@@ -33,6 +33,7 @@ Screenshots and a short behavior capture are stored under `docs/assets`.
 - Flat selected pill after selection settles
 - Glass transition while pressing, long-pressing, or dragging between items
 - Reusable circular glass action button
+- Multi-tab demo app with Home, Search, Create, and Profile examples
 
 ## Package
 
@@ -46,6 +47,20 @@ Direct AGSL entry point:
 
 ```text
 app/src/main/java/app/thdev/myapplication/ui/components/liquidglass/LiquidGlassAgslOverlay.kt
+```
+
+Demo app usage is under:
+
+```text
+app/src/main/java/app/thdev/myapplication/ui/demo/LiquidGlassDemoScreen.kt
+```
+
+## Agent Skill
+
+This repository includes a repo-local agent skill for future Android/Compose work:
+
+```text
+.agents/skills/android-liquid-glass-compose/SKILL.md
 ```
 
 ## Run
