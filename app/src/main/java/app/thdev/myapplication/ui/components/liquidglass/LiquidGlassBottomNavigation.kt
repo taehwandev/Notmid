@@ -485,18 +485,18 @@ private fun resolveLiquidGlassColors(
 
     return when (tone) {
         LiquidGlassTone.Light -> LiquidGlassResolvedColors(
-            containerSurfaceColor = Color.White.copy(alpha = 0.58f),
-            selectedSurfaceColor = Color.White.copy(alpha = 0.46f),
-            actionSurfaceColor = Color.White.copy(alpha = 0.64f),
+            containerSurfaceColor = Color.White.copy(alpha = 0.26f),
+            selectedSurfaceColor = Color.White.copy(alpha = 0.42f),
+            actionSurfaceColor = Color.White.copy(alpha = 0.30f),
             selectedContentColor = Color(0xFF111111),
             unselectedContentColor = Color(0xFF2F343A).copy(alpha = 0.52f),
             actionContentColor = Color(0xFF111111),
         )
 
         LiquidGlassTone.Dark -> LiquidGlassResolvedColors(
-            containerSurfaceColor = Color(0xFF2D363F).copy(alpha = 0.66f),
-            selectedSurfaceColor = Color(0xFF7E8A94).copy(alpha = 0.44f),
-            actionSurfaceColor = Color(0xFF55616B).copy(alpha = 0.68f),
+            containerSurfaceColor = Color(0xFF34414B).copy(alpha = 0.34f),
+            selectedSurfaceColor = Color(0xFF7E8A94).copy(alpha = 0.38f),
+            actionSurfaceColor = Color(0xFF65717B).copy(alpha = 0.36f),
             selectedContentColor = Color.White.copy(alpha = 0.98f),
             unselectedContentColor = Color(0xFFDCE6EF).copy(alpha = 0.54f),
             actionContentColor = Color.White.copy(alpha = 0.98f),

@@ -98,8 +98,11 @@ half4 main(float2 coord) {
     color -= float3(shade);
     color = clamp(color, 0.0, 1.0);
 
-    float alpha = surfaceColor.a + rim * 0.045 + active * 0.035;
-    alpha = clamp(alpha, 0.0, 0.92);
+    float alpha = surfaceColor.a * 0.18
+        + rim * (0.030 + active * 0.025)
+        + upperSheen * 0.018
+        + liquid * active * 0.020;
+    alpha = clamp(alpha, 0.0, 0.18);
 
     return half4(color.r, color.g, color.b, alpha);
 }
