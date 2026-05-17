@@ -87,6 +87,7 @@ fun NotmidShellScreen(
         listState = listState,
         destination = selectedDestination,
     )
+    val shouldShowLogin = activeRoute.requiresAuth && !authState.isAuthenticated
 
     LiquidGlassBackdropHost(
         modifier = Modifier
@@ -94,11 +95,8 @@ fun NotmidShellScreen(
             .background(NotmidBackgroundColor),
         backgroundColor = NotmidBackgroundColor,
         content = {
-            if (activeRoute.requiresAuth && !authState.isAuthenticated) {
+            if (shouldShowLogin) {
                 NotmidLoginScreen(
-                    destination = selectedDestination,
-                    authState = authState,
-                    listState = listState,
                     onContinueLocal = onContinueLocalAuth,
                     onBrowseSignedOut = onBrowseSignedOut,
                 )
@@ -182,16 +180,18 @@ fun NotmidShellScreen(
             }
         },
         floatingContent = { backdrop ->
-            NotmidBottomNavigation(
-                items = items,
-                selectedItemId = selectedDestinationId,
-                backdrop = backdrop,
-                modifier = Modifier.align(Alignment.BottomCenter),
-                adaptiveBackgroundColor = navigationBackdropColor,
-                onItemSelected = { item ->
-                    onRouteEvent(NotmidRouteEvent.DestinationSelected(item.id))
-                },
-            )
+            if (!shouldShowLogin) {
+                NotmidBottomNavigation(
+                    items = items,
+                    selectedItemId = selectedDestinationId,
+                    backdrop = backdrop,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    adaptiveBackgroundColor = navigationBackdropColor,
+                    onItemSelected = { item ->
+                        onRouteEvent(NotmidRouteEvent.DestinationSelected(item.id))
+                    },
+                )
+            }
         },
     )
 }

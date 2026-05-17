@@ -1,15 +1,9 @@
 import { createNotmidApiClient } from "@notmid/api-client";
-import {
-  notmidClips,
-  notmidFakeAuthSession,
-  notmidRoutes,
-  type NotmidAuthProvider,
-} from "@notmid/contracts";
+import { notmidFakeAuthSession, notmidRoutes, type NotmidAuthProvider } from "@notmid/contracts";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  getNotmidAuthStatus,
   normalizeNotmidReturnTo,
   noStoreFetch,
   notmidAuthCookieName,
@@ -23,69 +17,137 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const rawNext = Array.isArray(params?.next) ? params?.next[0] : params?.next;
   const nextPath = normalizeNotmidReturnTo(rawNext) ?? notmidRoutes.capture;
-  const auth = await getNotmidAuthStatus();
-  const heroClip = notmidClips[1] ?? notmidClips[0];
 
   return (
-    <main className="login-shell">
-      <Link className="detail-back" href={notmidRoutes.home}>
-        notmid
-      </Link>
+    <main className="login-web-shell">
+      <section className="login-web-hero" aria-label="notmid brand">
+        <div className="login-web-glow" aria-hidden="true" />
+        <Link className="login-web-logo" href={notmidRoutes.home}>
+          notmid
+        </Link>
 
-      <section
-        className="login-media"
-        style={{
-          backgroundImage: `linear-gradient(180deg, rgba(9, 10, 8, 0.1), rgba(9, 10, 8, 0.78)), url(${heroClip.coverImageUrl})`,
-        }}
-      >
-        <div className="login-media-copy">
-          <span>{heroClip.creatorHandle}</span>
-          <h1>{heroClip.title}</h1>
-          <p>{heroClip.caption}</p>
+        <div className="login-web-hero-copy">
+          <div className="login-web-verified">
+            <span aria-hidden="true">V</span>
+            <strong>GENUINE REVIEWS ONLY</strong>
+          </div>
+          <h1>
+            not mid.
+            <br />
+            <span>show receipts.</span>
+          </h1>
+          <p>
+            The local discovery platform where proof is the only currency. Stop guessing and start
+            seeing what&apos;s actually worth your time.
+          </p>
+        </div>
+
+        <div className="login-web-receipts" aria-hidden="true">
+          <article className="login-web-receipt login-web-receipt-a">
+            <div className="login-web-receipt-image">
+              <img
+                alt=""
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuABe_VFSduAyhiRAaaRGbFkOGrE9n0YiPVGOdHkKgCvCktZY_1enXR5N-KfQK9KOh-2uWwBi1Yq9oZoiIAcGySbsIDJGM0yLKQx6MOV2YZGu4cj5vzya7SVviVHU0tD_owGyTXWOZd2K1F0WNIUHv2aG4b3yPJzHVM9uW0kt1JppfWpIgjnhVkONShuSzc9bRo9XqYEoVOqGj2JkUm6OLY3A7W9PqMgJQdUBUMt28wjo2BKsLlD2XJOU4R61EEri7iHnvukKJPg7wM"
+              />
+            </div>
+            <strong>Supernova Coffee</strong>
+            <span>4.9 - 2h ago</span>
+          </article>
+          <article className="login-web-receipt login-web-receipt-b">
+            <div className="login-web-receipt-image">
+              <img
+                alt=""
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD61zVDVneZuK-xnEXzCkgWcgJ_XkLbl4ijq5RD_dtIwg5sNrBWrV5Ls3ieOR2AISPwcXNpi_YBHh8o-WOajGs6WDpcHt2qS4y7o9SwA6Dy-z1IauO4l4ANbRioij5WQNi2JYV-5Lp3ivR_DTWcwPXz-PCsRafh8MOPb9jC7n0eO5ErdPzVGNpmK5yvXjbnqKFKkteOaJedM0SYZWGLcvtDlNdKrTnzKBAzpM8czKZRpgNxzusAaaiaW3wXWjk2mnmSl-xOED-_DUk"
+              />
+            </div>
+            <strong>The Low Key</strong>
+            <span>5.0 - Just now</span>
+          </article>
         </div>
       </section>
 
-      <section className="login-panel" aria-labelledby="notmid-login-title">
-        <p className="login-kicker">{auth.authenticated ? "signed in" : "notmid account"}</p>
-        <h2 id="notmid-login-title">
-          {auth.authenticated ? `ready as @${auth.user?.handle}` : "keep your receipts attached"}
-        </h2>
-        <p className="login-copy">
-          Feed and map stay open. Capture, saves, chats, and profile edits start behind this local
-          auth boundary.
-        </p>
+      <section className="login-web-form-panel" aria-label="notmid login">
+        <div className="login-web-form-wrap">
+          <Link className="login-web-mobile-logo" href={notmidRoutes.home}>
+            notmid
+          </Link>
 
-        <div className="auth-mode-row">
-          <span>{auth.mode}</span>
-          <strong>
-            {auth.authenticated ? auth.user?.homeNeighborhood : "no production Firebase config"}
-          </strong>
-        </div>
+          <div className="login-web-heading">
+            <h2>Welcome back</h2>
+            <p>Enter your credentials to access the feed.</p>
+          </div>
 
-        <div className="login-actions">
-          <form action={continueWithProvider}>
+          <div className="login-web-social-stack">
+            <form action={continueWithProvider}>
+              <input name="provider" type="hidden" value="google" />
+              <input name="returnTo" type="hidden" value={nextPath} />
+              <button className="login-web-social-button" type="submit">
+                <span>G</span>
+                Continue with Google
+              </button>
+            </form>
+            <form action={continueWithProvider}>
+              <input name="provider" type="hidden" value="anonymous" />
+              <input name="returnTo" type="hidden" value={nextPath} />
+              <button className="login-web-social-button" type="submit">
+                <span>A</span>
+                Continue with Apple
+              </button>
+            </form>
+          </div>
+
+          <div className="login-web-divider">
+            <span />
+            <p>or</p>
+          </div>
+
+          <form action={continueWithProvider} className="login-web-form">
             <input name="provider" type="hidden" value="fake" />
             <input name="returnTo" type="hidden" value={nextPath} />
-            <button className="login-primary" type="submit">
-              Continue in local mode
-            </button>
-          </form>
-          <form action={continueWithProvider}>
-            <input name="provider" type="hidden" value="google" />
-            <input name="returnTo" type="hidden" value={nextPath} />
-            <button className="login-secondary" type="submit">
-              Preview Google handoff
-            </button>
-          </form>
-          <Link className="login-secondary" href={notmidRoutes.feed}>
-            Browse signed out
-          </Link>
-        </div>
 
-        <div className="auth-contract" aria-label="auth contract">
-          <span>GET /v1/auth/status</span>
-          <span>POST /v1/auth/fake-sign-in</span>
-          <span>{nextPath}</span>
+            <label className="login-web-field" htmlFor="notmid-login-identity">
+              <span>Username or Email</span>
+              <input
+                autoComplete="username"
+                id="notmid-login-identity"
+                name="identity"
+                placeholder="name@example.com"
+                type="text"
+              />
+            </label>
+
+            <label className="login-web-field" htmlFor="notmid-login-password">
+              <span>
+                Password
+                <a href="#forgot">Forgot?</a>
+              </span>
+              <input
+                autoComplete="current-password"
+                id="notmid-login-password"
+                name="password"
+                placeholder="********"
+                type="password"
+              />
+            </label>
+
+            <label className="login-web-remember" htmlFor="notmid-login-remember">
+              <input id="notmid-login-remember" name="remember" type="checkbox" />
+              <span>Keep me logged in</span>
+            </label>
+
+            <button className="login-web-submit" type="submit">
+              Login to Dashboard
+            </button>
+          </form>
+
+          <footer className="login-web-footer">
+            <p>New here?</p>
+            <form action={continueWithProvider}>
+              <input name="provider" type="hidden" value="fake" />
+              <input name="returnTo" type="hidden" value={nextPath} />
+              <button type="submit">Join the movement</button>
+            </form>
+          </footer>
         </div>
       </section>
     </main>
