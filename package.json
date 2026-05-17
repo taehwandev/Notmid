@@ -1,0 +1,21 @@
+{
+  "name": "notmid",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.12.1",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "api:dev": "pnpm --filter @notmid/api dev",
+    "web:dev": "pnpm --filter @notmid/web dev",
+    "typecheck": "pnpm -r typecheck",
+    "build:api": "pnpm --filter @notmid/api build",
+    "build:web": "pnpm --filter @notmid/web build"
+  }
+}

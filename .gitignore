@@ -11,7 +11,21 @@
 /.idea/assetWizardSettings.xml
 .DS_Store
 /build
+**/build/
 /captures
 .externalNativeBuild
 .cxx
 local.properties
+
+# Firebase / Google Cloud local configuration and credentials.
+# Commit example templates only, never real project credentials.
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase-adminsdk-*.json
+**/*service-account*.json
+**/serviceAccount*.json
+**/secrets.properties
+.env
+.env.*
+!.env.example
+!**/.env.example
