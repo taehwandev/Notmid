@@ -12,6 +12,11 @@
 .DS_Store
 /build
 **/build/
+/node_modules/
+**/node_modules/
+/.next/
+**/.next/
+*.tsbuildinfo
 /captures
 .externalNativeBuild
 .cxx
