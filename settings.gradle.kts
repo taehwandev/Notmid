@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             content {
@@ -22,5 +23,28 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "GlassNavLab"
-include(":app")
+rootProject.name = "notmid"
+include(
+    ":app",
+    ":core:data",
+    ":core:designsystem",
+    ":core:domain",
+    ":core:model",
+    ":core:router:api",
+    ":core:router:impl",
+    ":feature:capture:api",
+    ":feature:capture:impl",
+    ":feature:feed:api",
+    ":feature:feed:impl",
+    ":feature:inbox:api",
+    ":feature:inbox:impl",
+    ":feature:map:api",
+    ":feature:map:impl",
+    ":feature:notmid:api",
+    ":feature:notmid:common",
+    ":feature:notmid:impl",
+    ":feature:profile:api",
+    ":feature:profile:impl",
+    ":feature:webview:api",
+    ":feature:webview:impl",
+)
