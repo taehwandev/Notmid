@@ -66,6 +66,63 @@ data class RouteStack(
     }
 }
 
+data class RoutePlan(
+    val composeStack: RouteStack? = null,
+    val activityRoutes: List<ActivityRoute> = emptyList(),
+    val launchSingleTop: Boolean = true,
+    val restoreState: Boolean = true,
+) {
+    init {
+        require(composeStack != null || activityRoutes.isNotEmpty()) {
+            "RoutePlan requires a compose stack or at least one activity route."
+        }
+    }
+
+    companion object {
+        fun fromStack(
+            stack: RouteStack,
+            launchSingleTop: Boolean = true,
+            restoreState: Boolean = true,
+        ): RoutePlan {
+            val activityRoutes = stack.entries.filterIsInstance<ActivityRoute>()
+            val composeRoutes = stack.entries.filterNot { route -> route is ActivityRoute }
+
+            return RoutePlan(
+                composeStack = composeRoutes
+                    .takeIf { routes -> routes.isNotEmpty() }
+                    ?.let(::RouteStack),
+                activityRoutes = activityRoutes,
+                launchSingleTop = launchSingleTop,
+                restoreState = restoreState,
+            )
+        }
+
+        fun compose(
+            stack: RouteStack,
+            launchSingleTop: Boolean = true,
+            restoreState: Boolean = true,
+        ): RoutePlan {
+            return RoutePlan(
+                composeStack = stack,
+                launchSingleTop = launchSingleTop,
+                restoreState = restoreState,
+            )
+        }
+
+        fun activity(
+            route: ActivityRoute,
+            launchSingleTop: Boolean = true,
+            restoreState: Boolean = true,
+        ): RoutePlan {
+            return RoutePlan(
+                activityRoutes = listOf(route),
+                launchSingleTop = launchSingleTop,
+                restoreState = restoreState,
+            )
+        }
+    }
+}
+
 data class RouteCommand(
     val stack: RouteStack,
     val launchSingleTop: Boolean = true,
@@ -83,6 +140,13 @@ data class RouteCommand(
 
     val route: Route
         get() = stack.topRoute
+
+    val plan: RoutePlan
+        get() = RoutePlan.fromStack(
+            stack = stack,
+            launchSingleTop = launchSingleTop,
+            restoreState = restoreState,
+        )
 }
 
 fun interface Router {

@@ -1,6 +1,7 @@
 package app.thdev.glassnavlab.navigation
 
 import app.thdev.glassnavlab.core.router.RouteCommand
+import app.thdev.glassnavlab.core.router.RoutePlan
 import app.thdev.glassnavlab.core.router.RouteStack
 import app.thdev.glassnavlab.feature.feed.api.ClipDetailRoute
 import app.thdev.glassnavlab.feature.feed.api.FeedRouteEvent
@@ -120,6 +121,53 @@ class AppRouterTest {
             router.backStack.entries,
         )
         assertEquals(webViewRoute, router.pendingActivityRouteRequest?.route)
+    }
+
+    @Test
+    fun routePlanCanUpdateComposeStackAndQueueActivityLaunchTogether() {
+        val router = AppRouter()
+        val webViewRoute = WebViewRouteSpec.create(url = "https://thdev.app/help")
+
+        router.execute(
+            RoutePlan(
+                composeStack = RouteStack.single(ProfileRoute),
+                activityRoutes = listOf(webViewRoute),
+            ),
+        )
+
+        assertEquals(
+            listOf(ProfileRoute),
+            router.backStack.entries,
+        )
+        assertEquals(webViewRoute, router.pendingActivityRouteRequest?.route)
+    }
+
+    @Test
+    fun deepLinkNavigationUsesRoutePlanExecution() {
+        val router = AppRouter()
+
+        router.navigateDeepLink("https://thdev.app/notmid/profile/settings")
+
+        assertEquals(
+            listOf(ProfileRoute, ProfileSettingsRoute),
+            router.backStack.entries,
+        )
+    }
+
+    @Test
+    fun activityRouteDeepLinkQueuesActivityLaunchWithoutReplacingComposeStack() {
+        val router = AppRouter()
+
+        router.navigateDeepLink("https://thdev.app/notmid/web?url=https%3A%2F%2Fthdev.app%2Fhelp")
+
+        assertEquals(
+            listOf(FeedRoute),
+            router.backStack.entries,
+        )
+        assertEquals(
+            WebViewRouteSpec.create(url = "https://thdev.app/help"),
+            router.pendingActivityRouteRequest?.route,
+        )
     }
 
     @Test

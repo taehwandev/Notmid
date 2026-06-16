@@ -1,10 +1,10 @@
 package app.thdev.glassnavlab.navigation
 
-import app.thdev.glassnavlab.core.router.RouteCommand
+import app.thdev.glassnavlab.core.router.RoutePlan
 import app.thdev.glassnavlab.core.router.WebRouteLink
 
 internal class AppDeepLinkResolver {
-    fun resolve(uriString: String): RouteCommand? {
+    fun resolve(uriString: String): RoutePlan? {
         val link = WebRouteLink.parse(uriString) ?: return null
         if (link.scheme != APP_WEB_SCHEME || link.host != APP_WEB_HOST) return null
 
@@ -13,7 +13,7 @@ internal class AppDeepLinkResolver {
             link.copy(pathSegments = featurePathSegments),
         ) ?: return null
 
-        return RouteCommand(stack = stack)
+        return RoutePlan.fromStack(stack)
     }
 
     companion object {

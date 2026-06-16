@@ -1,15 +1,23 @@
 package app.thdev.glassnavlab.core.data.notmid
 
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
+import app.thdev.glassnavlab.core.model.notmid.NotmidCaptureDraft
+import app.thdev.glassnavlab.core.model.notmid.NotmidCaptureMediaState
+import app.thdev.glassnavlab.core.model.notmid.NotmidCaptureVisibility
+import app.thdev.glassnavlab.core.model.notmid.NotmidChatAccess
+import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteStatus
+import app.thdev.glassnavlab.core.model.notmid.NotmidChatRelationship
 import app.thdev.glassnavlab.core.model.notmid.NotmidClip
 import app.thdev.glassnavlab.core.model.notmid.NotmidColor
 import app.thdev.glassnavlab.core.model.notmid.NotmidColors
 import app.thdev.glassnavlab.core.model.notmid.NotmidDestination
+import app.thdev.glassnavlab.core.model.notmid.NotmidGeoPoint
 import app.thdev.glassnavlab.core.model.notmid.NotmidNavigationIcon
 import app.thdev.glassnavlab.core.model.notmid.NotmidPlace
+import app.thdev.glassnavlab.core.model.notmid.NotmidThread
 
 class StaticNotmidContentRepository : NotmidContentRepository {
-    override fun destinations(): List<NotmidDestination> = NotmidDestinations
+    override suspend fun destinations(): List<NotmidDestination> = NotmidDestinations
 }
 
 private fun color(argb: Long) = NotmidColor(argb)
@@ -26,18 +34,72 @@ private val NotmidDestinations = listOf(
                 description = "A 14 second proof clip showing wait time, table vibe, and drink texture.",
                 badge = "live rn",
                 palette = listOf(color(0xFF111827), color(0xFFFF4D6D), color(0xFFFFD166)),
+                isLive = true,
+                id = "cafe-queue-check",
+                placeId = "millo-roasters",
+                creatorHandle = "min.zip",
+                qualityLabel = "1080P",
+                playbackProgress = 0.42f,
             ),
             NotmidClip(
                 title = "Late night ramen",
                 description = "Creator-tagged receipt for taste, price, and the actual line outside.",
                 badge = "receipt",
                 palette = listOf(color(0xFF0F172A), color(0xFF22C55E), color(0xFFCCFBF1)),
+                isLive = true,
+                id = "late-night-ramen",
+                placeId = "han-river-steps",
+                creatorHandle = "yapmap.ji",
+                qualityLabel = "720P",
+                playbackProgress = 0.58f,
             ),
             NotmidClip(
                 title = "Gallery opener",
                 description = "Muted clip stack with map-aware recommendations nearby.",
                 badge = "near you",
                 palette = listOf(color(0xFF312E81), color(0xFF7C3AED), color(0xFFFDE68A)),
+                isLive = true,
+                id = "gallery-opener",
+                placeId = "basement-listening-bar",
+                creatorHandle = "receipt.han",
+                qualityLabel = "1080P",
+                playbackProgress = 0.21f,
+            ),
+            NotmidClip(
+                title = "Bakery first batch",
+                description = "Steam, shelf restock, and line speed checked from a short counter clip.",
+                badge = "fresh",
+                palette = listOf(color(0xFF3B1D0F), color(0xFFE9824B), color(0xFFFFE2A8)),
+                isLive = true,
+                id = "bakery-first-batch",
+                placeId = "millo-roasters",
+                creatorHandle = "min.zip",
+                qualityLabel = "4K",
+                playbackProgress = 0.64f,
+            ),
+            NotmidClip(
+                title = "Window seat proof",
+                description = "A thirty-second table sweep showing outlets, noise level, and daylight.",
+                badge = "seat check",
+                palette = listOf(color(0xFF0D3B66), color(0xFF2EC4B6), color(0xFFFFE66D)),
+                isLive = true,
+                id = "window-seat-proof",
+                placeId = "millo-roasters",
+                creatorHandle = "yapmap.ji",
+                qualityLabel = "1080P",
+                playbackProgress = 0.33f,
+            ),
+            NotmidClip(
+                title = "Listening bar pour",
+                description = "Low-light clip with queue length, cover price, and the current track mood.",
+                badge = "tonight",
+                palette = listOf(color(0xFF130F26), color(0xFF8E44AD), color(0xFFFF6B6B)),
+                isLive = true,
+                id = "listening-bar-pour",
+                placeId = "basement-listening-bar",
+                creatorHandle = "receipt.han",
+                qualityLabel = "720P",
+                playbackProgress = 0.49f,
             ),
         ),
         places = listOf(
@@ -76,18 +138,33 @@ private val NotmidDestinations = listOf(
                 description = "Pins rank by fresh clips, chat activity, and save velocity.",
                 badge = "map pulse",
                 palette = listOf(color(0xFF262626), color(0xFF8D8D8D), color(0xFFF3F3F3)),
+                id = "cluster-around-seongsu",
+                placeId = "three-pins-rising",
+                creatorHandle = "map.signal",
+                moodTags = listOf("freshness", "cluster", "nearby"),
+                capturedAtLabel = "8m ago",
             ),
             NotmidClip(
                 title = "Avoid the bait",
                 description = "Places with old media fall behind live creator receipts.",
                 badge = "freshness",
                 palette = listOf(color(0xFF005E7C), color(0xFF5AD7CF), color(0xFFF7E37B)),
+                id = "avoid-the-bait",
+                placeId = "creator-heat",
+                creatorHandle = "receipt.ops",
+                moodTags = listOf("fresh", "anti-hype"),
+                capturedAtLabel = "22m ago",
             ),
             NotmidClip(
                 title = "Route-ready saves",
                 description = "Saved spots can become a quick crawl without leaving the app.",
                 badge = "plan",
                 palette = listOf(color(0xFFF65868), color(0xFFB15FF4), color(0xFF593AE8)),
+                id = "route-ready-saves",
+                placeId = "neighborhood-filter",
+                creatorHandle = "route.kwon",
+                moodTags = listOf("walkable", "save"),
+                capturedAtLabel = "41m ago",
             ),
         ),
         places = listOf(
@@ -97,6 +174,14 @@ private val NotmidDestinations = listOf(
                 metric = "3",
                 palette = listOf(color(0xFF262626), color(0xFF8D8D8D), color(0xFFF3F3F3)),
                 heightDp = 156,
+                id = "three-pins-rising",
+                category = "Cafe",
+                address = "Seongsu-dong, Seoul",
+                coordinate = NotmidGeoPoint(
+                    latitude = 37.5446,
+                    longitude = 127.0557,
+                ),
+                receiptCount = 184,
             ),
             NotmidPlace(
                 title = "Creator heat",
@@ -104,6 +189,14 @@ private val NotmidDestinations = listOf(
                 metric = "live",
                 palette = listOf(color(0xFF0E7C66), color(0xFF32D6A2), color(0xFFF6D66B)),
                 heightDp = 180,
+                id = "creator-heat",
+                category = "Night",
+                address = "Hapjeong-dong, Seoul",
+                coordinate = NotmidGeoPoint(
+                    latitude = 37.5494,
+                    longitude = 126.9138,
+                ),
+                receiptCount = 97,
             ),
             NotmidPlace(
                 title = "Neighborhood filter",
@@ -111,6 +204,15 @@ private val NotmidDestinations = listOf(
                 metric = "soon",
                 palette = listOf(color(0xFF111827), color(0xFF3B4A6B), color(0xFFB9C7D6)),
                 heightDp = 124,
+                id = "neighborhood-filter",
+                category = "Exhibit",
+                address = "Euljiro, Seoul",
+                coordinate = NotmidGeoPoint(
+                    latitude = 37.5662,
+                    longitude = 126.9919,
+                ),
+                openNow = false,
+                receiptCount = 62,
             ),
         ),
     ),
@@ -163,6 +265,18 @@ private val NotmidDestinations = listOf(
                 heightDp = 132,
             ),
         ),
+        captureDraft = NotmidCaptureDraft(
+            id = "draft-local-receipt",
+            caption = "Steam on the counter, line moving fast, seats opening near the window.",
+            placeId = "clip-composer",
+            moodTags = listOf("line proof", "worth it"),
+            visibility = NotmidCaptureVisibility.Public,
+            mediaState = NotmidCaptureMediaState.LocalPreview,
+            statusLabel = "Draft saved locally",
+            waitTimeLabel = "8m",
+            crowdLabel = "busy",
+            priceTierLabel = "$$",
+        ),
     ),
     NotmidDestination(
         id = "inbox",
@@ -175,18 +289,33 @@ private val NotmidDestinations = listOf(
                 description = "A shared video can open a direct message with the place attached.",
                 badge = "chat",
                 palette = listOf(color(0xFF172A3A), color(0xFF2E8BC0), color(0xFFB1D4E0)),
+                id = "clip-thread",
+                placeId = "no-dead-end-share",
+                creatorHandle = "min.zip",
+                moodTags = listOf("chat", "place-aware"),
+                capturedAtLabel = "12m ago",
             ),
             NotmidClip(
                 title = "Plan together",
                 description = "Friends vote on spots and turn saved pins into a route.",
                 badge = "crew",
                 palette = listOf(color(0xFF6930C3), color(0xFF64DFDF), color(0xFFFFF3B0)),
+                id = "plan-together",
+                placeId = "group-signal",
+                creatorHandle = "yapmap.ji",
+                moodTags = listOf("group", "route"),
+                capturedAtLabel = "31m ago",
             ),
             NotmidClip(
                 title = "Creator reply",
                 description = "Public comments and private replies share a conversation domain later.",
                 badge = "reply",
                 palette = listOf(color(0xFF111111), color(0xFF555555), color(0xFFEDEDED)),
+                id = "creator-reply",
+                placeId = "moderation-queue",
+                creatorHandle = "receipt.han",
+                moodTags = listOf("reply", "moderation"),
+                capturedAtLabel = "1h ago",
             ),
         ),
         places = listOf(
@@ -196,6 +325,14 @@ private val NotmidDestinations = listOf(
                 metric = "dm",
                 palette = listOf(color(0xFF172A3A), color(0xFF2E8BC0), color(0xFFB1D4E0)),
                 heightDp = 154,
+                id = "no-dead-end-share",
+                category = "Cafe",
+                address = "Seongsu-dong, Seoul",
+                coordinate = NotmidGeoPoint(
+                    latitude = 37.5446,
+                    longitude = 127.0557,
+                ),
+                receiptCount = 184,
             ),
             NotmidPlace(
                 title = "Group signal",
@@ -204,6 +341,14 @@ private val NotmidDestinations = listOf(
                 palette = listOf(color(0xFF6930C3), color(0xFF64DFDF), color(0xFFFFF3B0)),
                 heightDp = 130,
                 contentColor = NotmidColors.DarkCardContent,
+                id = "group-signal",
+                category = "Walk",
+                address = "Hapjeong-dong, Seoul",
+                coordinate = NotmidGeoPoint(
+                    latitude = 37.5494,
+                    longitude = 126.9138,
+                ),
+                receiptCount = 97,
             ),
             NotmidPlace(
                 title = "Moderation queue",
@@ -211,6 +356,45 @@ private val NotmidDestinations = listOf(
                 metric = "mod",
                 palette = listOf(color(0xFF111111), color(0xFF555555), color(0xFFEDEDED)),
                 heightDp = 176,
+                id = "moderation-queue",
+                category = "Exhibit",
+                address = "Euljiro, Seoul",
+                coordinate = NotmidGeoPoint(
+                    latitude = 37.5662,
+                    longitude = 126.9919,
+                ),
+                openNow = false,
+                receiptCount = 62,
+            ),
+        ),
+        threads = listOf(
+            NotmidThread(
+                id = "tonight-seongsu",
+                title = "tonight in seongsu?",
+                preview = "No dead-end share looks not mid. meet after 8?",
+                updatedAtLabel = "now",
+                participantHandles = listOf("min.zip", "yapmap.ji", "you"),
+                attachedPlaceId = "no-dead-end-share",
+                attachedClipId = "clip-thread",
+                unreadCount = 3,
+            ),
+            NotmidThread(
+                id = "rain-route",
+                title = "rain route",
+                preview = "moderation queue first, then food nearby",
+                updatedAtLabel = "18m",
+                participantHandles = listOf("receipt.han", "you"),
+                attachedPlaceId = "moderation-queue",
+                attachedClipId = "creator-reply",
+                unreadCount = 0,
+                chatAccess = NotmidChatAccess(
+                    relationship = NotmidChatRelationship.NonFriend,
+                    inviteStatus = NotmidChatInviteStatus.PendingInbound,
+                    canSendMessage = false,
+                    canAcceptInvite = true,
+                    canRejectInvite = true,
+                    reasonLabel = "Accept or reject this chat request before messaging.",
+                ),
             ),
         ),
     ),

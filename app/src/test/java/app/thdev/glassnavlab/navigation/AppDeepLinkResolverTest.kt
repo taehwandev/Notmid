@@ -19,81 +19,81 @@ class AppDeepLinkResolverTest {
 
     @Test
     fun feedDeepLinkResolvesFeedStack() {
-        val command = resolver.resolve("https://thdev.app/notmid/feed")
+        val plan = resolver.resolve("https://thdev.app/notmid/feed")
 
         assertEquals(
             listOf(FeedRoute),
-            command?.stack?.entries,
+            plan?.composeStack?.entries,
         )
     }
 
     @Test
     fun emptyNotmidDeepLinkResolvesDefaultFeedStack() {
-        val command = resolver.resolve("https://thdev.app/notmid")
+        val plan = resolver.resolve("https://thdev.app/notmid")
 
         assertEquals(
             listOf(FeedRoute),
-            command?.stack?.entries,
+            plan?.composeStack?.entries,
         )
     }
 
     @Test
     fun mapDeepLinkResolvesMapStackFromFeatureSpec() {
-        val command = resolver.resolve("https://thdev.app/notmid/map")
+        val plan = resolver.resolve("https://thdev.app/notmid/map")
 
         assertEquals(
             listOf(MapRoute),
-            command?.stack?.entries,
+            plan?.composeStack?.entries,
         )
     }
 
     @Test
     fun nestedSettingsDeepLinkResolvesOrderedStack() {
-        val command = resolver.resolve("https://thdev.app/notmid/profile/settings")
+        val plan = resolver.resolve("https://thdev.app/notmid/profile/settings")
 
         assertEquals(
             listOf(ProfileRoute, ProfileSettingsRoute),
-            command?.stack?.entries,
+            plan?.composeStack?.entries,
         )
     }
 
     @Test
     fun clipDeepLinkResolvesOrderedFeedStack() {
-        val command = resolver.resolve("https://thdev.app/notmid/feed/clips/cafe-queue-check")
+        val plan = resolver.resolve("https://thdev.app/notmid/feed/clips/cafe-queue-check")
 
         assertEquals(
             listOf(FeedRoute, ClipDetailRoute("cafe-queue-check")),
-            command?.stack?.entries,
+            plan?.composeStack?.entries,
         )
     }
 
     @Test
     fun placeDeepLinkResolvesOrderedMapStack() {
-        val command = resolver.resolve("https://thdev.app/notmid/map/places/millo-roasters")
+        val plan = resolver.resolve("https://thdev.app/notmid/map/places/millo-roasters")
 
         assertEquals(
             listOf(MapRoute, PlaceDetailRoute("millo-roasters")),
-            command?.stack?.entries,
+            plan?.composeStack?.entries,
         )
     }
 
     @Test
     fun shortObjectDeepLinkResolvesThroughOwningTopLevelRoute() {
-        val command = resolver.resolve("https://thdev.app/notmid/places/millo-roasters")
+        val plan = resolver.resolve("https://thdev.app/notmid/places/millo-roasters")
 
         assertEquals(
             listOf(MapRoute, PlaceDetailRoute("millo-roasters")),
-            command?.stack?.entries,
+            plan?.composeStack?.entries,
         )
     }
 
     @Test
     fun chatDeepLinkResolvesOrderedInboxStack() {
-        val command = resolver.resolve("https://thdev.app/notmid/inbox/chats/clip-thread")
+        val plan = resolver.resolve("https://thdev.app/notmid/inbox/chats/clip-thread")
 
         assertEquals(
             listOf(InboxRoute, ChatThreadRoute("clip-thread")),
-            command?.stack?.entries,
+            plan?.composeStack?.entries,
         )
     }
 
@@ -106,7 +106,7 @@ class AppDeepLinkResolverTest {
 
     @Test
     fun webViewDeepLinkResolvesActivityRoute() {
-        val command = resolver.resolve(
+        val plan = resolver.resolve(
             "https://thdev.app/notmid/web?url=https%3A%2F%2Fthdev.app%2Fhelp&title=Help&mode=Help",
         )
 
@@ -118,7 +118,7 @@ class AppDeepLinkResolverTest {
                     mode = WebViewMode.Help,
                 ),
             ),
-            command?.stack?.entries,
+            plan?.activityRoutes,
         )
     }
 

@@ -6,17 +6,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import app.thdev.glassnavlab.core.router.ActivityRoute
+import app.thdev.glassnavlab.core.router.Route
 import app.thdev.glassnavlab.core.router.RouteCommand
 import app.thdev.glassnavlab.core.router.RouteEvent
 import app.thdev.glassnavlab.core.router.RouteEventSink
-import app.thdev.glassnavlab.core.router.Route
+import app.thdev.glassnavlab.core.router.RoutePlan
 import app.thdev.glassnavlab.core.router.RouteStack
 import app.thdev.glassnavlab.core.router.Router
-import app.thdev.glassnavlab.core.router.ActivityRoute
-import app.thdev.glassnavlab.feature.feed.api.FeedRouteEvent
-import app.thdev.glassnavlab.feature.inbox.api.InboxRouteEvent
-import app.thdev.glassnavlab.feature.map.api.MapRouteEvent
-import app.thdev.glassnavlab.feature.notmid.api.NotmidRouteEvent
 import app.thdev.glassnavlab.feature.notmid.api.NotmidRoute
 
 @Composable
@@ -25,7 +22,9 @@ internal fun rememberAppRouter(): AppRouter {
 }
 
 @Stable
-internal class AppRouter : Router, RouteEventSink {
+internal class AppRouter(
+    private val routeCoordinator: AppRouteCoordinator = AppRouteCoordinator(),
+) : Router, RouteEventSink {
     var backStack: RouteStack by mutableStateOf(
         RouteStack.single(NotmidRouteGraph.defaultRoute),
     )
@@ -40,81 +39,44 @@ internal class AppRouter : Router, RouteEventSink {
     val selectedNotmidDestinationId: String?
         get() = notmidRouteStack.lastOrNull()?.selectedDestinationId
 
-    var pendingActivityRouteRequest: ActivityRouteRequest? by mutableStateOf(null)
-        private set
+    private var pendingActivityRouteRequests: List<ActivityRouteRequest> by mutableStateOf(emptyList())
 
     private var nextActivityRouteRequestId = 0L
 
+    val pendingActivityRouteRequest: ActivityRouteRequest?
+        get() = pendingActivityRouteRequests.firstOrNull()
+
     override fun navigate(command: RouteCommand) {
-        val activityRoute = command.route as? ActivityRoute
-        if (activityRoute != null) {
-            pendingActivityRouteRequest = ActivityRouteRequest(
-                id = ++nextActivityRouteRequestId,
-                route = activityRoute,
-            )
-            return
+        execute(routeCoordinator.planFor(command))
+    }
+
+    fun navigateDeepLink(uriString: String) {
+        routeCoordinator.planForDeepLink(uriString)?.let(::execute)
+    }
+
+    fun execute(plan: RoutePlan) {
+        plan.composeStack?.let { stack ->
+            backStack = stack
         }
 
-        backStack = command.stack
+        if (plan.activityRoutes.isNotEmpty()) {
+            pendingActivityRouteRequests = pendingActivityRouteRequests +
+                plan.activityRoutes.map { route ->
+                    ActivityRouteRequest(
+                        id = ++nextActivityRouteRequestId,
+                        route = route,
+                    )
+                }
+        }
     }
 
     fun consumeActivityRouteRequest(id: Long) {
-        if (pendingActivityRouteRequest?.id == id) {
-            pendingActivityRouteRequest = null
-        }
+        pendingActivityRouteRequests = pendingActivityRouteRequests
+            .filterNot { request -> request.id == id }
     }
 
     override fun onRouteEvent(event: RouteEvent) {
-        when (event) {
-            is NotmidRouteEvent -> onNotmidRouteEvent(event)
-            is FeedRouteEvent -> onFeedRouteEvent(event)
-            is MapRouteEvent -> onMapRouteEvent(event)
-            is InboxRouteEvent -> onInboxRouteEvent(event)
-        }
-    }
-
-    private fun onNotmidRouteEvent(event: NotmidRouteEvent) {
-        val stack = when (event) {
-            is NotmidRouteEvent.DestinationSelected -> {
-                RouteStack.single(NotmidRouteGraph.destination(event.destinationId))
-            }
-
-            NotmidRouteEvent.SettingsRequested -> {
-                NotmidRouteGraph.settingsStack()
-            }
-        }
-
-        navigate(RouteCommand(stack = stack))
-    }
-
-    private fun onFeedRouteEvent(event: FeedRouteEvent) {
-        val stack = when (event) {
-            is FeedRouteEvent.ClipRequested -> {
-                NotmidRouteGraph.clipStack(event.clipId)
-            }
-        }
-
-        navigate(RouteCommand(stack = stack))
-    }
-
-    private fun onMapRouteEvent(event: MapRouteEvent) {
-        val stack = when (event) {
-            is MapRouteEvent.PlaceRequested -> {
-                NotmidRouteGraph.placeStack(event.placeId)
-            }
-        }
-
-        navigate(RouteCommand(stack = stack))
-    }
-
-    private fun onInboxRouteEvent(event: InboxRouteEvent) {
-        val stack = when (event) {
-            is InboxRouteEvent.ChatThreadRequested -> {
-                NotmidRouteGraph.chatThreadStack(event.threadId)
-            }
-        }
-
-        navigate(RouteCommand(stack = stack))
+        routeCoordinator.planFor(event)?.let(::execute)
     }
 }
 
