@@ -32,6 +32,7 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
    - `llm-wiki/routing-deeplinks.md` for navigation and web links.
    - `llm-wiki/platform-backend.md` for web/API/contracts and server-first backend direction.
    - `llm-wiki/firebase-open-source.md` for auth/Firebase/secrets.
+   - `docs/specs/android-commonization/README.md` when touching `core-app`, `assertions`, router/network/feedback commonization, WebView runtime, or app-shell structure.
    - `llm-wiki/implementation-checklist.md` before verifying or finishing.
 3. Inspect the smallest matching source files with `rg --files` and `sed`.
 4. Keep unrelated dirty worktree changes out of the write set.
@@ -54,12 +55,35 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
 - `:core:data` owns fake/static implementations and mapping into domain models.
 - `:core:router:api` stays pure Kotlin route contracts.
 - `:core:router:impl` owns default route registry/matching, not Android Activity launching.
-- `:feature:*:api` owns feature route contracts, deep-link specs, and route events.
+- `:core-app:*` owns Android/Compose app-runtime common contracts such as feedback hosts, permission adapters, ActivityRoute launch adapters, reusable WebView runtime, resources, and app-shell helpers.
+- `:feature:*:api` owns feature route contracts, deep-link specs, and route events. Split them by caller-facing role once more than one contract family exists: `route/`, `deeplink/`, `event/`, and `destination/` or `activity/` only when those are real import boundaries.
 - `:feature:*:impl` owns Compose screens and emits events. It must not depend on another feature impl.
+- `:*:assertions` modules own reusable test doubles, recording fakes, fixtures, and assertion helpers. They should depend on matching API contracts, not production impl modules.
+- `:feature:*:assertions` exists only when route/display fixtures or recording helpers are reused across test boundaries.
 - `apps/api` owns HTTP API, token verification boundary, and future persistence integrations.
 - `apps/web` owns React/Next.js routes and shareable web surfaces.
 - `packages/contracts` owns canonical web route helpers, TypeScript DTOs, and deterministic fixtures.
 - `packages/api-client` owns typed fetch helpers. It must not own product state or secrets.
+
+## Cross-Language Contract Rules
+
+- Apply the same contract-family split to Kotlin, TypeScript, server code, web
+  code, tests, and future shared packages.
+- Do not put route helpers, DTOs/schemas, API clients, server handlers, route
+  events, fixtures, and assertion helpers into one catch-all contract file or
+  barrel export.
+- `packages/contracts` should split by import boundary as it grows: route/path
+  helpers, DTO or schema shapes, fixture data, and parity resolvers should be
+  importable without pulling each other by default.
+- `apps/api` should keep route handlers, request parsing/validation, product
+  policy, repository ports, repository adapters, and error mapping in separate
+  owners when more than one caller or test boundary needs them.
+- `apps/web` should keep route rendering, server actions, session/cookie
+  handling, API-client calls, and feature UI contracts separate. Web UI should
+  not import server-only auth/session/runtime helpers through a broad barrel.
+- `packages/api-client` owns typed transport helpers and errors only. It should
+  not re-export product fixtures, web route rendering, server handlers, Android
+  route contracts, or app state.
 
 ## Design-System Rules
 
@@ -70,21 +94,33 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
   - `NotmidClipCard -> NotmidGradientSummaryCard`
   - `NotmidPlaceCard -> NotmidGradientHeroCard`
 - Keep media-derived palettes in feature UI models; keep reusable styling in `:core:designsystem`.
+- Feedback runtime orchestration belongs in `core-app` once extracted. Keep reusable visual components and tokens in `:core:designsystem`.
 
 ## Routing Rules
 
-- For mixed Activity and Compose navigation changes, apply `.agents/skills/android-mixed-activity-compose-router/SKILL.md` first. Use `.agents/skills/glassnavlab-android-stewardship/references/mixed-activity-compose-router-reference.md` only for the Notmid/FirFin comparison notes. The caller should say where to go; the app router decides whether that becomes a Compose stack mutation, Activity launch, deferred auth route, or future Nav3 back stack.
-- Deep links must resolve to ordered stacks, not just a top destination.
-- Feature impl modules emit events; `:app` converts events into route stacks.
+- For mixed Activity and Compose navigation changes, apply `.agents/skills/android-mixed-activity-compose-router/SKILL.md` first. Use `.agents/skills/glassnavlab-android-stewardship/references/mixed-activity-compose-router-reference.md` only for the Notmid/reference-project comparison notes. The caller should say where to go; the app router decides whether that becomes a Compose stack mutation, Activity launch, deferred auth route, or future Nav3 back stack.
+- Deep links must resolve to ordered route plans, not just a top destination.
+  Compose destinations carry a `RouteStack`; Activity-backed destinations carry
+  `ActivityRoute` launch requests.
+- Feature impl modules emit events; `:app` converts events into route plans and
+  Compose stacks when needed.
 - WebView is an `ActivityRoute`; normal screens are `ComposeRoute`.
 - Keep `RouteStack` and `RouteCommand` as router execution artifacts where possible. Feature UI should prefer route events or route intents so callers do not need to know whether a destination is Activity-backed or Compose-backed.
-- App owns scheme/host/base path policy, auth/deferred routing, pending deep-link consumption, and Activity launch dispatch. Feature API owns route data, route specs, deep-link specs, and public route events.
+- Kotlin route contracts that feature modules must implement stay open
+  interfaces. Use `sealed interface` only for closed families owned by one
+  module, such as feature route events or core router execution commands. Do not
+  seal core route/spec/registry contracts only to make `when` exhaustive.
+- App owns scheme/host/base path policy, auth/deferred routing, pending deep-link consumption, and Activity launch dispatch. Feature API owns route data, top-level route metadata when needed, deep-link specs, and public route events.
+- For Nav3-style deep links, `MainActivity` is the intent entrypoint, `:app`
+  builds the synthetic route plan, and the app/base shell maps Compose route keys
+  to screen content. Feature impl modules should not parse URLs or own the
+  synthetic stack.
+- If a deep link can enter an existing task or a new task, test Back and Up behavior for both paths before treating the route as stable.
 - New dynamic screens should add:
-  - route data class in feature API
-  - `RouteSpec`
-  - `DeepLinkSpec`
-  - route event when opened from UI
-  - `NotmidRouteGraph` registration
+  - route data class under the owning feature API `route/` package
+  - `DeepLinkSpec` under `deeplink/` when externally addressable
+  - route event under `event/` when opened from UI
+  - `NotmidRouteGraph` registration when external links or top-level navigation need it
   - `AppRouterTest` and `AppDeepLinkResolverTest`
 
 ## Verification

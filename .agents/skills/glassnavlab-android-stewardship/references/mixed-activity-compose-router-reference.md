@@ -1,13 +1,13 @@
-# Notmid/FirFin Mixed Router Notes
+# Notmid Mixed Router Reference Notes
 
 This is the local comparison companion for the reusable
 `.agents/skills/android-mixed-activity-compose-router/SKILL.md` skill. Load that
 standalone skill for cross-app rules. Load this reference only when Notmid work
-needs the FirFin interpretation that informed the router cleanup.
+needs the local reference-project interpretation that informed the router cleanup.
 
 ## Local Intent
 
-The original FirFin-style question was:
+The original reference-style question was:
 
 ```text
 When Activity routing and Compose navigation are mixed, how can callers navigate
@@ -21,10 +21,10 @@ feature emits a route contract
 app resolves that contract into Compose stack mutation or Activity launch
 ```
 
-Keep `RouteStack` useful, but treat it as the router's resolved plan, not as the
-normal feature caller API.
+Keep `RouteStack` useful, but treat it as the Compose back-stack portion of a
+router-resolved `RoutePlan`, not as the normal feature caller API.
 
-## FirFin Pieces That Were Inspected
+## Reference Pieces That Were Inspected
 
 - `core/router/router-api/.../Router.kt`
 - `core/router/router-api/.../JourneyGuidance.kt`
@@ -34,34 +34,34 @@ normal feature caller API.
 - `core/router/router/src/.../JourneyMapper.kt`
 - `core/lifecycle/.../LifecycleActivity.kt`
 - `core/lifecycle/.../GenerateJourneyGuidance.kt`
-- `core-app/scheme/scheme/.../FirFinScheme*.kt`
+- `core-app/scheme/scheme/.../ReferenceScheme*.kt`
 - `core/collector/bundle-collector-stream-api/.../BundleSchemeData.kt`
 - `feature/splash/splash/.../SchemeViewModel.kt`
 - `feature/holder/main/deeplink-holder/.../DeepLinkViewModel.kt`
 
-## FirFin Mapping
+## Reference Mapping
 
 ```text
-FirFin JourneyGuidance
+Reference JourneyGuidance
   -> caller-facing destination contract
 
-FirFin DeepLinkJourneyGuidance
+Reference DeepLinkJourneyGuidance
   -> destination can be reached from a scheme/deep link
 
-FirFin JourneyMapper
+Reference JourneyMapper
   -> app-level route registry
 
-FirFin findByHostNames(level, hostList, value)
+Reference findByHostNames(level, hostList, value)
   -> resolve normalized URI nodes into one or more execution targets
 
-FirFin List<Intent>
-  -> Notmid RoutePlan / RouteStack plus optional ActivityRoute launch
+Reference List<Intent>
+  -> Notmid RoutePlan with a Compose RouteStack and/or ActivityRoute launch
 
-FirFin groupActivity(*intents).visit()
+Reference groupActivity(*intents).visit()
   -> app route coordinator executes Compose stack and/or Activity routes
 
-FirFin BundleSchemeData(nodeList, params)
-  -> DeepLinkRequest/WebRouteLink plus typed route args
+Reference BundleSchemeData(nodeList, params)
+  -> DeepLinkRequest plus typed route args
 ```
 
 ## What Notmid Should Borrow
@@ -81,7 +81,7 @@ FirFin BundleSchemeData(nodeList, params)
   justify generation.
 - Hilt/Dagger as a router requirement.
 - Activity-first `Intent` builders for normal Compose destinations.
-- FirFin's role-specific `level` names or banking/product scheme constants.
+- The reference project's role-specific `level` names or banking/product scheme constants.
 - Feature screens consuming raw scheme strings for cross-feature routing.
 - App module aggregation patterns that depend on almost every feature and core
   module automatically.
@@ -95,23 +95,19 @@ Current Notmid contracts should continue to point here:
   Route
   ComposeRoute
   ActivityRoute
-  WebRoute
-  RouteSpec
-  ActivityRouteSpec
+  TopLevelRoute
   DeepLinkSpec
+  DeepLinkRequest
   RouteStack
+  RoutePlan
   RouteCommand
   RouteEvent
-  WebRouteLink
 
 :core:router:impl
   DefaultRouteRegistry
-  StaticRouteDeepLinkSpec
-  PrefixRouteDeepLinkSpec
 
 :feature:*:api
   route data
-  route specs
   deep-link specs
   public route events
 
@@ -124,8 +120,9 @@ Current Notmid contracts should continue to point here:
   auth/deferred route handling
 ```
 
-When the app route surface grows, introduce a `RouteIntent` or `RoutePlan`
-layer before exposing more `RouteStack` construction to feature UI.
+When the app route surface grows, introduce a `RouteIntent` or app-owned
+`RoutePlan` layer before exposing more route execution construction to feature
+UI.
 
 ## Local Review Questions
 

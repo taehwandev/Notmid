@@ -1,6 +1,6 @@
-# FirFin Modularization Reference
+# Android Reference Modularization
 
-Use this reference when a notmid task asks to modularize the app, add `build-logic`, introduce a design system, or split data/domain/fake service code. The source project is `/Users/taehwankwon/Downloads/firfin-android-main`.
+Use this reference when a notmid task asks to modularize the app, add `build-logic`, introduce a design system, or split data/domain/fake service code. The source project should be supplied outside committed repo-local docs as `${REFERENCE_ANDROID_PROJECT_ROOT}`.
 
 ## What Was Inspected
 
@@ -16,10 +16,10 @@ Use this reference when a notmid task asks to modularize the app, add `build-log
   - `AndroidLibraryRepositoryConventionPlugin.kt`
   - `KotlinLibraryConventionPlugin.kt`
 - Shared Gradle helpers:
-  - `family/firfin/gradle/KotlinAndroid.kt`
-  - `family/firfin/gradle/ComposeAndroid.kt`
-  - `family/firfin/gradle/extensions/InternalProjectExtension.kt`
-  - `family/firfin/gradle/extensions/AppExtension.kt`
+  - `reference/gradle/KotlinAndroid.kt`
+  - `reference/gradle/ComposeAndroid.kt`
+  - `reference/gradle/extensions/InternalProjectExtension.kt`
+  - `reference/gradle/extensions/AppExtension.kt`
 - Representative modules:
   - `core-app/compose/compose-design-system`
   - `feature/manage/family/manage/family-manage`
@@ -30,7 +30,7 @@ Use this reference when a notmid task asks to modularize the app, add `build-log
 
 ## Transferable Structure
 
-FirFin uses a large production shape:
+The reference project uses a large production shape:
 
 - `:app` is the root Android application and aggregates many feature/core modules.
 - `:feature:*:*` modules own user-facing screens.
@@ -54,11 +54,11 @@ For this repository, shrink that into:
 - `:core:router:impl`
 - `build-logic`
 
-Do not mirror FirFin's full folder depth unless notmid grows multiple independent product areas.
+Do not mirror the reference project's full folder depth unless notmid grows multiple independent product areas.
 
 ## Build Logic Pattern
 
-FirFin's `settings.gradle.kts` adds:
+The reference project's `settings.gradle.kts` adds:
 
 ```kotlin
 pluginManagement {
@@ -73,7 +73,7 @@ Its `build-logic` is an included build with a `:convention` module that register
 - `glassnavlab.android.library.compose`
 - `glassnavlab.kotlin.library`
 
-Use FirFin's helper pattern, but rename and reduce it:
+Use the reference project's helper pattern, but rename and reduce it:
 
 - `findLibrary(name)` and `findVersion(name)` read from the `libs` version catalog.
 - `androidExtension` hides whether the target is an application or library.
@@ -81,7 +81,7 @@ Use FirFin's helper pattern, but rename and reduce it:
 - `configureKotlinAndroid()` centralizes SDK, Java/Kotlin target, defaultConfig, and test options.
 - `configureComposeAndroid()` applies `org.jetbrains.kotlin.plugin.compose`, enables Compose, and adds the Compose BOM plus common Compose dependencies.
 
-Avoid copying FirFin build logic for:
+Avoid copying reference build logic for:
 
 - Hilt, KSP, generated data modules.
 - Firebase, Crashlytics, Google services.
@@ -128,7 +128,7 @@ Do not allow:
 
 ## Design System Lessons
 
-FirFin keeps many shared components in `core-app/compose/compose-design-system`, including buttons, text fields, list components, navigation, scaffold, status bar, badges, selectors, placeholders, and visual transformations.
+The reference project keeps many shared components in `core-app/compose/compose-design-system`, including buttons, text fields, list components, navigation, scaffold, status bar, badges, selectors, placeholders, and visual transformations.
 
 For this repository:
 
@@ -136,11 +136,11 @@ For this repository:
 - Move reusable Liquid Glass navigation component code to `:core:designsystem` if more than one screen uses it.
 - Keep feature-only cards, header, icons, and copy in `:feature:notmid:impl`.
 - Treat `LiquidGlassNavigationStyle` as design-system tokens.
-- Keep names product-specific, not imported. Prefer `notmidTheme`, `LiquidGlass*`, and `Notmid*` over imported `FirFin*` naming.
+- Keep names product-specific, not imported. Prefer `notmidTheme`, `LiquidGlass*`, and `Notmid*` over imported vendor-specific naming.
 
 ## Data And Domain Lessons
 
-FirFin's family example shows three separate layers:
+The reference project's family example shows three separate layers:
 
 - Repository API module: interfaces and data entities, such as `FamilyRepository` and `FamilyEntity`.
 - Repository implementation module: API calls, local cache, mapping from response DTOs to entities, and mutation methods.
@@ -157,7 +157,7 @@ Do not over-engineer with network APIs, Hilt scopes, generated factories, or lif
 
 ## Feature Module Lessons
 
-FirFin feature modules tend to contain:
+Reference feature modules tend to contain:
 
 - Activity or route entry point.
 - ViewModel or state holder.
@@ -177,7 +177,7 @@ For this repository:
 
 ## App Module Lessons
 
-FirFin's `:app` aggregates all modules and contains production flavor/signing/build config wiring. This repository should keep `:app` much thinner:
+The reference project's `:app` aggregates all modules and contains production flavor/signing/build config wiring. This repository should keep `:app` much thinner:
 
 - `MainActivity`
 - manifest and launcher resources
@@ -185,7 +185,7 @@ FirFin's `:app` aggregates all modules and contains production flavor/signing/bu
 - theme wrapping
 - explicit construction of fake data/repository dependencies if no DI is used
 
-Do not use the FirFin pattern where `:app` automatically depends on almost every subproject. For this sample, explicit module dependencies are easier to reason about.
+Do not use the reference pattern where `:app` automatically depends on almost every subproject. For this sample, explicit module dependencies are easier to reason about.
 
 ## Practical Implementation Order
 
@@ -202,8 +202,8 @@ Do not use the FirFin pattern where `:app` automatically depends on almost every
 
 ## Review Checklist
 
-- Build convention ids are project-specific, not `fir.fin.*`.
-- No FirFin package names, secrets, signing config, ad/network repositories, or generated-module dependencies were copied.
+- Build convention ids are project-specific, not vendor-prefixed ids.
+- No reference-project package names, secrets, signing config, ad/network repositories, or generated-module dependencies were copied.
 - Module names are proportional to notmid's current product scope.
 - Pure model/domain modules do not import Android or Compose.
 - Design system has shared UI/tokens only; feature copy/fake data stays out.

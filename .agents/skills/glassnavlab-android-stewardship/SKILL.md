@@ -22,11 +22,12 @@ If the change touches Liquid Glass navigation rendering, AGSL, backdrop capture,
    sed -n '1,260p' gradle/libs.versions.toml
    ```
 
-3. If modularizing, compare `/Users/taehwankwon/Downloads/firfin-android-main` only for structure: included `build-logic`, convention plugin names, and `feature`/`core-data` style boundaries. Do not copy Firebase, Hilt, ad, banking, or enterprise-specific dependencies unless the task explicitly requires them.
-   - For the distilled FirFin reference, read `references/firfin-modularization-reference.md`.
-4. If routing, route events, deep links, `ActivityRoute`, Compose back stacks, or a mixed Activity/Compose navigation surface is involved, use `.agents/skills/android-mixed-activity-compose-router/SKILL.md` first. For the Notmid/FirFin comparison notes, read `references/mixed-activity-compose-router-reference.md`. Borrow FirFin's caller-facing route contract idea, not its production-only KSP, Hilt, or Activity-first implementation.
-5. Define the change type: build convention, module split, behavior-preserving move, behavior change, UI/design-system change, router contract change, fake data/service change, or documentation-only.
-6. Prefer move-first refactors. Keep behavior changes separate from file moves when feasible.
+3. If modularizing, compare `${REFERENCE_ANDROID_PROJECT_ROOT}` only for structure: included `build-logic`, convention plugin names, and `feature`/`core-data` style boundaries. Do not copy Firebase, Hilt, ad, banking, or enterprise-specific dependencies unless the task explicitly requires them.
+   - For the distilled reference, read `references/android-reference-modularization.md`.
+4. If routing, route events, deep links, `ActivityRoute`, Compose back stacks, or a mixed Activity/Compose navigation surface is involved, use `.agents/skills/android-mixed-activity-compose-router/SKILL.md` first. For the Notmid/reference-project comparison notes, read `references/mixed-activity-compose-router-reference.md`. Borrow the reference project's caller-facing route contract idea, not its production-only KSP, Hilt, or Activity-first implementation.
+5. When the task touches shared Android structure, read `docs/specs/android-commonization/README.md` for the current `core` / `core-app` / `api` / `impl` / `assertions` rollout plan. The planning specs are Korean until they are translated before commit or release.
+6. Define the change type: build convention, module split, behavior-preserving move, behavior change, UI/design-system change, router contract change, fake data/service change, or documentation-only.
+7. Prefer move-first refactors. Keep behavior changes separate from file moves when feasible.
 
 ## Target Shape
 
@@ -37,16 +38,37 @@ Use this module direction unless the current task gives a better reason:
 - `:core:model`: pure Kotlin immutable models that contain no Android, Compose, `Color`, `Dp`, resource, or repository implementation types.
 - `:core:domain`: pure Kotlin use cases and repository contracts. No Android plugin unless a real Android dependency is needed.
 - `:core:data`: repository implementations and fake service data. Keep mapping from raw product data to domain models here.
+- `:core:*`: pure Kotlin or implementation-neutral contracts for route, network, model, domain, and reusable test-support boundaries. These modules should stay free of Android and Compose runtime unless a specific legacy boundary is being migrated.
+- `:core-app:*`: Android/Compose app-runtime commonization such as feedback hosts, permission adapters, ActivityRoute launch adapters, reusable WebView runtime, resources, and app-shell helpers. This family may depend on Android/Compose but should stay feature-policy free.
 - `:core:router:api`: pure Kotlin router contracts shared by app and feature API modules. Keep it free of AndroidX Navigation, `Context`, `Intent`, and `NavController` until an Android-specific execution adapter is introduced.
 - `:core:router:impl`: default registry and deep-link matching implementation. Keep Android Activity launching and app-link host policy outside this module until an Android-specific router module is needed.
+- `:core:*:assertions` and `:core-app:*:assertions`: reusable test doubles, recording fakes, fixtures, and assertion helpers that compile against stable API contracts without pulling production implementation modules by default.
 - `:feature:notmid:api`: shared notmid route markers, destination ids, route events, and helpers for feature route/deep-link specs.
 - `:feature:notmid:impl`: the notmid Liquid Glass product shell, UI state mapping, product-only components, previews, and feature orchestration. It may depend on `core:domain`, `core:model`, `core:designsystem`, and its own `feature:notmid:api`.
+- `:feature:*:assertions`: only when route/display fixtures or recording helpers are reused across more than one test boundary. Keep one-off preview data inside the feature impl.
 
 Avoid creating extra modules just to mirror a large production app. Add a module when it creates a real ownership boundary or removes coupling from `:app`.
 
+## API / Impl / Assertions Direction
+
+- `api` modules expose stable contracts, route data, DTO-like request/response shapes, interfaces, and error models.
+- `impl` modules own production implementations: screens, adapters, repositories, clients, route registries, and runtime orchestration.
+- `assertions` modules own deterministic fake implementations, recording sinks/sources, fixtures, and assertion DSLs for tests.
+- `assertions` modules should depend on the matching `api` module and test libraries. They should not depend on production `impl` modules unless they live inside that impl module's own test source set.
+- The first useful extraction target is `:core:router:assertions`, because router stacks, commands, deep links, and ActivityRoute events need reusable recording helpers.
+- Do not create feature assertions modules for previews, static sample data, or a single test. Keep those local until the reuse is real.
+- Use plural `assertions` for module names so Gradle paths stay consistent.
+
+## Compose App Shell Direction
+
+- Do not recreate a broad `BaseActivity`, `BaseFragment`, or universal `BaseViewModel` hierarchy. Prefer small Compose-first runtime contracts such as `AppEnvironment`, `AppRoot`, `RouteCoordinator`, `FeedbackHost`, and `PermissionHost`.
+- `MainActivity` should remain the Android entry holder. Product behavior belongs in app ViewModels, feature state holders, route coordinators, or domain services.
+- Shared `core-app` helpers must not absorb feature copy, product route policy, analytics policy, repositories, or screen-specific state.
+- Keep WebView, permission, feedback, and Activity launching commonization behind caller-facing contracts so feature code does not know whether a destination is Compose-backed, Activity-backed, or browser/WebView-backed.
+
 ## Build Logic
 
-Introduce `build-logic` as a small included build, not a copy of the FirFin build:
+Introduce `build-logic` as a small included build, not a copy of the reference build:
 
 - Add `pluginManagement { includeBuild("build-logic") }` in `settings.gradle.kts`.
 - Add `build-logic/settings.gradle.kts` with a `libs` version catalog imported from `../gradle/libs.versions.toml`.
@@ -56,8 +78,9 @@ Introduce `build-logic` as a small included build, not a copy of the FirFin buil
   - `glassnavlab.android.library.compose`
   - `glassnavlab.kotlin.library`
 - Centralize `compileSdk`, `minSdk`, `targetSdk`, Java/Kotlin targets, Compose enablement, and common dependencies.
-- Keep plugin ids project-specific; do not use copied `fir.fin.*` ids.
+- Keep plugin ids project-specific; do not use copied reference-project ids.
 - Add only catalog entries the project uses. Do not add Hilt, KSP, Firebase, detekt, or navigation before the code needs them.
+- Add assertion-specific convention plugins only after at least two `assertions` modules repeat the same Gradle setup.
 
 After build-logic changes, verify plugin wiring with:
 
@@ -139,7 +162,9 @@ Store refreshed screenshots or short behavior captures in `docs/assets` only whe
 Stop and ask or narrow the change when:
 
 - A refactor starts touching unrelated app behavior.
-- A copied FirFin convention would pull in production-only tooling or dependencies.
+- A copied reference-project convention would pull in production-only tooling or dependencies.
 - The desired module split requires a new architecture decision not covered above.
+- A proposed `assertions` module needs production `impl` dependencies to be useful.
+- A proposed `core-app` helper starts owning feature copy, route policy, analytics policy, repositories, or screen-specific state.
 - Tests expose pre-existing failures that make verification ambiguous.
 - Continuing would require reverting or overwriting user changes.
