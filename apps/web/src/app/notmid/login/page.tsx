@@ -1,13 +1,18 @@
-import { createNotmidApiClient } from "@notmid/api-client";
 import { notmidFakeAuthSession, notmidRoutes, type NotmidAuthProvider } from "@notmid/contracts";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { FirebaseLoginActions } from "./FirebaseLoginActions";
 import {
   normalizeNotmidReturnTo,
-  noStoreFetch,
   notmidAuthCookieName,
+  notmidAuthCookiePath,
 } from "../../../lib/notmidAuth";
+import {
+  createNotmidWebApiClient,
+  isNotmidLocalFallbackEnabled,
+  readNotmidWebAuthProviderForRender,
+} from "../../../lib/notmidRuntime";
 
 type LoginPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -17,6 +22,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const rawNext = Array.isArray(params?.next) ? params?.next[0] : params?.next;
   const nextPath = normalizeNotmidReturnTo(rawNext) ?? notmidRoutes.capture;
+  const firebaseAuthEnabled = readNotmidWebAuthProviderForRender() === "firebase";
+  const localFallbackEnabled = isNotmidLocalFallbackEnabled();
 
   return (
     <main className="login-web-shell">
@@ -77,76 +84,93 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <p>Enter your credentials to access the feed.</p>
           </div>
 
-          <div className="login-web-social-stack">
-            <form action={continueWithProvider}>
-              <input name="provider" type="hidden" value="google" />
-              <input name="returnTo" type="hidden" value={nextPath} />
-              <button className="login-web-social-button" type="submit">
-                <span>G</span>
-                Continue with Google
-              </button>
-            </form>
-            <form action={continueWithProvider}>
-              <input name="provider" type="hidden" value="anonymous" />
-              <input name="returnTo" type="hidden" value={nextPath} />
-              <button className="login-web-social-button" type="submit">
-                <span>A</span>
-                Continue with Apple
-              </button>
-            </form>
-          </div>
+          {firebaseAuthEnabled ? (
+            <FirebaseLoginActions returnTo={nextPath} />
+          ) : localFallbackEnabled ? (
+            <>
+              <div className="login-web-social-stack">
+                <form action={continueWithProvider}>
+                  <input name="provider" type="hidden" value="google" />
+                  <input name="returnTo" type="hidden" value={nextPath} />
+                  <button className="login-web-social-button" type="submit">
+                    <span>G</span>
+                    Continue with Google
+                  </button>
+                </form>
+                <form action={continueWithProvider}>
+                  <input name="provider" type="hidden" value="anonymous" />
+                  <input name="returnTo" type="hidden" value={nextPath} />
+                  <button className="login-web-social-button" type="submit">
+                    <span>A</span>
+                    Continue as guest
+                  </button>
+                </form>
+              </div>
 
-          <div className="login-web-divider">
-            <span />
-            <p>or</p>
-          </div>
+              <div className="login-web-divider">
+                <span />
+                <p>or</p>
+              </div>
 
-          <form action={continueWithProvider} className="login-web-form">
-            <input name="provider" type="hidden" value="fake" />
-            <input name="returnTo" type="hidden" value={nextPath} />
+              <form action={continueWithProvider} className="login-web-form">
+                <input name="provider" type="hidden" value="fake" />
+                <input name="returnTo" type="hidden" value={nextPath} />
 
-            <label className="login-web-field" htmlFor="notmid-login-identity">
-              <span>Username or Email</span>
-              <input
-                autoComplete="username"
-                id="notmid-login-identity"
-                name="identity"
-                placeholder="name@example.com"
-                type="text"
-              />
-            </label>
+                <label className="login-web-field" htmlFor="notmid-login-identity">
+                  <span>Username or Email</span>
+                  <input
+                    autoComplete="username"
+                    id="notmid-login-identity"
+                    name="identity"
+                    placeholder="name@example.com"
+                    type="text"
+                  />
+                </label>
 
-            <label className="login-web-field" htmlFor="notmid-login-password">
-              <span>
-                Password
-                <a href="#forgot">Forgot?</a>
-              </span>
-              <input
-                autoComplete="current-password"
-                id="notmid-login-password"
-                name="password"
-                placeholder="********"
-                type="password"
-              />
-            </label>
+                <label className="login-web-field" htmlFor="notmid-login-password">
+                  <span>
+                    Password
+                    <a href="#forgot">Forgot?</a>
+                  </span>
+                  <input
+                    autoComplete="current-password"
+                    id="notmid-login-password"
+                    name="password"
+                    placeholder="********"
+                    type="password"
+                  />
+                </label>
 
-            <label className="login-web-remember" htmlFor="notmid-login-remember">
-              <input id="notmid-login-remember" name="remember" type="checkbox" />
-              <span>Keep me logged in</span>
-            </label>
+                <label className="login-web-remember" htmlFor="notmid-login-remember">
+                  <input id="notmid-login-remember" name="remember" type="checkbox" />
+                  <span>Keep me logged in</span>
+                </label>
 
-            <button className="login-web-submit" type="submit">
-              Login to Dashboard
-            </button>
-          </form>
+                <button className="login-web-submit" type="submit">
+                  Login to Dashboard
+                </button>
+              </form>
+            </>
+          ) : (
+            <div className="login-web-form">
+              <p>Sign-in is unavailable for this deployment.</p>
+              <Link className="login-web-submit" href={notmidRoutes.home}>
+                Continue browsing
+              </Link>
+            </div>
+          )}
 
           <footer className="login-web-footer">
             <p>New here?</p>
-            <form action={continueWithProvider}>
-              <input name="provider" type="hidden" value="fake" />
-              <input name="returnTo" type="hidden" value={nextPath} />
-              <button type="submit">Join the movement</button>
-            </form>
+            {localFallbackEnabled ? (
+              <form action={continueWithProvider}>
+                <input name="provider" type="hidden" value="fake" />
+                <input name="returnTo" type="hidden" value={nextPath} />
+                <button type="submit">Join the movement</button>
+              </form>
+            ) : (
+              <Link href={notmidRoutes.home}>Browse notmid</Link>
+            )}
           </footer>
         </div>
       </section>
@@ -159,27 +183,30 @@ async function continueWithProvider(formData: FormData) {
 
   const provider = parseProvider(formData.get("provider"));
   const returnTo = normalizeNotmidReturnTo(formData.get("returnTo")) ?? notmidRoutes.capture;
-  const api = createNotmidApiClient({
-    baseUrl: process.env.NOTMID_API_BASE_URL,
-    fetcher: noStoreFetch,
-  });
+  const api = createNotmidWebApiClient();
 
   const response = await api
     .signIn({ provider, intent: provider === "google" ? "profile" : "capture", returnTo })
-    .catch(() => ({
-      mode: "fake" as const,
-      session: {
-        ...notmidFakeAuthSession,
-        provider,
-      },
-      nextPath: returnTo,
-    }));
+    .catch((error: unknown) => {
+      if (!isNotmidLocalFallbackEnabled()) {
+        throw error;
+      }
+
+      return {
+        mode: "fake" as const,
+        session: {
+          ...notmidFakeAuthSession,
+          provider,
+        },
+        nextPath: returnTo,
+      };
+    });
 
   const cookieStore = await cookies();
   cookieStore.set(notmidAuthCookieName, response.session.accessToken, {
     httpOnly: true,
     maxAge: 60 * 60 * 24 * 7,
-    path: "/notmid",
+    path: notmidAuthCookiePath,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
   });

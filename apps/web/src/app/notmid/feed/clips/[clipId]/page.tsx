@@ -1,1 +1,1 @@
-export { default } from "../../../clips/[clipId]/page";
+export { default, dynamic } from "../../../clips/[clipId]/page";

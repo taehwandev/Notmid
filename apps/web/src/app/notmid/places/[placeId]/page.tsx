@@ -1,7 +1,9 @@
-import { createNotmidApiClient } from "@notmid/api-client";
 import { findNotmidPlace, notmidRoutes } from "@notmid/contracts";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { createNotmidWebApiClient } from "../../../../lib/notmidRuntime";
+
+export const dynamic = "force-dynamic";
 
 type PlacePageProps = {
   params: Promise<{
@@ -11,10 +13,7 @@ type PlacePageProps = {
 
 export default async function PlacePage({ params }: PlacePageProps) {
   const { placeId } = await params;
-  const api = createNotmidApiClient({
-    baseUrl: process.env.NOTMID_API_BASE_URL,
-    fetcher: noStoreFetch,
-  });
+  const api = createNotmidWebApiClient();
 
   const place = await api.getPlace(placeId).catch(() => findNotmidPlace(placeId));
 
@@ -44,9 +43,3 @@ export default async function PlacePage({ params }: PlacePageProps) {
     </main>
   );
 }
-
-const noStoreFetch: typeof fetch = (input, init) =>
-  fetch(input, {
-    ...init,
-    cache: "no-store",
-  });

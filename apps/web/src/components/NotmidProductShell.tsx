@@ -6,6 +6,7 @@ import type {
 } from "@notmid/contracts";
 import { notmidRoutes } from "@notmid/contracts";
 import Link from "next/link";
+import { saveClipFromWeb } from "../lib/notmidClipActions";
 import { MapBoard } from "./MapBoard";
 
 type NotmidProductShellProps = {
@@ -13,9 +14,10 @@ type NotmidProductShellProps = {
   map: NotmidMapResponse;
   inbox: NotmidInboxResponse;
   auth: NotmidAuthStatusResponse;
+  saveStatus?: string;
 };
 
-export function NotmidProductShell({ feed, map, inbox, auth }: NotmidProductShellProps) {
+export function NotmidProductShell({ feed, map, inbox, auth, saveStatus }: NotmidProductShellProps) {
   const activeClip = feed.clips[0];
   const activePlace = feed.places.find((place) => place.id === activeClip.placeId) ?? feed.places[0];
   const captureHref = auth.authenticated ? notmidRoutes.capture : notmidRoutes.login(notmidRoutes.capture);
@@ -52,14 +54,39 @@ export function NotmidProductShell({ feed, map, inbox, auth }: NotmidProductShel
         }}
       >
         <div className="clip-actions" aria-label="clip actions">
-          <span>{activeClip.metrics.likes}</span>
-          <span>{activeClip.metrics.saves}</span>
-          <span>{activeClip.metrics.comments}</span>
+          <span>
+            <strong>{activeClip.metrics.likes}</strong>
+            <small>Likes</small>
+          </span>
+          {auth.authenticated ? (
+            <form action={saveClipFromWeb}>
+              <input name="clipId" type="hidden" value={activeClip.id} />
+              <input name="returnTo" type="hidden" value={notmidRoutes.home} />
+              <button className="clip-action-button" type="submit">
+                <strong>{activeClip.metrics.saves}</strong>
+                <small>Save</small>
+              </button>
+            </form>
+          ) : (
+            <Link className="clip-action-button" href={notmidRoutes.login(notmidRoutes.home)}>
+              <strong>{activeClip.metrics.saves}</strong>
+              <small>Save</small>
+            </Link>
+          )}
+          <span>
+            <strong>{activeClip.metrics.comments}</strong>
+            <small>Chat</small>
+          </span>
         </div>
 
         <div className="clip-copy">
           <Link href={notmidRoutes.clip(activeClip.id)}>{activeClip.creatorHandle}</Link>
           <h1>{activeClip.title}</h1>
+          {saveStatus ? (
+            <p className="clip-save-status" role="status">
+              {saveStatus}
+            </p>
+          ) : null}
           <p>{activeClip.caption}</p>
           <div className="tag-row">
             {activeClip.moodTags.map((tag) => (

@@ -1,0 +1,191 @@
+@media (max-width: 1080px) {
+  .product-shell {
+    grid-template-columns: 86px minmax(0, 1fr);
+  }
+
+  .brand-lockup strong,
+  .rail-auth-link,
+  .rail-status,
+  .right-panel {
+    display: none;
+  }
+
+  .rail-nav a {
+    padding: 9px 6px;
+    text-align: center;
+  }
+
+  .login-web-shell {
+    min-height: 100dvh;
+    overflow: auto;
+  }
+
+  .login-web-hero {
+    display: none;
+  }
+
+  .login-web-form-panel {
+    width: 100%;
+    min-height: 100dvh;
+    align-items: flex-start;
+    padding: 40px 16px;
+  }
+
+  .login-web-mobile-logo {
+    display: block;
+  }
+
+  .profile-grid,
+  .settings-grid,
+  .capture-workspace,
+  .chat-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-context-card,
+  .chat-heading-panel,
+  .chat-message-stack,
+  .chat-composer-panel {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .product-shell {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    padding: 10px;
+  }
+
+  .side-rail {
+    min-height: auto;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px;
+  }
+
+  .brand-lockup span {
+    font-size: 1.1rem;
+  }
+
+  .rail-nav {
+    grid-auto-flow: column;
+    overflow-x: auto;
+  }
+
+  .rail-nav a {
+    min-width: 64px;
+    white-space: nowrap;
+  }
+
+  .clip-stage {
+    min-height: calc(100vh - 104px);
+    padding: 16px;
+  }
+
+  .login-shell {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .login-media {
+    min-height: 42vh;
+    padding: 18px;
+  }
+
+  .login-panel {
+    min-height: auto;
+    padding: 18px;
+  }
+
+  .clip-copy h1,
+  .detail-copy h1,
+  .login-media-copy h1 {
+    font-size: 2.2rem;
+  }
+
+  .login-panel h2 {
+    font-size: 1.9rem;
+  }
+
+  .clip-actions {
+    top: 16px;
+    right: 16px;
+  }
+
+  .clip-actions span {
+    width: 54px;
+    min-height: 54px;
+  }
+
+  .clip-action-button {
+    width: 54px;
+    min-height: 54px;
+  }
+
+  .profile-shell {
+    padding: 10px;
+  }
+
+  .profile-workspace {
+    gap: 10px;
+    padding-top: 72px;
+  }
+
+  .capture-shell,
+  .inbox-shell,
+  .chat-shell {
+    padding: 10px;
+  }
+
+  .capture-workspace,
+  .inbox-workspace,
+  .chat-workspace {
+    gap: 10px;
+    padding-top: 72px;
+  }
+
+  .profile-hero-panel {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding: 18px;
+  }
+
+  .profile-action,
+  .profile-control-panel a,
+  .settings-signin {
+    width: 100%;
+  }
+
+  .profile-stat-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-control-panel {
+    display: grid;
+  }
+
+  .settings-card div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .inbox-thread-card {
+    grid-template-columns: 1fr;
+  }
+
+  .message-bubble {
+    width: 100%;
+  }
+
+  .chat-composer-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-composer-form {
+    grid-template-columns: 1fr;
+  }
+}

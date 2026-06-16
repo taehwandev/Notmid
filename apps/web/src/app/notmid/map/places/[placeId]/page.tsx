@@ -1,1 +1,1 @@
-export { default } from "../../../places/[placeId]/page";
+export { default, dynamic } from "../../../places/[placeId]/page";

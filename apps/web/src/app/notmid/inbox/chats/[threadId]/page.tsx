@@ -1,1 +1,1 @@
-export { default } from "../../../chats/[threadId]/page";
+export { default, dynamic } from "../../../chats/[threadId]/page";

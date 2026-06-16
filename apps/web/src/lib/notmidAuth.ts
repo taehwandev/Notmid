@@ -1,4 +1,3 @@
-import { createNotmidApiClient } from "@notmid/api-client";
 import {
   notmidFakeAuthSession,
   notmidFakeAuthStatus,
@@ -6,20 +5,27 @@ import {
   type NotmidAuthStatusResponse,
 } from "@notmid/contracts";
 import { cookies } from "next/headers";
+import {
+  notmidAuthCookieName,
+  notmidAuthCookiePath,
+  notmidLegacyFakeAuthCookieName,
+} from "./notmidAuthCookies";
+import { createNotmidWebApiClient, isNotmidLocalFallbackEnabled } from "./notmidRuntime";
 
-export const notmidAuthCookieName = "notmid_fake_access_token";
+export {
+  notmidAuthCookieName,
+  notmidAuthCookiePath,
+  notmidAuthRefreshCookieName,
+} from "./notmidAuthCookies";
 
 export async function getNotmidAuthStatus(): Promise<NotmidAuthStatusResponse> {
   const accessToken = await getNotmidAccessToken();
-  const api = createNotmidApiClient({
-    baseUrl: process.env.NOTMID_API_BASE_URL,
-    fetcher: noStoreFetch,
-  });
+  const api = createNotmidWebApiClient();
 
   return api
     .getAuthStatus(accessToken)
     .catch(() =>
-      accessToken === notmidFakeAuthSession.accessToken
+      isNotmidLocalFallbackEnabled() && accessToken === notmidFakeAuthSession.accessToken
         ? notmidFakeAuthStatus
         : notmidSignedOutAuthStatus,
     );
@@ -27,7 +33,10 @@ export async function getNotmidAuthStatus(): Promise<NotmidAuthStatusResponse> {
 
 export async function getNotmidAccessToken(): Promise<string | undefined> {
   const cookieStore = await cookies();
-  return cookieStore.get(notmidAuthCookieName)?.value;
+  return (
+    cookieStore.get(notmidAuthCookieName)?.value ??
+    cookieStore.get(notmidLegacyFakeAuthCookieName)?.value
+  );
 }
 
 export function normalizeNotmidReturnTo(value: unknown): string | undefined {
@@ -37,9 +46,3 @@ export function normalizeNotmidReturnTo(value: unknown): string | undefined {
 
   return value;
 }
-
-export const noStoreFetch: typeof fetch = (input, init) =>
-  fetch(input, {
-    ...init,
-    cache: "no-store",
-  });
