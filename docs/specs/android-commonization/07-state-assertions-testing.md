@@ -6,7 +6,7 @@ status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
 last_verified: 2026-06-16
-applies_to: ViewModel tests, fake repositories, route tests, feedback tests
+applies_to: ViewModel tests, fake repositories, route tests, notice tests
 related_pages:
   - 02-target-module-taxonomy.md
   - 03-build-logic-module-templates.md
@@ -56,7 +56,7 @@ Examples:
 ```text
 RecordingRouter
 FakeRouteRegistry
-RecordingFeedbackSink
+RecordingNoticeSink
 FakeNotmidNetworkClient
 NetworkRequestSubject
 NotmidUiStateFixtures
@@ -123,7 +123,7 @@ Feature action:
 sealed interface FeedAction {
     data object Refresh : FeedAction
     data class ClipClick(val clipId: String) : FeedAction
-    data object DismissFeedback : FeedAction
+    data object DismissNotice : FeedAction
 }
 ```
 
@@ -132,7 +132,7 @@ Feature effect:
 ```kotlin
 sealed interface FeedEffect {
     data class OpenClip(val clipId: String) : FeedEffect
-    data class ShowFeedback(val request: FeedbackRequest) : FeedEffect
+    data class ShowNotice(val request: NoticeRequest) : FeedEffect
 }
 ```
 
@@ -170,12 +170,12 @@ Assertions should make these easy:
 - malformed JSON maps to malformed response.
 - timeout/transport failure preserves retryability.
 
-## Feedback Assertions
+## Notice Assertions
 
 Test target:
 
 ```text
-ViewModel catches domain failure -> emits feedback/state -> renderer is not required
+ViewModel catches domain failure -> emits notice/state -> renderer is not required
 ```
 
 Assertions should make these easy:
@@ -184,7 +184,7 @@ Assertions should make these easy:
 - tone equals Info/Success/Warning/Error.
 - action semantic is expected.
 - deep link is allowlisted or blank.
-- feedback is emitted once and not replayed by the fake sink.
+- notice is emitted once and not replayed by the fake sink.
 
 ## WebView Assertions
 
@@ -225,7 +225,7 @@ Deterministic fixtures belong in the lowest stable owner.
 core:model fixture -> if model is pure and reused broadly
 feature assertions fixture -> if model is feature-specific route/display contract
 core:network assertions fixture -> if it describes network envelope/request
-:core:app feedback assertions fixture -> if it describes feedback runtime
+:core:runtime notice assertions fixture -> if it describes notice runtime
 ```
 
 Avoid fake data that encodes production credentials, private URLs, or user-specific values.
@@ -236,8 +236,8 @@ Avoid fake data that encodes production credentials, private URLs, or user-speci
 2. Move repeated app router test setup into router assertions.
 3. Add network assertions.
 4. Move repeated fake network client behavior into network assertions.
-5. Add feedback assertions.
-6. Refactor ViewModel tests to assert feedback without needing design-system renderer.
+5. Add notice assertions.
+6. Refactor ViewModel tests to assert notice without needing design-system renderer.
 7. Add feature assertions only where shared test pressure appears.
 
 ## Review Checklist

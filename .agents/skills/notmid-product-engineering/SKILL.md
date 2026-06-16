@@ -32,7 +32,7 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
    - `llm-wiki/routing-deeplinks.md` for navigation and web links.
    - `llm-wiki/platform-backend.md` for web/API/contracts and server-first backend direction.
    - `llm-wiki/firebase-open-source.md` for auth/Firebase/secrets.
-   - `docs/specs/android-commonization/README.md` when touching `core/app`, `assertions`, router/network/feedback commonization, WebView runtime, or app-shell structure.
+   - `docs/specs/android-commonization/README.md` when touching `core/base`, `core/runtime`, `assertions`, router/network/notice commonization, WebView runtime, or app-shell structure.
    - `llm-wiki/implementation-checklist.md` before verifying or finishing.
 3. Inspect the smallest matching source files with `rg --files` and `sed`.
 4. Keep unrelated dirty worktree changes out of the write set.
@@ -52,16 +52,17 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
   runtime config injection, and concrete platform launch binding. It must not
   own reusable router assembly, route registry construction, deep-link resolver
   construction, or feature event mapping.
-- `:core:designsystem` owns `NotmidTheme`, tokens, Material3 wrappers, reusable Notmid components, visual feedback primitives, and Liquid Glass primitives. It must not collect feedback flows or show Android Toasts.
+- `:core:designsystem` owns `NotmidTheme`, tokens, Material3 wrappers, reusable Notmid components, visual notice primitives, and Liquid Glass primitives. It must not collect notice flows or show Android Toasts.
 - `:core:model` remains pure Kotlin models. No Compose, Android, `Color`, `Dp`, or UI effect runtime contracts.
-- `:core:feedback:api` owns pure feedback request/effect contracts. Split files and packages by role: `model/` for request/presentation/tone/action values and `effect/` for one-shot effects and delegates. Use `sealed interface` for closed feedback effect/action families; use regular interfaces for injection points such as delegates.
+- `:core:notice:api` owns pure user-notice request/effect contracts for toast, snackbar, alert, inline, and full-page display. Split files and packages by role: `model/` for `NoticeRequest`, `NoticePresentation`, `NoticeTone`, and `NoticeAction`, and `effect/` for `NoticeEffect` and delegates. Use `sealed interface` for closed notice effect/action families; use regular interfaces for injection points such as delegates.
 - `:core:domain` owns repository contracts and use cases.
 - `:core:data` owns fake/static implementations and mapping into domain models.
 - `:core:router:api` stays pure Kotlin route contracts.
 - `:core:router:impl` owns default route registry/matching, not Android Activity launching.
-- `:core:app` owns Android/Compose app-runtime common contracts such as router runtime, router bundle/config assembly, feedback hosts, permission adapters, ActivityRoute launch adapters, reusable WebView runtime, resources, and app-shell helpers.
-- `:core:app` feedback packages must stay app-runtime only. Activity/Compose shells install `FeedbackHost`; feature/ViewModel code emits `:core:feedback:api` contracts. Do not put product copy, repositories, network error mapping, or feature route policy inside the host package.
-- `:core:app` router packages must be split by role: `config/` for reusable
+- `:core:base` owns reusable Compose Activity shell contracts: Compose-only `BaseActivity`, edge-to-edge setup, final `onCreate`/`onNewIntent` template handling, `Content()` composition, `BaseAppRoot`, `AppRoot`, and pending deep-link wiring convenience. It may install `:core:runtime` notice/router effects, but must not own product screen mapping, Notmid route registrations, repositories, auth policy, runtime config selection, or ViewModel creation.
+- `:core:runtime` owns Android/Compose runtime execution contracts such as router runtime, router bundle/config assembly, notice hosts, permission adapters, ActivityRoute launch adapters, reusable WebView runtime, and resources. It is not a global app module and should not own the reusable Activity base.
+- `:core:runtime` notice packages must stay runtime-only. Activity/Compose shells install `NoticeHost`; feature/ViewModel code emits `:core:notice:api` contracts. Do not put product copy, repositories, network error mapping, or feature route policy inside the host package.
+- `:core:runtime` router packages must be split by role: `config/` for reusable
   bundle/config assembly, `planner/` for app route planning, `runtime/` for
   Compose back-stack and pending ActivityRoute state, `deeplink/` for app
   resolver adapters, and `activity/` for ActivityRoute launch contracts and
@@ -70,10 +71,10 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
   route event planner, URI-to-deep-link request parsing, scheme/host/base-path
   normalization, static/prefix deep-link specs, and deep-link resolver. Split
   implementation packages by role: `registry/`, `event/`, and `deeplink/`.
-  `:core:app` may compose these defaults behind a reusable bundle config, but it
+  `:core:runtime` may compose these defaults behind a reusable bundle config, but it
   must not own Notmid feature route policy, WebView Intent construction, auth
   policy, repositories, or feature impl imports. Add a separate router
-  assertions Gradle module only after app-runtime fakes have multiple external
+  assertions Gradle module only after runtime fakes have multiple external
   test consumers.
 - `:core:network:assertions` owns reusable `NotmidNetworkClient` test doubles,
   queued network responses/failures, request assertion subjects, safe header
@@ -109,6 +110,23 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
   not re-export product fixtures, web route rendering, server handlers, Android
   route contracts, or app state.
 
+## Module Naming And Inference Rules
+
+- Module and package names must reveal the capability a caller imports. Prefer
+  `notice`, `router`, `network`, `auth`, `base`, `runtime`, `webview`,
+  `permission`, `model`, `domain`, and `designsystem` over vague buckets.
+- Do not use `feedback` for toast/snackbar/alert/inline/full-page display. In
+  Notmid that capability is a user notice contract, so the pure module is
+  `:core:notice:api`, runtime rendering is `:core:runtime/notice/host`, and
+  visual primitives stay in `:core:designsystem`.
+- Do not create another broad `:core:app` or `core-app` module. If code needs
+  Android/Compose execution APIs but is feature-policy free, it belongs under
+  a capability package in `:core:runtime`; if it is Compose Activity template
+  behavior, it belongs in `:core:base`.
+- Before adding a new module or package, write the boundary in the same terms:
+  owner, allowed imports, forbidden imports, exported contracts, callers, and
+  focused verification.
+
 ## Design-System Rules
 
 - Prefer `Notmid*` wrappers over direct Material3 imports in feature/app modules.
@@ -118,7 +136,7 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
   - `NotmidClipCard -> NotmidGradientSummaryCard`
   - `NotmidPlaceCard -> NotmidGradientHeroCard`
 - Keep media-derived palettes in feature UI models; keep reusable styling in `:core:designsystem`.
-- Feedback runtime orchestration belongs in `:core:app`. Keep reusable visual components and tokens in `:core:designsystem`, and keep caller-facing contracts in `:core:feedback:api`.
+- Notice runtime orchestration belongs in `:core:runtime`. Keep reusable visual components and tokens in `:core:designsystem`, and keep caller-facing contracts in `:core:notice:api`.
 
 ## Routing Rules
 
@@ -127,7 +145,7 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
   Compose destinations carry a `RouteStack`; Activity-backed destinations carry
   `ActivityRoute` launch requests.
 - Feature impl modules emit events. The product shell or owning feature runtime
-  supplies route registrations and event handlers to the `:core:app` router
+  supplies route registrations and event handlers to the `:core:runtime` router
   bundle; `:app` should not reimplement registry/resolver/planner construction.
 - WebView is an `ActivityRoute`; normal screens are `ComposeRoute`.
 - Keep `RouteStack` and `RouteCommand` as router execution artifacts where possible. Feature UI should prefer route events or route intents so callers do not need to know whether a destination is Activity-backed or Compose-backed.
@@ -136,8 +154,9 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
   module, such as feature route events or core router execution commands. Do not
   seal core route/spec/registry contracts only to make `when` exhaustive.
 - The product shell owns scheme/host/base path values and feature route/event
-  registrations. `:core:app` owns the reusable bundle assembly from those
-  values. `:app` owns external intent entry, pending deep-link handoff, and
+  registrations. `:core:runtime` owns the reusable bundle assembly from those
+  values. `:core:base` owns repeated Activity intent/deep-link handoff mechanics,
+  while `:app` owns the Android entrypoint, product route/content wiring, and
   concrete platform launch binding. Feature API owns route data, top-level route
   metadata when needed, deep-link specs, and public route events.
 - For Nav3-style deep links, `MainActivity` is the intent entrypoint, `:app`

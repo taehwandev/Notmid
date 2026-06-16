@@ -49,7 +49,7 @@ Use this skill for Liquid Glass UI-specific changes in the `notmid` repository a
 
    ```bash
    ./gradlew :app:installDebug
-   /Users/taehwankwon/Library/Android/sdk/platform-tools/adb shell am start -n app.thdev.glassnavlab/.MainActivity
+   "${ANDROID_HOME:-$HOME/Library/Android/sdk}/platform-tools/adb" shell am start -n app.thdev.glassnavlab/.MainActivity
    ```
 
    Store screenshots, and only necessary behavior videos, in `docs/assets`.

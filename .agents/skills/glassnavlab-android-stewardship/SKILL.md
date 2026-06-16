@@ -25,7 +25,7 @@ If the change touches Liquid Glass navigation rendering, AGSL, backdrop capture,
 3. If modularizing, compare `${REFERENCE_ANDROID_PROJECT_ROOT}` only for structure: included `build-logic`, convention plugin names, and `feature`/`core-data` style boundaries. Do not copy Firebase, Hilt, ad, banking, or enterprise-specific dependencies unless the task explicitly requires them.
    - For the distilled reference, read `references/android-reference-modularization.md`.
 4. If routing, route events, deep links, `ActivityRoute`, Compose back stacks, or a mixed Activity/Compose navigation surface is involved, use `.agents/skills/android-mixed-activity-compose-router/SKILL.md` first. For the Notmid/reference-project comparison notes, read `references/mixed-activity-compose-router-reference.md`. Borrow the reference project's caller-facing route contract idea, not its production-only KSP, Hilt, or Activity-first implementation.
-5. When the task touches shared Android structure, read `docs/specs/android-commonization/README.md` for the current `core` / `core/app` / `api` / `impl` / `assertions` rollout plan. The planning specs are Korean until they are translated before commit or release.
+5. When the task touches shared Android structure, read `docs/specs/android-commonization/README.md` for the current `core` / `core/base` / `core/runtime` / `api` / `impl` / `assertions` rollout plan. The planning specs are Korean until they are translated before commit or release.
 6. Define the change type: build convention, module split, behavior-preserving move, behavior change, UI/design-system change, router contract change, fake data/service change, or documentation-only.
 7. Prefer move-first refactors. Keep behavior changes separate from file moves when feasible.
 
@@ -33,25 +33,55 @@ If the change touches Liquid Glass navigation rendering, AGSL, backdrop capture,
 
 Use this module direction unless the current task gives a better reason:
 
-- `:app`: Android entry point only. Owns `MainActivity`, manifest, launcher resources, app theme wiring, top-level composition, runtime config injection, pending deep-link handoff, and concrete platform launch binding. It should depend on feature modules, not own reusable UI, fake data, route registry construction, deep-link resolver construction, or feature event mapping.
-- `:core:designsystem`: Compose theme, colors, typography, shape/elevation tokens, reusable app primitives, visual feedback primitives, and the Liquid Glass navigation component if it is shared across screens. It must not collect feedback flows, show Toasts, or own app-runtime effects.
+- `:app`: Android entry point only. Owns `MainActivity`, manifest, launcher resources, app theme wiring, top-level product composition, runtime config injection, and concrete platform launch binding. It should depend on feature modules, not own reusable UI, fake data, route registry construction, deep-link resolver construction, feature event mapping, or repeated Activity lifecycle boilerplate.
+- `:core:designsystem`: Compose theme, colors, typography, shape/elevation tokens, reusable app primitives, visual notice primitives, and the Liquid Glass navigation component if it is shared across screens. It must not collect notice flows, show Toasts, or own runtime effects.
 - `:core:model`: pure Kotlin immutable models that contain no Android, Compose, `Color`, `Dp`, resource, repository implementation, or UI effect runtime types.
 - `:core:domain`: pure Kotlin use cases and repository contracts. No Android plugin unless a real Android dependency is needed.
 - `:core:data`: repository implementations and fake service data. Keep mapping from raw product data to domain models here.
-- `:core:feedback:api`: pure Kotlin feedback request/effect contracts. Split by role, such as `model/` for `FeedbackRequest`, `FeedbackPresentation`, `FeedbackTone`, and `FeedbackAction`, and `effect/` for `FeedbackEffect` and delegates. Use `sealed interface` for closed feedback event/action families owned here; use open interfaces only for injection points such as delegates.
+- `:core:notice:api`: pure Kotlin user-notice request/effect contracts for toast, snackbar, alert, inline, and full-page messages. Split by role, such as `model/` for `NoticeRequest`, `NoticePresentation`, `NoticeTone`, and `NoticeAction`, and `effect/` for `NoticeEffect` and delegates. Use `sealed interface` for closed notice event/action families owned here; use open interfaces only for injection points such as delegates. Do not call this module `feedback`; that name is too broad to reveal the UI notice boundary.
 - `:core:*`: pure Kotlin or implementation-neutral contracts for route, network, model, domain, and reusable test-support boundaries. These modules should stay free of Android and Compose runtime unless a specific legacy boundary is being migrated.
-- `:core:app`: Android/Compose app-runtime commonization. It may contain router runtime, feedback hosts, permission adapters, ActivityRoute launch adapters, reusable WebView runtime, resources, and app-shell helpers as packages, but should stay feature-policy free.
-- `:core:app` feedback packages: reusable Activity/Compose host installation and Android runtime rendering. Keep them under role packages such as `feedback/host/`. They may depend on `:core:feedback:api` and `:core:designsystem`; they must not own feature copy, repositories, product route policy, or network error mapping.
-- `:core:app` router packages: reusable Android/Compose app-router runtime contracts and default execution state. They own `config/` bundle/config assembly, `planner/` app route planning, `deeplink/` app resolver adapters, `runtime/` Compose `RouteStack` state and pending ActivityRoute queueing, and `activity/` ActivityRoute launch contracts/effects/handler registry. Keep URI parsing, base-path stripping, route event planning, deep-link matching, Notmid feature policy, repositories, feature impl imports, WebView Intent construction, auth policy, analytics, and data access out. `Context` is allowed only in Android launch adapters such as `DefaultActivityRouteLauncher`, not in pure router API or product policy.
+- `:core:base`: reusable Compose Activity shell. It owns Compose-only
+  `BaseActivity`, edge-to-edge defaults, `Content()` template wiring, incoming
+  intent/deep-link request identity, `AppRoot` theme/router/notice assembly,
+  and pending deep-link handoff helpers. It may depend on `:core:runtime`
+  contracts, but must not own product repositories, feature screen mapping,
+  auth policy, route registrations, runtime config selection, ViewModel
+  creation, or feature Activity subclasses.
+- `:core:runtime`: Android/Compose runtime execution commonization. It may contain router runtime, notice hosts, permission adapters, ActivityRoute launch adapters, reusable WebView runtime, and resources, but should stay feature-policy free and should not own the reusable Activity base.
+- `:core:runtime` notice packages: reusable Activity/Compose host installation and Android runtime rendering. Keep them under role packages such as `notice/host/`. They may depend on `:core:notice:api` and `:core:designsystem`; they must not own feature copy, repositories, product route policy, or network error mapping.
+- `:core:runtime` router packages: reusable Android/Compose router runtime contracts and default execution state. They own `config/` bundle/config assembly, `planner/` app route planning, `deeplink/` app resolver adapters, `runtime/` Compose `RouteStack` state and pending ActivityRoute queueing, and `activity/` ActivityRoute launch contracts/effects/handler registry. Keep URI parsing, base-path stripping, route event planning, deep-link matching, Notmid feature policy, repositories, feature impl imports, WebView Intent construction, auth policy, analytics, and data access out. `Context` is allowed only in Android launch adapters such as `DefaultActivityRouteLauncher`, not in pure router API or product policy.
 - `:core:router:api`: pure Kotlin router contracts shared by app and feature API modules. Keep it free of AndroidX Navigation, `Context`, `Intent`, and `NavController` until an Android-specific execution adapter is introduced.
 - `:core:router:impl`: default registry, route event planner, URI-to-`DeepLinkRequest` parser, scheme/host/base-path policy normalization, static/prefix deep-link spec implementations, and deep-link resolver. Split packages by role: `registry/`, `event/`, and `deeplink/`. Keep Android Activity launching, `Context`, `Intent`, feature implementation imports, auth policy, analytics, and repositories outside this module.
-- `:core:*:assertions` and `:core:app` test source: reusable test doubles, recording fakes, fixtures, and assertion helpers that compile against stable API contracts without pulling production implementation modules by default. Add a new `core:app:assertions` Gradle module only after two or more external test boundaries need the same helpers.
+- `:core:*:assertions` and `:core:runtime` test source: reusable test doubles, recording fakes, fixtures, and assertion helpers that compile against stable API contracts without pulling production implementation modules by default. Add a new `core:runtime:assertions` Gradle module only after two or more external test boundaries need the same helpers.
 - `:core:network:assertions`: reusable network test fakes and assertion helpers. Keep request recording, queued responses/failures, safe header redaction, and API error envelope fixtures here once two or more repository/auth/data tests need them. It depends on `:core:network:api` only, not `:core:network:impl`, app, feature impl, or Android runtime.
 - `:feature:notmid:api`: shared notmid route markers, destination ids, route events, and helpers for feature route/deep-link specs.
-- `:feature:notmid:impl`: the notmid Liquid Glass product shell, UI state mapping, product-only components, previews, feature orchestration, and Notmid route registrations/event handlers that compose the reusable `:core:app` router bundle. It may depend on `:core:app`, `:core:domain`, `:core:model`, `:core:designsystem`, feature API modules, and its own `:feature:notmid:api`.
+- `:feature:notmid:impl`: the notmid Liquid Glass product shell, UI state mapping, product-only components, previews, feature orchestration, and Notmid route registrations/event handlers that compose the reusable `:core:runtime` router bundle. It may depend on `:core:runtime`, `:core:domain`, `:core:model`, `:core:designsystem`, feature API modules, and its own `:feature:notmid:api`.
 - `:feature:*:assertions`: only when route/display fixtures or recording helpers are reused across more than one test boundary. Keep one-off preview data inside the feature impl.
 
 Avoid creating extra modules just to mirror a large production app. Add a module when it creates a real ownership boundary or removes coupling from `:app`.
+
+## Module Inference And Naming
+
+When a future agent decides where code belongs, the module name must answer
+what reusable capability the caller imports without opening source files. Use
+this decision order:
+
+1. Pure caller contract or value type: keep it in `:core:<capability>:api`
+   with platform-free packages named by contract family, such as `model/`,
+   `route/`, `event/`, `effect/`, `schema/`, or `adapter/`.
+2. Android or Compose execution for that contract: keep it in `:core:runtime`
+   under a capability package such as `router/`, `notice/`, `permission/`, or
+   `webview/`.
+3. Reusable Compose Activity template behavior: keep it in `:core:base` under
+   `activity/`, `root/`, or `deeplink/`.
+4. Visual components and tokens only: keep them in `:core:designsystem`.
+5. Product policy, feature copy, repository orchestration, and route
+   registrations stay in `:app` or the owning feature.
+
+Do not create or keep vague module/package names such as `app`, `common`,
+`shared`, `manager`, `helper`, or `feedback` when a narrower capability name
+exists. In this repo, toast/snackbar/alert/inline/full-page user-visible
+messages are `notice`, not `feedback`.
 
 ## API / Impl / Assertions Direction
 
@@ -59,16 +89,18 @@ Avoid creating extra modules just to mirror a large production app. Add a module
 - `impl` modules own production implementations: screens, adapters, repositories, clients, route registries, and runtime orchestration.
 - `assertions` modules own deterministic fake implementations, recording sinks/sources, fixtures, and assertion DSLs for tests.
 - `assertions` modules should depend on the matching `api` module and test libraries. They should not depend on production `impl` modules unless they live inside that impl module's own test source set.
-- Router commonization has two active layers: `:core:router:assertions` for pure route stack/plan helpers and route event/deep-link contract tests, and `:core:app` test source for app-runtime fakes such as app deep-link resolver adapters and ActivityRoute launch recorders. Extract a `:core:app:assertions` Gradle module only after two or more external test boundaries need those fakes without depending on the runtime module.
+- Router commonization has two active layers: `:core:router:assertions` for pure route stack/plan helpers and route event/deep-link contract tests, and `:core:runtime` test source for runtime fakes such as app deep-link resolver adapters and ActivityRoute launch recorders. Extract a `:core:runtime:assertions` Gradle module only after two or more external test boundaries need those fakes without depending on the runtime module.
 - Do not create feature assertions modules for previews, static sample data, or a single test. Keep those local until the reuse is real.
 - Use plural `assertions` for module names so Gradle paths stay consistent.
 
 ## Compose App Shell Direction
 
-- Do not recreate a broad `BaseActivity`, `BaseFragment`, or universal `BaseViewModel` hierarchy. Prefer small Compose-first runtime contracts such as `AppEnvironment`, `AppRoot`, `RouteCoordinator`, `FeedbackHost`, and `PermissionHost`.
+- Do not recreate a broad `BaseActivity`, `BaseFragment`, or universal `BaseViewModel` hierarchy. A narrow Compose-only `BaseActivity` belongs in `:core:base` when it owns Activity-level platform defaults, final `onCreate`/`onNewIntent` template handling, `Content()` composition, `BaseAppRoot`, pending deep-link handoff, ActivityRoute launcher effect installation, and notice host installation. Keep product state in ViewModels and keep product route registrations, runtime config, repositories, and feature screen mapping in the caller.
 - `MainActivity` should remain the Android entry holder. Product behavior belongs in app ViewModels, feature state holders, route coordinators, or domain services.
-- Shared `:core:app` helpers must not absorb feature copy, product route policy, analytics policy, repositories, or screen-specific state.
-- Keep WebView, permission, feedback, and Activity launching commonization behind caller-facing contracts so feature code does not know whether a destination is Compose-backed, Activity-backed, or browser/WebView-backed.
+- Shared `:core:base` and `:core:runtime` helpers must not absorb feature copy, product route policy, analytics policy, repositories, or screen-specific state.
+- `AppRoot` and `BaseActivity.BaseAppRoot` may install a caller-provided theme slot, `NoticeHost`, and ActivityRoute launcher effect. The caller still supplies product content, app router registrations, Activity launch handlers, runtime config, and ViewModel state.
+- Pending external deep links may use reusable `:core:base` intent receipt and Compose handoff helpers. The concrete app Activity still owns task/back-stack policy and product route/content wiring.
+- Keep WebView, permission, notice, and Activity launching commonization behind caller-facing contracts so feature code does not know whether a destination is Compose-backed, Activity-backed, or browser/WebView-backed.
 
 ## Build Logic
 
@@ -103,7 +135,7 @@ After build-logic changes, verify plugin wiring with:
 - Leaf components should accept `Modifier`, plain values, and slots/callbacks. Do not pass repositories, activities, or whole state holders into leaf UI.
 - Keep `:core:designsystem` free of feature product data. It may expose reusable components and tokens, but not destinations or feature copy.
 - Keep domain models free of Compose types. Map domain color tokens, ids, or semantic palette names to Compose `Color`/`Dp` in `:feature:notmid:impl` or `:core:designsystem`.
-- Preserve edge-to-edge behavior: `MainActivity` should call `enableEdgeToEdge()`, and floating bottom navigation must account for navigation bar insets.
+- Preserve edge-to-edge behavior: each app Activity should apply `enableEdgeToEdge()` directly or through the shared `BaseActivity`, before `setContent`, and floating bottom navigation must account for navigation bar insets.
 
 ## Liquid Glass Boundaries
 
@@ -156,7 +188,7 @@ Choose the narrowest useful gate:
   ```bash
   ./gradlew :app:compileDebugKotlin
   ./gradlew :app:installDebug
-  /Users/taehwankwon/Library/Android/sdk/platform-tools/adb shell am start -n app.thdev.glassnavlab/.MainActivity
+  ${ANDROID_HOME}/platform-tools/adb shell am start -n app.thdev.glassnavlab/.MainActivity
   ```
 
 Store refreshed screenshots or short behavior captures in `docs/assets` only when the visual contract changed.
@@ -169,6 +201,6 @@ Stop and ask or narrow the change when:
 - A copied reference-project convention would pull in production-only tooling or dependencies.
 - The desired module split requires a new architecture decision not covered above.
 - A proposed `assertions` module needs production `impl` dependencies to be useful.
-- A proposed `:core:app` helper starts owning feature copy, route policy, analytics policy, repositories, or screen-specific state.
+- A proposed `:core:runtime` helper starts owning feature copy, route policy, analytics policy, repositories, or screen-specific state.
 - Tests expose pre-existing failures that make verification ambiguous.
 - Continuing would require reverting or overwriting user changes.

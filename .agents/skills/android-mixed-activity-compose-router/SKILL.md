@@ -70,7 +70,7 @@ core router impl
   owns registry, path matching, route-event handler dispatch, URI parsing,
   scheme/host/base-path normalization, and deep-link resolution helpers
 
-:core:app router package
+:core:runtime router package
   owns reusable Android/Compose app-router runtime contracts and default
   execution state: bundle/config assembly, route planner dispatch, app deep-link
   resolver adapter, pending ActivityRoute queueing, ActivityRoute launch handler
@@ -78,13 +78,14 @@ core router impl
 
 app
   owns Android entrypoint handling, runtime config injection, auth/deferred
-  routing when it is truly app-global, pending external intent handoff, Compose
-  route-to-content mapping, and concrete platform launch binding. It should not
-  copy reusable registry/resolver/planner assembly for every app.
+  routing when it is truly app-global, Compose route-to-content mapping, and
+  concrete platform launch binding. Reusable Activity bases may own repeated
+  pending external intent handoff mechanics. App code should not copy reusable
+  registry/resolver/planner assembly for every app.
 
 product shell or app-base feature
   owns product route registrations, feature event handler lists, host/scheme
-  policy values, and typed stack factories, then passes them into the `:core:app`
+  policy values, and typed stack factories, then passes them into the `:core:runtime`
   router bundle
 ```
 
@@ -364,7 +365,7 @@ without rewriting feature callers.
 3. Add route events or route intents for caller-facing actions.
 4. Add a central route graph or registry in the app layer.
 5. Add a route coordinator that resolves events, intents, and deep links.
-6. Move Activity launching behind the `:core:app` launcher registry and a concrete
+6. Move Activity launching behind the `:core:runtime` launcher registry and a concrete
    app binding.
 7. Move host, scheme, and base path policy out of feature code.
 8. Replace feature implementation navigation calls with route events/intents.
@@ -398,10 +399,12 @@ coordinator.
   deep-link specs, and public route events. Do not add a separate route-spec
   abstraction unless a real caller consumes pattern metadata without creating a
   route instance.
-- Core-app owns reusable bundle/planner/runtime assembly. The product shell or
-  app-base feature owns product route registrations, host/scheme policy values,
-  and feature event handlers. App owns external intent entry, auth gating when
-  app-global, pending route consumption, and concrete platform launch binding.
+- `:core:runtime` router packages own reusable bundle/planner/runtime assembly.
+  The product shell or app-base feature owns product route registrations,
+  host/scheme policy values, and feature event handlers. `:core:base` owns
+  repeated Activity intent/deep-link handoff mechanics. App owns external
+  intent entry, auth gating when app-global, pending route consumption, and
+  concrete platform launch binding.
 - Core router contracts are pure and testable without Android framework classes.
 - Callers do not need to know whether a destination is Compose or
   Activity-backed.

@@ -1,38 +1,38 @@
 ---
-title: Feedback Alert Toast Contract
+title: Notice Alert Toast Contract
 audience: Android engineers and AI agents
-purpose: toast, snackbar, alert, inline, full-page feedback을 API 계약과 core/app 런타임으로 분리한다.
+purpose: toast, snackbar, alert, inline, full-page notice를 API 계약과 core/runtime 런타임으로 분리한다.
 status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
 last_verified: 2026-06-16
-applies_to: UI effects, design system, app shell, ViewModel feedback
+applies_to: UI effects, design system, app shell, ViewModel notice
 related_pages:
   - 05-network-error-contract.md
   - 07-state-assertions-testing.md
   - llm-wiki/design-system.md
 ---
 
-# Feedback Alert Toast Contract
+# Notice Alert Toast Contract
 
 ## Current State
 
-Notmid feedback is split across a pure API contract, an app-runtime host, and
+Notmid notice is split across a pure API contract, a runtime host, and
 design-system visual primitives.
 
 ```text
-:core:feedback:api
-  model/ FeedbackRequest
-  model/ FeedbackPresentation
-  model/ FeedbackTone
-  model/ FeedbackAction
-  effect/ FeedbackEffect
-  effect/ FeedbackEffectDelegate
+:core:notice:api
+  model/ NoticeRequest
+  model/ NoticePresentation
+  model/ NoticeTone
+  model/ NoticeAction
+  effect/ NoticeEffect
+  effect/ NoticeEffectDelegate
 
-:core:app
-  feedback/host/ FeedbackHost
-  feedback/host/ FeedbackEffectLifecycleCollector
-  feedback/host/ FeedbackAlertDialog
+:core:runtime
+  notice/host/ NoticeHost
+  notice/host/ NoticeEffectLifecycleCollector
+  notice/host/ NoticeAlertDialog
   Android Toast/Snackbar/Alert dispatch
 
 :core:designsystem
@@ -41,60 +41,60 @@ design-system visual primitives.
 ```
 
 `core:model` does not own UI effect contracts. `core:designsystem` does not
-collect flows, show Toasts, or render app-runtime alerts.
+collect flows, show Toasts, or render runtime alerts.
 
 ## Decision
 
-Use a dedicated `:core:feedback:api` module before adding more feedback behavior.
-Render and collect those effects from `:core:app`, not from feature screens or
+Use a dedicated `:core:notice:api` module before adding more notice behavior.
+Render and collect those effects from `:core:runtime`, not from feature screens or
 the design system.
 
 Target:
 
 ```text
-:core:feedback:api
+:core:notice:api
   model/
   effect/
 
-:core:app
-  feedback/host/
+:core:runtime
+  notice/host/
 
 :core:designsystem
-  visual feedback primitives only
+  visual notice primitives only
 ```
 
-Do not leave duplicate feedback contracts in `:core:model` once callers migrate.
+Do not leave duplicate notice contracts in `:core:model` once callers migrate.
 Do not put lifecycle collection, Toast rendering, or app effects back into
 `:core:designsystem`.
 
-## Feedback Contract
+## Notice Contract
 
-The API should express a feedback request, not a concrete UI widget.
+The API should express a notice request, not a concrete UI widget.
 
 Target concepts:
 
 ```text
-FeedbackRequest
+NoticeRequest
   id
   presentation
   tone
   message
   action
 
-FeedbackPresentation
+NoticePresentation
   Toast
   Snackbar
   Alert
   Inline
   FullPage
 
-FeedbackAction
+NoticeAction
   sealed interface for closed shared UI triggers
   current action: OpenDeepLink(label, deepLink)
   future actions: Retry, Dismiss, SignIn after a real caller exists
 ```
 
-Do not make a reusable feedback action carry feature-specific sealed actions. Feature actions remain feature-owned.
+Do not make a reusable notice action carry feature-specific sealed actions. Feature actions remain feature-owned.
 
 ## Presentation Rules
 
@@ -141,13 +141,13 @@ server policy rejection with detail
 
 Use for form fields, composer errors, and local screen sections.
 
-Inline feedback is usually feature state, not a global UI effect.
+Inline notice is usually feature state, not a global UI effect.
 
 ### FullPage
 
 Use for blocking content load failures, not one-off effects.
 
-Full-page feedback should normally be represented in `UiState`, not as a transient event.
+Full-page notice should normally be represented in `UiState`, not as a transient event.
 
 ## Ownership
 
@@ -162,20 +162,20 @@ Feature owns:
 
 Feature emits:
 
-- `FeedbackRequest` or `UiState` failure.
+- `NoticeRequest` or `UiState` failure.
 - route/action event for follow-up, not direct UI code.
 
-### Core Feedback API
+### Core Notice API
 
 API owns:
 
-- stable feedback value types.
-- feedback sink/source interfaces.
-- one-shot `FeedbackEffect` contracts and delegate interfaces.
+- stable notice value types.
+- notice sink/source interfaces.
+- one-shot `NoticeEffect` contracts and delegate interfaces.
 
-### Core-App Feedback Host
+### Core Runtime Notice Host
 
-`:core:app` owns:
+`:core:runtime` owns:
 
 - Toast rendering.
 - Snackbar host adapter.
@@ -183,18 +183,18 @@ API owns:
 - lifecycle-aware collection.
 - Android resource/message resolving.
 
-### Core-App Feedback Assertions
+### Core Notice Assertions
 
 Assertions owns:
 
-- `RecordingFeedbackSink`.
-- `FakeFeedbackMessageResolver`.
-- `FeedbackRequestAssertions`.
+- `RecordingNoticeSink`.
+- `FakeNoticeMessageResolver`.
+- `NoticeRequestAssertions`.
 - helper fixtures for common error presentations.
 
 ## Message Policy
 
-Long term, feedback messages should be message keys or resource ids where feasible.
+Long term, notice messages should be message keys or resource ids where feasible.
 
 Rules:
 
@@ -205,30 +205,30 @@ Rules:
 
 ## Action Policy
 
-Feedback action is a UI trigger, not business logic.
+Notice action is a UI trigger, not business logic.
 
 Allowed:
 
 ```text
-FeedbackAction.Retry
-FeedbackAction.Dismiss
-FeedbackAction.OpenDeepLink(uri)
-FeedbackAction.SignIn
+NoticeAction.Retry
+NoticeAction.Dismiss
+NoticeAction.OpenDeepLink(uri)
+NoticeAction.SignIn
 ```
 
 Feature/app maps that trigger to an owned action:
 
 ```text
-FeedbackAction.Retry -> NotmidAppAction.ReloadContent
-FeedbackAction.SignIn -> NotmidAppAction.ContinueAuth(...)
-FeedbackAction.OpenDeepLink -> AppRouterRuntime.navigateDeepLink(...)
+NoticeAction.Retry -> NotmidAppAction.ReloadContent
+NoticeAction.SignIn -> NotmidAppAction.ContinueAuth(...)
+NoticeAction.OpenDeepLink -> AppRouterRuntime.navigateDeepLink(...)
 ```
 
 Forbidden:
 
 ```text
-FeedbackAction(payload = InboxAction.SendMessage(...))
-Feedback renderer calls repository
+NoticeAction(payload = InboxAction.SendMessage(...))
+Notice renderer calls repository
 Toast click performs protected write
 ```
 
@@ -236,16 +236,16 @@ Toast click performs protected write
 
 Design system owns visual primitives.
 
-Feedback module owns runtime orchestration.
+Notice module owns runtime orchestration.
 
 Target split:
 
 ```text
-:core:app feedback/host package
-  FeedbackHost
-  FeedbackEffectLifecycleCollector
-  FeedbackAlertDialog
-  FeedbackActionHandler
+:core:runtime notice/host package
+  NoticeHost
+  NoticeEffectLifecycleCollector
+  NoticeAlertDialog
+  NoticeActionHandler
 
 :core:designsystem
   NotmidSnackbarHost visual style
@@ -257,7 +257,7 @@ Target split:
 The host split is:
 
 ```text
-FeedbackHost
+NoticeHost
   effect collection and dispatch
 
 AlertRenderer
@@ -272,12 +272,12 @@ ToastRenderer
 Recording sink:
 
 ```kotlin
-val sink = RecordingFeedbackSink()
-sink.show(FeedbackRequest.toast("Saved"))
+val sink = RecordingNoticeSink()
+sink.show(NoticeRequest.toast("Saved"))
 
 sink.assertLast {
-    hasPresentation(FeedbackPresentation.Toast)
-    hasTone(FeedbackTone.Success)
+    hasPresentation(NoticePresentation.Toast)
+    hasTone(NoticeTone.Success)
 }
 ```
 
@@ -285,7 +285,7 @@ Alert assertion:
 
 ```kotlin
 sink.assertLastAlert {
-    hasAction(FeedbackAction.SignIn)
+    hasAction(NoticeAction.SignIn)
     isCancellable()
 }
 ```
@@ -294,34 +294,34 @@ The assertion helper should not require Compose runtime.
 
 ## Migration Steps
 
-1. Keep pure value/effect contracts in `:core:feedback:api`.
-2. Keep Android/Compose collection and rendering in `:core:app` `feedback/host`.
+1. Keep pure value/effect contracts in `:core:notice:api`.
+2. Keep Android/Compose collection and rendering in `:core:runtime` `notice/host`.
 3. Keep design-system visual components reusable and product-free.
-4. Update Activity shells to install `FeedbackHost` once around app content.
+4. Update Activity shells to install `NoticeHost` once around app content.
 5. Add assertions modules only when multiple external test boundaries need the helpers.
 
 ## Stop Conditions
 
 Stop and redesign if:
 
-- feedback API needs feature-specific action types.
-- feedback renderer needs repository or router implementation dependency.
+- notice API needs feature-specific action types.
+- notice renderer needs repository or router implementation dependency.
 - server error text is shown directly without a safe fallback policy.
 - Toast becomes the retry/action surface for important errors.
-- assertions need Android UI to verify basic feedback emission.
+- assertions need Android UI to verify basic notice emission.
 
 ## Verification
 
-Pure feedback API/assertions:
+Pure notice API/assertions:
 
 ```bash
-./gradlew :core:feedback:api:test
+./gradlew :core:notice:api:test
 ```
 
-Feedback impl:
+Runtime notice host:
 
 ```bash
-./gradlew :core:app:compileDebugKotlin
+./gradlew :core:runtime:compileDebugKotlin
 ./gradlew :app:compileDebugKotlin
 ```
 

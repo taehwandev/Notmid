@@ -12,7 +12,7 @@ related_pages:
   - 02-target-module-taxonomy.md
   - 04-router-webview-contract.md
   - 05-network-error-contract.md
-  - 06-feedback-alert-toast-contract.md
+  - 06-notice-alert-toast-contract.md
   - 07-state-assertions-testing.md
 ---
 
@@ -26,7 +26,7 @@ Order the work by risk:
 
 1. Add test-only assertion boundaries where production behavior does not change.
 2. Strengthen typed contracts.
-3. Move app-runtime rendering into `:core:app`.
+3. Move runtime rendering into `:core:runtime`.
 4. Extract app shell/base helpers.
 5. Harden WebView.
 6. Update skills/wiki after code proves the shape.
@@ -160,76 +160,76 @@ Verification:
 ./gradlew :app:test --tests '*NotmidAppViewModelTest'
 ```
 
-## Phase 4: Feedback API And Assertions
+## Phase 4: Notice API And Assertions
 
 Goal:
 
-Move feedback contracts into a pure `:core:feedback:api` module without a broad design-system move.
+Move notice contracts into a pure `:core:notice:api` module without a broad design-system move.
 
 Proposed changes:
 
 ```text
-:core:feedback:api
+:core:notice:api
   model/
-  FeedbackRequest
-  FeedbackPresentation
-  FeedbackTone
-  FeedbackAction
+  NoticeRequest
+  NoticePresentation
+  NoticeTone
+  NoticeAction
   effect/
-  FeedbackEffect
-  FeedbackEffectDelegate
+  NoticeEffect
+  NoticeEffectDelegate
 
-:core:feedback:api test source
-  FeedbackEffectDelegate tests
-  feedback contract fixtures
+:core:notice:api test source
+  NoticeEffectDelegate tests
+  notice contract fixtures
 ```
 
 Acceptance:
 
-- ViewModel tests can assert feedback emission without Compose renderer.
-- Old `NotmidUiFeedback`/`NotmidUiEffect` duplicates are removed after callers migrate.
+- ViewModel tests can assert notice emission without Compose renderer.
+- Old `NotmidUiNotice`/`NotmidUiEffect` duplicates are removed after callers migrate.
 - Feature/app code does not call Android Toast/Alert directly.
 - Feature-specific actions remain feature-owned.
 
 Verification:
 
 ```bash
-./gradlew :core:feedback:api:test
+./gradlew :core:notice:api:test
 ./gradlew :app:test --tests '*NotmidAppViewModelTest'
 ```
 
-## Phase 5: Core-App Feedback Impl
+## Phase 5: Runtime Notice Host
 
 Goal:
 
-Move runtime rendering out of `:core:designsystem` into `:core:app`.
+Move runtime rendering out of `:core:designsystem` into `:core:runtime`.
 
 Proposed changes:
 
 ```text
-:core:app feedback/host package
-  FeedbackHost
-  FeedbackEffectLifecycleCollector
-  FeedbackAlertDialog
-  FeedbackActionHandler
+:core:runtime notice/host package
+  NoticeHost
+  NoticeEffectLifecycleCollector
+  NoticeAlertDialog
+  NoticeActionHandler
 ```
 
 Migration:
 
 - Keep `NotmidSnackbarHost` visual style in design system.
-- Move effect collection/rendering responsibility to feedback impl.
-- Update `MainActivity`/app root to install `FeedbackHost`.
+- Move effect collection/rendering responsibility to notice impl.
+- Update `MainActivity`/app root to install `NoticeHost`.
 
 Acceptance:
 
-- `:core:designsystem` no longer owns global feedback effect lifecycle.
-- Feedback renderer depends on design-system primitives where needed.
-- App state and feature tests use `:core:feedback:api` contracts.
+- `:core:designsystem` no longer owns global notice effect lifecycle.
+- Notice renderer depends on design-system primitives where needed.
+- App state and feature tests use `:core:notice:api` contracts.
 
 Verification:
 
 ```bash
-./gradlew :core:app:compileDebugKotlin
+./gradlew :core:runtime:compileDebugKotlin
 ./gradlew :app:compileDebugKotlin
 ./gradlew :app:test
 ```
@@ -238,21 +238,45 @@ Verification:
 
 Goal:
 
-Extract compositional app shell helpers without BaseActivity inheritance.
+Extract app shell/base helpers without creating a broad Activity hierarchy.
 
 Proposed candidates:
 
 ```text
 AppEnvironment
-NotmidAppRoot
+BaseActivity
+AppRoot
 RouteCoordinator
 AuthGateCoordinator
 ProtectedActionCoordinator
 ```
 
+First slice:
+
+```text
+:core:base activity/BaseActivity
+  Compose-only Content() template
+  edge-to-edge Activity default setup
+  onCreate/onNewIntent pending external deep-link receipt
+  BaseAppRoot convenience for NoticeHost and ActivityRouteLauncherEffect
+  automatic pending external deep-link handoff from BaseAppRoot
+  no product routing, repositories, runtime config, or ViewModel creation
+
+:core:base root/AppRoot
+  caller-provided theme slot
+  NoticeHost installation
+  ActivityRouteLauncherEffect installation
+
+:core:base deeplink/PendingDeepLink/PendingDeepLinkEffect
+  pending external deep-link request identity
+  lifecycle-safe handoff to the app router runtime
+```
+
 Acceptance:
 
-- `MainActivity` is thinner but still owns Android entry setup.
+- `MainActivity` is thinner and implements `Content()` instead of repeating Activity lifecycle plumbing.
+- `MainActivity` keeps runtime config, ViewModel creation, product screen mapping, and Activity launch handler selection.
+- `:core:base` helpers do not depend on feature impl modules, repositories, auth policy, runtime config, or feature Activity subclasses.
 - Product state remains in `NotmidAppViewModel` or explicit app coordinator, not in design-system/core helpers.
 - No broad behavior change is mixed with the extraction.
 
@@ -285,7 +309,7 @@ Keep module placement:
 :feature:webview:impl
 ```
 
-Only add a `:core:app` webview package after a second caller or reusable holder pressure appears.
+Only add a `:core:runtime` webview package after a second caller or reusable holder pressure appears.
 
 Acceptance:
 
@@ -320,7 +344,7 @@ Acceptance:
 
 - English canonical docs match implemented modules.
 - Korean planning docs can stay as local planning history or be translated before commit if requested.
-- Skills route agents to the new `:core:app`/`assertions` specs.
+- Skills route agents to the new `:core:runtime`/`assertions` specs.
 
 Verification:
 
@@ -334,17 +358,17 @@ vibeguard audit .
 Use separate commits.
 
 ```text
-docs(android): plan core-app commonization
+docs(android): plan core runtime commonization
 test(android): add router assertions module
 test(android): add network assertions module
-feat(android): add feedback api and assertions
-refactor(android): move feedback host to core-app
+feat(android): add notice api and assertions
+refactor(android): move notice host to core-runtime
 refactor(android): extract app shell coordinators
 fix(android): harden webview route policy
 docs(android): update module map and agent skills
 ```
 
-Do not combine docs, build-logic, network behavior, feedback UI, and WebView policy in one commit.
+Do not combine docs, build-logic, network behavior, notice UI, and WebView policy in one commit.
 
 ## Global Done Criteria
 

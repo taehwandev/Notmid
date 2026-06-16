@@ -1,7 +1,7 @@
 ---
 title: Target Module Taxonomy
 audience: Android engineers and AI agents
-purpose: Notmid의 `core`, `core/app`, feature, assertions 모듈 분류와 import 규칙을 정의한다.
+purpose: Notmid의 `core`, `core/runtime`, feature, assertions 모듈 분류와 import 규칙을 정의한다.
 status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
@@ -20,7 +20,9 @@ related_pages:
 Notmid의 목표 구조는 다음 두 축을 분리한다.
 
 - `core`: 순수 Kotlin 또는 플랫폼 독립 계약. 앱이 아니어도 재사용 가능해야 한다.
-- `core/app`: Android/Compose 앱 런타임. UI renderer, lifecycle, permission, WebView, Android resource, app shell helper를 둔다.
+- `core/runtime`: Android/Compose 실행 런타임. Notice renderer,
+  lifecycle collector, permission/WebView adapter, Android resource adapter,
+  router runtime, ActivityRoute launcher 같은 실행 부품만 둔다.
 
 이 분리는 “모든 모듈을 쪼갠다”가 아니라 “의존성 방향을 문서화하고 테스트 가능한 계약을 만든다”가 목적이다.
 
@@ -30,7 +32,7 @@ Notmid의 목표 구조는 다음 두 축을 분리한다.
 
 ```text
 app/
-  MainActivity, runtime config injection, pending deep-link handoff,
+  MainActivity, runtime config injection, product content wiring,
   concrete platform launch binding
 
 core/
@@ -49,12 +51,12 @@ core/
     impl/
     assertions/        only if auth tests need shared fake gateway
 
-core/app/
-  router/              active app-runtime contract + implementation package
-  feedback/            later package inside the same module
+core/runtime/
+  router/              active runtime contract + implementation package
+  notice/            later package inside the same module
   permissions/         later package inside the same module
   webview/             later package inside the same module after reusable WebView pressure appears
-  src/test/...         app-runtime fakes, recorders, and assertions until external reuse proves a module boundary
+  src/test/...         runtime fakes, recorders, and assertions until external reuse proves a module boundary
 
 feature/
   <name>/
@@ -68,19 +70,20 @@ feature/
 
 | Current | Target | Migration |
 | --- | --- | --- |
-| `:core:model` | keep in `core` | Pure models stay. UI feedback/effect contracts live in `:core:feedback:api`. |
-| `:core:feedback:api` | active pure contract module | Feedback request/effect contracts split into `model/` and `effect/` packages. No Android, Compose, resources, repositories, or rendering. |
+| `:core:model` | keep in `core` | Pure models stay. UI notice/effect contracts live in `:core:notice:api`. |
+| `:core:notice:api` | active pure contract module | Notice request/effect contracts split into `model/` and `effect/` packages. No Android, Compose, resources, repositories, or rendering. |
 | `:core:domain` | keep in `core` | Keep repository contracts/use cases pure. |
 | `:core:data` | keep short term | Later split repository APIs/impl only when there are real multi-caller contracts. |
 | `:core:network:api` | keep in `core` | Expand typed failures and safe server error envelope. |
-| `:core:network:impl` | keep in `core` or move to `:core:app` only if Android-specific | OkHttp JVM impl can stay `core`; Android connectivity/auth interceptors go `:core:app`. |
+| `:core:network:impl` | keep in `core` or move to `:core:runtime` only if Android-specific | OkHttp JVM impl can stay `core`; Android connectivity/auth interceptors go `:core:runtime`. |
 | `:core:router:api` | keep in `core` | Pure contracts stay here. |
 | `:core:router:impl` | keep in `core` | Pure route registry, route event planner, URI parser, scheme/host/base-path normalizer, deep-link resolver, and static/prefix matcher implementations. |
-| `:core:app` router package | active app-runtime commonization | Single Android/Compose runtime module package that owns runtime execution state, app deep-link resolver adapter, pending ActivityRoute queue/effect, and module-local runtime test doubles. Split into a submodule only after external caller/test pressure proves the boundary. |
-| `:core:app` feedback package | active app-runtime commonization | Compose/Activity `FeedbackHost`, lifecycle collection, Toast/Snackbar/Alert dispatch, and design-system visual adapter usage. |
-| `:core:designsystem` | active visual system | Keep theme/tokens/visual primitives here. Do not collect feedback flows or show Toasts. |
-| `:feature:webview:api/impl` | keep first | Route target remains feature. Extract reusable holder to a `:core:app` webview package only after hardening need appears. |
-| `:app` route graph/event mapper/activity launcher | keep app-owned | App provides Notmid route/spec registration values, host/base path values, feature event handlers, and concrete Activity launch to core router impl and the `:core:app` runtime. |
+| `:core:base` | active app-shell commonization | Compose-only `BaseActivity`, edge-to-edge defaults, final Activity lifecycle template handling, `Content()` composition, `AppRoot`, and pending external deep-link handoff. It depends on `:core:runtime` runtime contracts but owns no product route policy, repositories, runtime config, or ViewModel creation. |
+| `:core:runtime` router package | active runtime commonization | Single Android/Compose runtime module package that owns runtime execution state, app deep-link resolver adapter, pending ActivityRoute queue/effect, and module-local runtime test doubles. Split into a submodule only after external caller/test pressure proves the boundary. |
+| `:core:runtime` notice package | active runtime commonization | Compose/Activity `NoticeHost`, lifecycle collection, Toast/Snackbar/Alert dispatch, and design-system visual adapter usage. |
+| `:core:designsystem` | active visual system | Keep theme/tokens/visual primitives here. Do not collect notice flows or show Toasts. |
+| `:feature:webview:api/impl` | keep first | Route target remains feature. Extract reusable holder to a `:core:runtime` webview package only after hardening need appears. |
+| `:app` route graph/event mapper/activity launcher | keep app-owned | App provides Notmid route/spec registration values, host/base path values, feature event handlers, and concrete Activity launch to core router impl and the `:core:runtime` runtime. |
 
 ## Module Family Rules
 
@@ -102,7 +105,7 @@ Not allowed:
 - Firebase SDK, OkHttp implementation types in API contracts.
 - feature implementation imports.
 
-### `core/app`
+### `core/runtime`
 
 Allowed:
 
@@ -111,7 +114,7 @@ Allowed:
 - permission launcher and result adapters.
 - ActivityRoute launcher implementation.
 - WebView holder/runtime state when reusable.
-- app shell base helpers such as `AppEnvironment`, `AppRoot`, `FeedbackHost`.
+- app shell base helpers such as `AppEnvironment`, `AppRoot`, `NoticeHost`.
 
 Not allowed:
 
@@ -190,12 +193,14 @@ Package naming:
 ```text
 app.thdev.glassnavlab.core.router.assertions
 app.thdev.glassnavlab.core.network.assertions
-app.thdev.glassnavlab.coreapp.feedback.api
-app.thdev.glassnavlab.coreapp.feedback.impl
-app.thdev.glassnavlab.coreapp.feedback.assertions
+app.thdev.glassnavlab.core.notice.api
+app.thdev.glassnavlab.core.runtime.notice.host
+app.thdev.glassnavlab.core.notice.assertions
 ```
 
-If the repo prefers `core.app` instead of `coreapp`, decide once before implementation. The package should not encode Gradle punctuation mechanically if it makes imports noisy.
+Use `app.thdev.glassnavlab.core.runtime` for Android/Compose runtime packages.
+The package name should describe runtime adapter ownership, not global app
+ownership.
 
 ## Import Direction
 
@@ -205,16 +210,19 @@ Allowed:
 app -> feature:*:api
 app -> feature:*:impl
 app -> core:*:api/impl selected by app graph
-app -> core:app selected packages selected by app graph
+app -> core:base for reusable Compose Activity template behavior
+app -> core:runtime selected packages selected by app graph
 
 feature:*:impl -> feature:*:api
 feature:*:impl -> core:model
 feature:*:impl -> core:domain
-feature:*:impl -> core:feedback:api when it emits reusable feedback effects
+feature:*:impl -> core:notice:api when it emits reusable notice effects
 feature:*:impl -> core:designsystem
 
-core:app implementation package -> core:feedback:api
-core:app implementation package -> core:*:api where needed
+core:runtime implementation package -> core:notice:api
+core:runtime implementation package -> core:*:api where needed
+core:base -> core:runtime contracts
+core:base -> core:notice:api
 
 assertions -> matching api
 test source -> assertions
@@ -223,19 +231,22 @@ test source -> assertions
 Forbidden:
 
 ```text
-core -> core:app
+core -> core:runtime
 core -> app
 core -> feature:*:impl
 feature:*:api -> feature:*:impl
 feature:*:api -> app
-feature:*:api -> core:app implementation package
+feature:*:api -> core:runtime implementation package
 assertions -> production impl by default
-core:app feedback package -> feature route decisions
+core:runtime notice package -> feature route decisions
 ```
 
 ## Base/App Shell Rule
 
-Do not introduce a large `BaseActivity` or `BaseViewModel` hierarchy.
+Do not introduce a large `BaseActivity` or `BaseViewModel` hierarchy. A narrow
+`BaseActivity` belongs in `:core:base` when it owns only reusable Activity
+template behavior such as edge-to-edge setup, `Content()` composition,
+incoming intent/deep-link request identity, and root host installation.
 
 Compose-first base commonization should be compositional:
 
@@ -244,19 +255,21 @@ AppEnvironment
   dependencies selected by build/runtime config
 
 AppRoot
-  theme, route host, feedback host, permission host
+  theme, route host, notice host, permission host
 
 RouteCoordinator
   route command/event/deep-link planning
 
-FeedbackHost
+NoticeHost
   lifecycle-aware UI effect collection and rendering
 
 PermissionHost
   ActivityResult launcher ownership and result mapping
 ```
 
-`MainActivity` should remain the Android entry holder. It may delegate to app shell helpers, but those helpers should not own product feature behavior.
+`MainActivity` should remain the Android entry holder. It may delegate to
+`:core:base` Activity helpers, but those helpers should not own product feature
+behavior.
 
 ## Transition Policy
 
@@ -265,8 +278,8 @@ Do not start by moving all existing modules.
 Order:
 
 1. Add `assertions` where existing API boundary already exists.
-2. Add new `:core:app` packages for new app-runtime contracts.
-3. Move feedback renderer out of `:core:designsystem` after the `:core:feedback:api` contract is stable.
+2. Add new `:core:runtime` packages for new runtime contracts.
+3. Move notice renderer out of `:core:designsystem` after the `:core:notice:api` contract is stable.
 4. Decide design system migration separately. `:core:designsystem` can remain as a compatibility module until there is a real need to rename.
 5. Split `:core:data` only after repository API pressure repeats across features or tests.
 

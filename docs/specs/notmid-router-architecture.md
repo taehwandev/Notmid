@@ -47,7 +47,7 @@ The implementation is adapted for notmid's current shape:
   deeplink/StaticRouteDeepLinkSpec
   deeplink/PrefixRouteDeepLinkSpec
 
-:core:app
+:core:runtime
   router/config/AppRouterBundleConfig
   router/config/AppDeepLinkUrlConfig
   router/config/DefaultAppRouterBundle
@@ -91,10 +91,11 @@ The implementation is adapted for notmid's current shape:
   WebView intent factory
   WebViewActivityRouteLaunchHandler
 
+:core:base
+  BaseActivity external intent and pending deep-link handoff
+
 :app
-  MainActivity external intent and pending deep-link handoff
-  auth gate
-  concrete ActivityRoute launcher binding
+  MainActivity product wiring, auth gate, and concrete ActivityRoute launcher binding
 ```
 
 ## Rule
@@ -260,7 +261,7 @@ With a registry:
 `DefaultRouteEventPlanner` do not execute navigation. They parse, normalize,
 match, and resolve reusable route inputs into a `RoutePlan`.
 
-Reusable execution belongs in the `:core:app` router package only after a
+Reusable execution belongs in the `:core:runtime` router package only after a
 `RoutePlan` exists because it needs Compose runtime state and ActivityRoute
 side-effect orchestration, but it must not know Notmid feature contracts.
 
@@ -281,7 +282,7 @@ core router impl provides:
   DefaultRouteEventPlanner
   DefaultRouteRegistry
 
-:core:app provides:
+:core:runtime provides:
   DefaultAppRouterBundle
   DefaultAppDeepLinkResolver adapter
   DefaultAppRoutePlanner
@@ -306,7 +307,7 @@ interface ActivityRoute {
 }
 ```
 
-Then `:core:app` runtime queues execution and the ActivityRoute launcher binding
+Then `:core:runtime` runtime queues execution and the ActivityRoute launcher binding
 decides the concrete Android launch through feature-owned launch handlers:
 
 ```text

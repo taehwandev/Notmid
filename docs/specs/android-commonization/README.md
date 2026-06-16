@@ -6,7 +6,7 @@ status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
 last_verified: 2026-06-16
-applies_to: Android Gradle modules, Compose app shell, router, network, feedback, WebView, tests
+applies_to: Android Gradle modules, Compose app shell, router, network, notice, WebView, tests
 related_pages:
   - llm-wiki/module-map.md
   - llm-wiki/routing-deeplinks.md
@@ -16,7 +16,7 @@ related_pages:
 
 # Android Commonization Spec Index
 
-이 문서 묶음은 참조 Android 프로젝트 구조에서 배울 수 있는 경계를 Notmid의 최신 Compose 구조로 다시 설계한 로컬 한국어 스펙이다. 목표는 코드를 바로 옮기는 것이 아니라, 이후 구현을 작은 PR 또는 커밋 단위로 나눌 수 있게 `core`, `core/app`, feature, `api`/`impl`/`assertions` 경계를 먼저 확정하는 것이다.
+이 문서 묶음은 참조 Android 프로젝트 구조에서 배울 수 있는 경계를 Notmid의 최신 Compose 구조로 다시 설계한 로컬 한국어 스펙이다. 목표는 코드를 바로 옮기는 것이 아니라, 이후 구현을 작은 PR 또는 커밋 단위로 나눌 수 있게 `core`, `core/runtime`, feature, `api`/`impl`/`assertions` 경계를 먼저 확정하는 것이다.
 
 ## 결론
 
@@ -26,7 +26,7 @@ Notmid에는 참조 프로젝트 구조를 그대로 적용하지 않는다.
 
 - 호출자는 안정 계약만 보고 구현은 모르게 하는 `api`/`impl` 경계.
 - 테스트가 구현 모듈이나 앱 쉘을 끌어오지 않게 하는 `assertions` 경계.
-- Android/Compose 앱 런타임 공통 요소를 단일 `:core:app` 모듈로 두고, 순수 계약과 도메인은 `core`에 남기는 경계.
+- 재사용 Compose Activity base는 `:core:base`로 분리하고, router/notice 같은 Android/Compose 앱 런타임 실행 부품은 `:core:runtime`에 두며, 순수 계약과 도메인은 `core`에 남기는 경계.
 
 버릴 것은 다음이다.
 
@@ -40,11 +40,11 @@ Notmid에는 참조 프로젝트 구조를 그대로 적용하지 않는다.
 | 문서 | 역할 | 다음 구현 단위 |
 | --- | --- | --- |
 | [01-reference-inventory.md](01-reference-inventory.md) | 참조 프로젝트/Notmid/스킬 문서에서 확인한 구조와 차용 기준 | 적용 대상과 제외 대상 확정 |
-| [02-target-module-taxonomy.md](02-target-module-taxonomy.md) | `core`, `core/app`, feature, data, assertions 모듈 분류 | `settings.gradle.kts` 목표 모듈 목록 설계 |
+| [02-target-module-taxonomy.md](02-target-module-taxonomy.md) | `core`, `core/runtime`, feature, data, assertions 모듈 분류 | `settings.gradle.kts` 목표 모듈 목록 설계 |
 | [03-build-logic-module-templates.md](03-build-logic-module-templates.md) | Gradle convention과 모듈 템플릿 | `assertions` convention 추가 여부 결정 |
 | [04-router-webview-contract.md](04-router-webview-contract.md) | 라우터, 딥링크, ActivityRoute, WebView 계약 | 라우터 assertions와 WebView hardening |
 | [05-network-error-contract.md](05-network-error-contract.md) | 네트워크 클라이언트, 서버 오류, 공통 오류 모델 | network API/impl/assertions 개편 |
-| [06-feedback-alert-toast-contract.md](06-feedback-alert-toast-contract.md) | toast/snackbar/alert/full-page feedback 공통화 | `:core:feedback:api` 계약과 `:core:app` host 패키지 |
+| [06-notice-alert-toast-contract.md](06-notice-alert-toast-contract.md) | toast/snackbar/alert/full-page notice 공통화 | `:core:notice:api` 계약과 `:core:runtime` host 패키지 |
 | [07-state-assertions-testing.md](07-state-assertions-testing.md) | ViewModel/state/reducer 테스트와 assertions 모듈 규칙 | 테스트 대역/검증 DSL 도입 |
 | [08-implementation-work-breakdown.md](08-implementation-work-breakdown.md) | 실제 적용 순서, acceptance, 검증 명령 | 작업 티켓/커밋 분리 기준 |
 
@@ -58,10 +58,10 @@ Notmid에는 참조 프로젝트 구조를 그대로 적용하지 않는다.
 
 부족한 내용:
 
-- `core`와 `core/app`을 Notmid의 장기 목표 모듈군으로 나누는 기준.
+- `core`와 `core/runtime`을 Notmid의 장기 목표 모듈군으로 나누는 기준.
 - `assertions` 모듈을 언제 만들고 무엇을 담는지에 대한 공식 규칙.
-- network error, feedback, permission, WebView holder 같은 앱 런타임 공통화를 최신 Compose 방식으로 나누는 순서.
-- 기존 `:core:designsystem`, `:core:model`에 있던 feedback/effect 계약을 어떻게 `:core:feedback:api`와 `:core:app`으로 이전할지.
+- network error, notice, permission, WebView holder 같은 앱 런타임 공통화를 최신 Compose 방식으로 나누는 순서.
+- 기존 `:core:designsystem`, `:core:model`에 있던 notice/effect 계약을 어떻게 `:core:notice:api`와 `:core:runtime`으로 이전할지.
 
 따라서 이 스펙은 구현 전 임시 기준이다. 구현이 시작되면 `llm-wiki/module-map.md`, `llm-wiki/implementation-checklist.md`, 관련 skill 문서를 영어 canonical 문서로 갱신해야 한다.
 
@@ -69,12 +69,13 @@ Notmid에는 참조 프로젝트 구조를 그대로 적용하지 않는다.
 
 ```text
 :core:*             순수 Kotlin 계약, 도메인, 라우터/네트워크 핵심 계약, 테스트 가능한 fake/assertion
-:core:app           Android/Compose 앱 런타임 공통 요소 단일 모듈, router bundle/runtime, feedback, permission, WebView runtime, app shell helper
+:core:base          Compose 전용 BaseActivity, AppRoot, edge-to-edge, pending deep-link handoff
+:core:runtime       Android/Compose 실행 런타임, router bundle/runtime, notice, permission, WebView runtime
 :feature:*:api      feature route/event/entry contract
 :feature:*:impl     Compose screen, ViewModel/state owner, feature-local UI
 :feature:*:assertions
                     feature 계약을 여러 테스트가 공유할 때만 추가
-:app                MainActivity, runtime config injection, pending deep-link handoff, concrete platform launch binding
+:app                MainActivity, runtime config injection, product content wiring, concrete platform launch binding
 ```
 
 ## 적용 순서 요약
@@ -83,9 +84,9 @@ Notmid에는 참조 프로젝트 구조를 그대로 적용하지 않는다.
 2. `assertions` convention과 naming을 먼저 정한다.
 3. 가장 위험이 낮은 `core:router:assertions`부터 만든다.
 4. network error 모델과 network assertions를 추가한다.
-5. feedback/toast/alert 렌더러를 `:core:app` 내부 feedback 패키지로 분리한다.
-6. WebView는 현재 `feature:webview`를 유지하되, reusable holder가 필요해지는 시점에 `:core:app` 내부 webview 패키지로 뺀다.
-7. 앱 shell/base는 BaseActivity 상속 구조가 아니라 Compose `AppRoot`/`AppEnvironment`/`RouteCoordinator`/`FeedbackHost` 조합으로 분리한다.
+5. notice/toast/alert 렌더러를 `:core:runtime` 내부 notice 패키지로 분리한다.
+6. WebView는 현재 `feature:webview`를 유지하되, reusable holder가 필요해지는 시점에 `:core:runtime` 내부 webview 패키지로 뺀다.
+7. 앱 shell/base는 `:core:base`의 좁은 Compose `BaseActivity` 템플릿으로 분리하고, router/notice 실행 부품은 `:core:runtime`의 `AppRoot`/`RouteCoordinator`/`NoticeHost` 조합으로 연결한다.
 
 ## 중단 조건
 
@@ -94,7 +95,7 @@ Notmid에는 참조 프로젝트 구조를 그대로 적용하지 않는다.
 - 새 모듈이 단 하나의 호출자만 가지고 안정 계약도 없다.
 - `assertions` 모듈이 구현 모듈에 의존해야만 동작한다.
 - `core` 모듈이 Android `Context`, `Activity`, Compose UI 타입, OkHttp 구현 타입, Firebase 타입을 안정 계약으로 노출한다.
-- feedback 공통화가 feature별 copy, analytics, route decision을 삼킨다.
+- notice 공통화가 feature별 copy, analytics, route decision을 삼킨다.
 - WebView 공통화가 URL allowlist, 파일 chooser, permission, JavaScript bridge 보안을 문서화하지 않는다.
 
 ## 검증 기준

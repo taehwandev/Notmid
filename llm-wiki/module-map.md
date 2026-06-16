@@ -4,7 +4,7 @@
 
 ```text
 app/                 Android entry point
-core/                Android core modules, including core/app runtime common module
+core/                Android core modules, including core/base and core/runtime
 feature/             Android feature api/impl modules
 build-logic/         Android Gradle conventions
 
@@ -30,7 +30,8 @@ Target families:
 
 ```text
 :core:*                 pure Kotlin or implementation-neutral contracts
-:core:app               Android/Compose app-runtime commonization
+:core:base              reusable Compose Activity shell and app-root installation
+:core:runtime           Android/Compose runtime commonization
 :feature:*:api          feature route, event, and public contracts
 :feature:*:impl         feature screens, state holders, and orchestration
 :*:assertions           reusable test doubles, fixtures, recording helpers, assertion DSLs
@@ -40,25 +41,32 @@ Rules:
 
 - Keep `:core:*` free of Android and Compose runtime unless a legacy boundary is
   being migrated.
-- Use `:core:app` packages for feedback hosts, permission adapters, ActivityRoute
-  launch adapters, reusable WebView runtime, resources, and app-shell helpers.
+- Use `:core:base` for role-split app-shell helpers: `activity` Compose-only
+  BaseActivity, edge-to-edge defaults, final `onCreate`/`onNewIntent` template
+  handling, `Content()` composition, root/deep-link convenience functions,
+  `root` app-root assembly, and `deeplink` pending external deep-link effects.
+- Use `:core:runtime` for runtime components: notice hosts, permission
+  adapters, ActivityRoute launch adapters, router runtime, reusable WebView
+  runtime, and resources.
 - `assertions` modules should depend on stable API contracts and test
   libraries, not production impl modules by default.
-- Do not recreate broad `BaseActivity` or `BaseViewModel` inheritance. Prefer
-  small Compose-first contracts such as `AppEnvironment`, `AppRoot`,
-  `RouteCoordinator`, `FeedbackHost`, and `PermissionHost`.
-- Keep `:core:designsystem` as the visual component/token owner. Feedback
-  runtime orchestration belongs in `:core:app`, while visual rendering
+- Do not recreate broad `BaseActivity` or `BaseViewModel` inheritance. A narrow
+  Compose-only `BaseActivity` may own Activity-level platform defaults,
+  final lifecycle template handling, `Content()` composition, app-root
+  installation, pending deep-link handoff, and notice/router host installation;
+  product state stays in ViewModels and app/feature owners.
+- Keep `:core:designsystem` as the visual component/token owner. Notice
+  runtime orchestration belongs in `:core:runtime`, while visual rendering
   primitives such as `NotmidSnackbarHost` remain in the design system.
 
 ## Ownership
 
 ```text
 :app
-  Android entry point, MainActivity, app theme wiring
+  Android entry point, MainActivity, app theme selection
   runtime config injection and top-level composition
-  pending external deep-link handoff to the app router runtime
-  concrete ActivityRoute launch binding through the `:core:app` launcher registry
+  Android entrypoint and concrete platform launch binding
+  concrete ActivityRoute launch binding through the `:core:runtime` launcher registry
   notmid runtime content-source selection and async app-shell loading state
   NotmidAppViewModel for top-level state, auth/write orchestration, and UI effects
   Android Credential Manager Google ID-token provider for Firebase REST exchange
@@ -67,7 +75,7 @@ Rules:
   NotmidTheme, color/type/spacing/shape/elevation tokens
   Notmid* Material3 wrappers
   reusable Notmid UI primitives
-  NotmidSnackbarHost and other visual feedback primitives only
+  NotmidSnackbarHost and other visual notice primitives only
   Liquid Glass primitives
 
 :core:model
@@ -75,10 +83,10 @@ Rules:
   platform-independent action delegate contracts for ViewModel injection
   no Android, Compose, Color, Dp, resource ids, or repositories
 
-:core:feedback:api
-  pure Kotlin feedback request/effect contracts
-  FeedbackRequest, FeedbackPresentation, FeedbackTone, FeedbackAction
-  FeedbackEffect and FeedbackEffectDelegate for one-shot UI events
+:core:notice:api
+  pure Kotlin notice request/effect contracts
+  NoticeRequest, NoticePresentation, NoticeTone, NoticeAction
+  NoticeEffect and NoticeEffectDelegate for one-shot UI events
   no Android, Compose, resources, feature policy, repositories, or rendering
 
 :core:domain
@@ -114,14 +122,20 @@ Rules:
 :core:network:impl
   OkHttp-backed client implementation for the API network boundary
 
-:core:app
+:core:base
+  activity BaseActivity and EdgeToEdgeConfig for Compose-only Activity content, edge-to-edge defaults, final lifecycle template handling, BaseAppRoot, and pending deep-link convenience
+  root AppRoot for caller-provided theme slot, notice host, and ActivityRoute launch effect installation
+  deeplink PendingDeepLink and PendingDeepLinkEffect for lifecycle-safe pending external deep-link handoff
+  no Notmid feature policy, repositories, feature impl imports, WebView Intent construction, auth policy, runtime config, ViewModel creation, or data access
+
+:core:runtime
   router/config AppRouterBundleConfig, AppDeepLinkUrlConfig, DefaultAppRouterBundle
   router/planner AppRoutePlanner and DefaultAppRoutePlanner
   router/deeplink AppDeepLinkResolver and DefaultAppDeepLinkResolver
   router/runtime AppRouterRuntime, DefaultAppRouterRuntime, PendingActivityRouteRequest
   router/activity ActivityRouteLauncher, ActivityRouteLaunchHandler, DefaultActivityRouteLauncher, ActivityRouteLauncherEffect
-  feedback/host FeedbackHost, FeedbackEffectLifecycleCollector, FeedbackAlertDialog
-  Android Toast/Snackbar/Alert dispatch using :core:feedback:api and design-system visuals
+  notice/host NoticeHost, NoticeEffectLifecycleCollector, NoticeAlertDialog
+  Android Toast/Snackbar/Alert dispatch using :core:notice:api and design-system visuals
   no Notmid feature policy, repositories, feature impl imports, WebView Intent construction, auth policy, or data access
   test source owns module-local app-router test doubles such as fake deep-link
   resolver and recording ActivityRoute launcher
@@ -151,7 +165,7 @@ Rules:
 :feature:notmid:impl
   notmid app shell and feature orchestration
   router/ Notmid route registrations, deep-link registrations, event handlers,
-  rememberNotmidAppRouter, and notmidRouteStack over the reusable `:core:app` bundle
+  rememberNotmidAppRouter, and notmidRouteStack over the reusable `:core:runtime` bundle
 
 :feature:*:api
   route/ typed route data and top-level route metadata
@@ -207,7 +221,7 @@ feature:feed:impl -> feature:feed:api
 feature:feed:impl -> feature:notmid:common
 feature:notmid:impl -> feature:feed:impl
 app -> feature:*:api and impl modules
-app -> core:feedback:api
+app -> core:notice:api
 ```
 
 Not allowed:
@@ -235,28 +249,28 @@ OkHttpNotmidNetworkClient
   -> successful chat invite accept/reject receipts merge the updated thread
   -> :core:model NotmidActionDelegate exposes a channel-backed Flow<NotmidAppAction>
   -> NotmidAppViewModel handles ordered actions at one reducer boundary
-  -> :core:feedback:api FeedbackEffectDelegate exposes SharedFlow<FeedbackEffect>(replay = 0)
-  -> :core:app FeedbackHost collects effects with LifecycleStartEffect
-  -> FeedbackHost dispatches Toast/Snackbar/Alert using design-system visuals
+  -> :core:notice:api NoticeEffectDelegate exposes SharedFlow<NoticeEffect>(replay = 0)
+  -> :core:runtime NoticeHost collects effects with LifecycleStartEffect
+  -> NoticeHost dispatches Toast/Snackbar/Alert using design-system visuals
   -> feature screens receive stable state/callback props, not network clients
 ```
 
 Do not introduce a shared `Success`/`Failure` sealed response wrapper for
 suspend network calls. Success returns the expected value; failure is raised as a
 typed exception at the boundary that owns the failure meaning. Server-driven
-presentation hints should map into `FeedbackRequest` (`Toast`, `Snackbar`, `Alert`,
+presentation hints should map into `NoticeRequest` (`Toast`, `Snackbar`, `Alert`,
 `Inline`, `FullPage`) and optional deep-link actions before reaching feature UI.
 Chat send permission is API-owned: friends can send immediately, non-friends
 must be represented through `thread.chatAccess`, and feature UI only disables
 composer or emits invite accept/reject callbacks from that state.
 Collect persistent `StateFlow` UI state with `collectAsStateWithLifecycle`; keep
 one-shot toast/alert/navigation effects as a separate `Flow` and collect them
-through the lifecycle-aware `:core:app` feedback host. UI effects should not be
+through the lifecycle-aware `:core:runtime` notice host. UI effects should not be
 replayed after the screen stops; the ViewModel may continue working, but stopped
 UI must not process late toast or alert side effects on resume.
 `MainActivity` is only the route holder: it creates app dependencies, collects
 `NotmidAppViewModel.state` with `collectAsStateWithLifecycle`, passes
-`effects` to `FeedbackHost`, and forwards user callbacks as
+`effects` to `NoticeHost`, and forwards user callbacks as
 `NotmidAppAction`.
 Keep ViewModel capabilities compositional: AndroidX still requires
 `ViewModel` inheritance, but reusable side-effect emission should be injected as
@@ -266,7 +280,7 @@ composition rule for action processing: UI-facing callers dispatch through
 channel-backed Flow stream. Flow-based action processing is useful when actions
 need one ordered reducer boundary; use a channel-backed Flow when UI actions
 must not be dropped before the collector is running. Keep the lifecycle-bound
-toast/snackbar/alert collector in `:core:app`; it renders effects but does not
+toast/snackbar/alert collector in `:core:runtime`; it renders effects but does not
 own feature state, repositories, or product route policy.
 
 ## Build Logic

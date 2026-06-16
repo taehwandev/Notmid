@@ -119,7 +119,7 @@ Current Notmid contracts should continue to point here:
   NotmidRouteEventMapper
   NotmidAppRouter binding
 
-:core-app router package
+:core:runtime router package
   config/AppRouterBundleConfig, AppDeepLinkUrlConfig, DefaultAppRouterBundle
   planner/AppRoutePlanner, DefaultAppRoutePlanner
   deeplink/AppDeepLinkResolver, DefaultAppDeepLinkResolver
@@ -147,7 +147,7 @@ UI.
 - Does an `ActivityRoute` launch without accidentally replacing the Compose
   stack?
 - Are app-link host/scheme/base-path rules kept in the product shell router
-  bundle config and passed through `:core-app`, not duplicated in `:app` or
+  bundle config and passed through `:core:runtime`, not duplicated in `:app` or
   feature screens?
 - Could `RouteStack.entries` become `List<NavKey>` later without rewriting
   feature callers?

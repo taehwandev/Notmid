@@ -6,9 +6,9 @@ status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
 last_verified: 2026-06-16
-applies_to: core network, core data, domain failures, feedback mapping
+applies_to: core network, core data, domain failures, notice mapping
 related_pages:
-  - 06-feedback-alert-toast-contract.md
+  - 06-notice-alert-toast-contract.md
   - 07-state-assertions-testing.md
   - llm-wiki/module-map.md
 ---
@@ -65,7 +65,7 @@ raw exception / raw HTTP response
   -> network boundary failure
   -> API contract failure
   -> domain failure
-  -> user-visible feedback/state
+  -> user-visible notice/state
 ```
 
 ### Raw Exception
@@ -140,7 +140,7 @@ Ownership:
 
 - `:core:domain`.
 
-### User-Visible Feedback
+### User-Visible Notice
 
 Examples:
 
@@ -154,8 +154,8 @@ FullPage
 
 Ownership:
 
-- Contract in the `:core:feedback:api` module.
-- Rendering in the `:core:app` feedback host package.
+- Contract in the `:core:notice:api` module.
+- Rendering in the `:core:runtime` notice host package.
 - Feature-specific decision remains in feature/app state owner.
 
 ## Target Network API
@@ -295,7 +295,7 @@ Required observations:
 
 Do not store or assert real tokens.
 
-## Relationship To Feedback
+## Relationship To Notice
 
 Network must not directly show UI.
 
@@ -304,8 +304,8 @@ Allowed flow:
 ```text
 network throws typed failure
 repository maps to domain failure
-ViewModel/app reducer maps to FeedbackRequest or UiState
-:core:app FeedbackHost shows Toast/Alert/Snackbar
+ViewModel/app reducer maps to NoticeRequest or UiState
+:core:runtime NoticeHost shows Toast/Alert/Snackbar
 ```
 
 Forbidden:
@@ -326,7 +326,7 @@ The reference project's network exception handler coupled network handling to to
 3. Add safe server error envelope parser in `:core:data` or `:core:network:api` depending on final ownership.
 4. Move duplicated protected write error parsing into a shared mapper.
 5. Add typed retryability and correlation id fields.
-6. Map common API failures to `:core:feedback:api` `FeedbackRequest` values.
+6. Map common API failures to `:core:notice:api` `NoticeRequest` values.
 
 ## Verification
 

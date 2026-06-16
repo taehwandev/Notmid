@@ -128,7 +128,7 @@ plugins {
 }
 
 android {
-    namespace = "app.thdev.glassnavlab.coreapp.feedback.api"
+    namespace = "app.thdev.glassnavlab.core.runtime.notice.api"
 }
 
 dependencies {
@@ -138,13 +138,13 @@ dependencies {
 
 If the API can be pure Kotlin, use `glassnavlab.kotlin.library` instead.
 
-## Package Template: Android/Compose App Runtime In `:core:app`
+## Package Template: Android/Compose App Runtime In `:core:runtime`
 
 Use when:
 
 - rendering Toast, AlertDialog, Snackbar, permission launcher, ActivityResult, WebView.
 - implementation depends on Compose Material3 or Android framework.
-- the code belongs to app-runtime commonization but does not deserve a new Gradle module.
+- the code belongs to runtime commonization but does not deserve a new Gradle module.
 
 ```kotlin
 plugins {
@@ -152,7 +152,7 @@ plugins {
 }
 
 android {
-    namespace = "app.thdev.glassnavlab.coreapp"
+    namespace = "app.thdev.glassnavlab.core.runtime"
 }
 
 dependencies {
@@ -162,8 +162,10 @@ dependencies {
 
 Rule:
 
-- Keep API-shaped contracts in a stable package such as `coreapp.feedback.api`.
-- Keep production implementation in a sibling package such as `coreapp.feedback.impl`.
+- Keep API-shaped contracts in a stable package such as
+  `core.notice.api`.
+- Keep production Android/Compose rendering in a runtime package such as
+  `core.runtime.notice.host`.
 - Keep shared test helpers in `src/test` until two or more external test boundaries need them as a real Gradle artifact.
 
 ## Module Template: Assertions
@@ -187,7 +189,7 @@ dependencies {
 }
 ```
 
-Android/Compose inside `:core:app`:
+Android/Compose inside `:core:runtime`:
 
 ```kotlin
 plugins {
@@ -195,7 +197,7 @@ plugins {
 }
 
 android {
-    namespace = "app.thdev.glassnavlab.coreapp"
+    namespace = "app.thdev.glassnavlab.core.runtime"
 }
 
 dependencies {
@@ -220,7 +222,7 @@ include(
 )
 
 include(
-    ":core:app",
+    ":core:runtime",
 )
 ```
 
@@ -233,9 +235,9 @@ Prefer stable namespace names that describe ownership.
 ```text
 app.thdev.glassnavlab.core.router.assertions
 app.thdev.glassnavlab.core.network.assertions
-app.thdev.glassnavlab.coreapp.feedback.api
-app.thdev.glassnavlab.coreapp.feedback.impl
-app.thdev.glassnavlab.coreapp.feedback.assertions
+app.thdev.glassnavlab.core.notice.api
+app.thdev.glassnavlab.core.runtime.notice.host
+app.thdev.glassnavlab.core.notice.assertions
 ```
 
 Avoid:
@@ -270,7 +272,7 @@ Do not add:
 - Is a new convention backed by at least two modules?
 - Are reference project plugin IDs absent?
 - Does `assertions` avoid production implementation dependencies?
-- Are module names and package names consistent with `core` vs `core/app`?
+- Are module names and package names consistent with `core` vs `core/runtime`?
 
 ## Verification
 

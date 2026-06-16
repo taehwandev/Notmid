@@ -154,17 +154,17 @@ packages/api-client
   composer disabled from `thread.chatAccess.canSendMessage`. Feature UI never
   decides whether two users are friends; it only renders `chatAccess` and emits
   accept/reject callbacks.
-- Android feedback presentation is a side effect, not feature-local string
-  plumbing. `:core:feedback:api` owns `FeedbackRequest`, `FeedbackEffect`, and
-  the feedback delegate contract (`Toast`, `Snackbar`, `Alert`, `Inline`,
-  `FullPage`, optional shared action/deep link). `:core:app` owns
-  lifecycle-aware effect collection and rendering through `FeedbackHost`.
+- Android notice presentation is a side effect, not feature-local string
+  plumbing. `:core:notice:api` owns `NoticeRequest`, `NoticeEffect`, and
+  the notice delegate contract (`Toast`, `Snackbar`, `Alert`, `Inline`,
+  `FullPage`, optional shared action/deep link). `:core:runtime` owns
+  lifecycle-aware effect collection and rendering through `NoticeHost`.
   `:core:designsystem` owns visual primitives such as `NotmidSnackbarHost`.
   `NotmidAppViewModel` exposes persistent app state as
   `StateFlow<NotmidAppUiState>` and one-shot toast/alert effects as
-  `SharedFlow<FeedbackEffect>` with `replay = 0` through the injected
-  `:core:feedback:api` `FeedbackEffectDelegate`. `MainActivity` collects state with
-  `collectAsStateWithLifecycle`, while `:core:app` collects effects
+  `SharedFlow<NoticeEffect>` with `replay = 0` through the injected
+  `:core:notice:api` `NoticeEffectDelegate`. `MainActivity` collects state with
+  `collectAsStateWithLifecycle`, while `:core:runtime` collects effects
   with `LifecycleStartEffect`, so stopped UI does not receive stale toast/alert
   effects when it resumes. `:app` maps typed repository/auth failures into these
   effects after updating stable screen state.
@@ -226,10 +226,10 @@ API route/input/auth/rate-limit failure
   read raises the same typed content exception path and the ViewModel decides
   the visible app-shell error state. Android protected writes throw
   `NotmidProtectedWriteException`; `NotmidAppViewModel` catches it, updates
-  inline feedback state when needed, and emits
-  `FeedbackEffect.ShowFeedback` for toast/alert interactions. If the server
+  inline notice state when needed, and emits
+  `NoticeEffect.ShowNotice` for toast/alert interactions. If the server
   later sends presentation hints, the data/app boundary should map them into
-  `FeedbackRequest` instead of exposing raw server envelopes to feature screens.
+  `NoticeRequest` instead of exposing raw server envelopes to feature screens.
 - Retries must be explicit. Rate-limited responses use `retry-after`; protected
   web write refresh retry is limited to one session refresh; mutating writes
   should not be retried automatically unless the API path is idempotent or the
