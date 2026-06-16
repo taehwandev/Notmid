@@ -24,20 +24,21 @@ If the change touches Liquid Glass navigation rendering, AGSL, backdrop capture,
 
 3. If modularizing, compare `/Users/taehwankwon/Downloads/firfin-android-main` only for structure: included `build-logic`, convention plugin names, and `feature`/`core-data` style boundaries. Do not copy Firebase, Hilt, ad, banking, or enterprise-specific dependencies unless the task explicitly requires them.
    - For the distilled FirFin reference, read `references/firfin-modularization-reference.md`.
-4. Define the change type: build convention, module split, behavior-preserving move, behavior change, UI/design-system change, fake data/service change, or documentation-only.
-5. Prefer move-first refactors. Keep behavior changes separate from file moves when feasible.
+4. If routing, route events, deep links, `ActivityRoute`, Compose back stacks, or a mixed Activity/Compose navigation surface is involved, use `.agents/skills/android-mixed-activity-compose-router/SKILL.md` first. For the Notmid/FirFin comparison notes, read `references/mixed-activity-compose-router-reference.md`. Borrow FirFin's caller-facing route contract idea, not its production-only KSP, Hilt, or Activity-first implementation.
+5. Define the change type: build convention, module split, behavior-preserving move, behavior change, UI/design-system change, router contract change, fake data/service change, or documentation-only.
+6. Prefer move-first refactors. Keep behavior changes separate from file moves when feasible.
 
 ## Target Shape
 
 Use this module direction unless the current task gives a better reason:
 
-- `:app`: Android entry point only. Owns `MainActivity`, manifest, launcher resources, app theme wiring, and top-level composition. It should depend on feature modules, not own reusable UI or fake data.
+- `:app`: Android entry point only. Owns `MainActivity`, manifest, launcher resources, app theme wiring, top-level composition, app route graph assembly, auth/deferred routing, and Activity launch dispatch. It should depend on feature modules, not own reusable UI or fake data.
 - `:core:designsystem`: Compose theme, colors, typography, shape/elevation tokens, reusable app primitives, and the Liquid Glass navigation component if it is shared across screens.
 - `:core:model`: pure Kotlin immutable models that contain no Android, Compose, `Color`, `Dp`, resource, or repository implementation types.
 - `:core:domain`: pure Kotlin use cases and repository contracts. No Android plugin unless a real Android dependency is needed.
 - `:core:data`: repository implementations and fake service data. Keep mapping from raw product data to domain models here.
-- `:core:router:api`: pure Kotlin router contracts shared by app and feature API modules. Keep it free of AndroidX Navigation until a real NavHost is introduced.
-- `:core:router:impl`: default registry and deep-link matching implementation. Keep Android Activity launching outside this module until an Android-specific router module is needed.
+- `:core:router:api`: pure Kotlin router contracts shared by app and feature API modules. Keep it free of AndroidX Navigation, `Context`, `Intent`, and `NavController` until an Android-specific execution adapter is introduced.
+- `:core:router:impl`: default registry and deep-link matching implementation. Keep Android Activity launching and app-link host policy outside this module until an Android-specific router module is needed.
 - `:feature:notmid:api`: shared notmid route markers, destination ids, route events, and helpers for feature route/deep-link specs.
 - `:feature:notmid:impl`: the notmid Liquid Glass product shell, UI state mapping, product-only components, previews, and feature orchestration. It may depend on `core:domain`, `core:model`, `core:designsystem`, and its own `feature:notmid:api`.
 
@@ -69,6 +70,7 @@ After build-logic changes, verify plugin wiring with:
 
 - Split state-holder composables from plain UI composables. The holder wires repositories, state, effects, and navigation callbacks; the UI composable takes immutable UI state plus explicit callbacks.
 - Feature-to-feature and activity-to-activity communication should go through route/event contracts, not implementation module references. A feature emits its own `feature:*:api` event, and `:app` decides whether that event changes route, opens another feature/activity, or is ignored.
+- Keep caller-facing navigation high level. Feature UI should emit a route event or route intent; `RouteStack`, Activity launch requests, `Intent`, and NavController operations should stay in app/router execution code unless the feature owns a local-only nested graph.
 - Web links must resolve to ordered route stacks. For example, `https://thdev.app/notmid/profile/settings` should become `[Profile, Settings]`, not only a single top destination.
 - Keep UI-local state such as scroll, gesture, animation, focus, and interaction state in the UI when it only affects rendering.
 - Leaf components should accept `Modifier`, plain values, and slots/callbacks. Do not pass repositories, activities, or whole state holders into leaf UI.

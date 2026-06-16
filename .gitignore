@@ -18,6 +18,7 @@
 **/.next/
 *.tsbuildinfo
 /captures
+.antigravitycli/
 .externalNativeBuild
 .cxx
 local.properties
@@ -34,3 +35,23 @@ local.properties
 .env.*
 !.env.example
 !**/.env.example
+# Vibe-Guard local secrets
+.env.vibeguard.local
+# VibeGuard local secrets
+!.env.sample
+!.env.template
+!.env.dist
+!.env.defaults
+!.env.schema
+!.env*.default
+!.env*.defaults
+!.env*.dist
+!.env*.example
+!.env*.sample
+!.env*.schema
+!.env*.template
+# VibeGuard local state
+.vibeguard/
+
+# AgentPlaybook local evidence
+.agentplaybook/

@@ -73,9 +73,12 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
 
 ## Routing Rules
 
+- For mixed Activity and Compose navigation changes, apply `.agents/skills/android-mixed-activity-compose-router/SKILL.md` first. Use `.agents/skills/glassnavlab-android-stewardship/references/mixed-activity-compose-router-reference.md` only for the Notmid/FirFin comparison notes. The caller should say where to go; the app router decides whether that becomes a Compose stack mutation, Activity launch, deferred auth route, or future Nav3 back stack.
 - Deep links must resolve to ordered stacks, not just a top destination.
 - Feature impl modules emit events; `:app` converts events into route stacks.
 - WebView is an `ActivityRoute`; normal screens are `ComposeRoute`.
+- Keep `RouteStack` and `RouteCommand` as router execution artifacts where possible. Feature UI should prefer route events or route intents so callers do not need to know whether a destination is Activity-backed or Compose-backed.
+- App owns scheme/host/base path policy, auth/deferred routing, pending deep-link consumption, and Activity launch dispatch. Feature API owns route data, route specs, deep-link specs, and public route events.
 - New dynamic screens should add:
   - route data class in feature API
   - `RouteSpec`

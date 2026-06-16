@@ -1,0 +1,12 @@
+{
+  "rulesPath": "${AGENTPLAYBOOK_HOME:-$HOME/Documents/KeyFlowVault/AgentPlaybook}",
+  "maxFileLines": 500,
+  "autoFix": {
+    "envGitignore": true,
+    "envExample": true,
+    "simpleSecretQuarantine": true
+  },
+  "update": {
+    "checkIntervalDays": 7
+  }
+}
