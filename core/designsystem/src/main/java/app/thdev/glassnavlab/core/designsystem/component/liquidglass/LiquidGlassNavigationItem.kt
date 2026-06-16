@@ -15,5 +15,6 @@ data class LiquidGlassNavigationItem(
 data class LiquidGlassNavigationAction(
     val contentDescription: String,
     val icon: @Composable (contentColor: Color) -> Unit,
+    val selected: Boolean = false,
     val onClick: () -> Unit,
 )

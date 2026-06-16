@@ -1,10 +1,8 @@
 package app.thdev.glassnavlab.core.designsystem.component.liquidglass
 
 import android.os.Build
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,8 +18,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,13 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.input.pointer.PointerInputScope
-import androidx.compose.ui.input.pointer.PointerInputChange
-import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
-import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
@@ -63,9 +53,6 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withTimeout
-import kotlin.math.abs
-import kotlin.math.roundToInt
 
 @Composable
 fun LiquidGlassBottomNavigation(
@@ -93,7 +80,6 @@ fun LiquidGlassBottomNavigation(
     },
 ) {
     val selectedItemId = resolveSelectedItemId(
-        items = items,
         state = state,
     )
 
@@ -139,11 +125,12 @@ fun LiquidGlassBottomNavigationBar(
 ) {
     if (items.isEmpty()) return
 
-    val selectedIndex = items.indexOfFirst { it.id == selectedItemId }.coerceAtLeast(0)
+    val selectedIndex = items.indexOfFirst { it.id == selectedItemId }
+    val motionSelectedIndex = selectedIndex.coerceAtLeast(0)
     var gestureGlassActive by remember { mutableStateOf(false) }
     var selectionTransitionActive by remember { mutableStateOf(false) }
-    var observedSelectedIndex by remember { mutableStateOf(selectedIndex) }
-    var activeIndex by remember { mutableFloatStateOf(selectedIndex.toFloat()) }
+    var observedSelectedIndex by remember { mutableStateOf(motionSelectedIndex) }
+    var activeIndex by remember { mutableFloatStateOf(motionSelectedIndex.toFloat()) }
     val glassActive = gestureGlassActive || selectionTransitionActive
     val glassProgress by animateFloatAsState(
         targetValue = if (glassActive) 1f else 0f,
@@ -151,7 +138,7 @@ fun LiquidGlassBottomNavigationBar(
         label = "liquid selected glass progress",
     )
     val pillIndex by animateFloatAsState(
-        targetValue = if (gestureGlassActive) activeIndex else selectedIndex.toFloat(),
+        targetValue = if (gestureGlassActive) activeIndex else motionSelectedIndex.toFloat(),
         animationSpec = spring(dampingRatio = 0.78f, stiffness = 650f),
         label = "liquid selected index",
     )
@@ -163,7 +150,7 @@ fun LiquidGlassBottomNavigationBar(
     )
 
     LaunchedEffect(selectedIndex) {
-        if (selectedIndex != observedSelectedIndex) {
+        if (selectedIndex >= 0 && selectedIndex != observedSelectedIndex) {
             observedSelectedIndex = selectedIndex
             selectionTransitionActive = true
             delay(520)
@@ -239,33 +226,35 @@ fun LiquidGlassBottomNavigationBar(
                     val selectedPillX = (
                         contentPaddingStart + pillOffset + (tabWidth - selectedPillWidth) / 2f
                     ).coerceIn(0.dp, barWidth - selectedPillWidth)
-                    Box(
-                        modifier = Modifier
-                            .offset(
-                                x = selectedPillX,
-                                y = style.contentPadding.calculateTopPadding() +
-                                    (style.itemHeight - style.selectedPillHeight) / 2f,
-                            )
-                            .width(selectedPillWidth)
-                            .height(style.selectedPillHeight)
-                            .liquidGlassSurface(
-                                backdrop = backdrop,
-                                shape = { style.itemShape },
-                                surfaceColor = colors.selectedSurfaceColor,
-                                renderMode = renderMode,
-                                glassIntensity = glassProgress,
-                                activeBlur = 5.dp,
-                                refractionHeight = 9.dp,
-                                refractionAmount = 12.dp,
-                                chromaticAberration = true,
-                                flatWhenIdle = true,
-                                layerBlock = {
-                                    val scale = lerp(1f, 1.03f, glassProgress)
-                                    scaleX = scale
-                                    scaleY = scale
-                                },
-                            )
-                    )
+                    if (selectedIndex >= 0) {
+                        Box(
+                            modifier = Modifier
+                                .offset(
+                                    x = selectedPillX,
+                                    y = style.contentPadding.calculateTopPadding() +
+                                        (style.itemHeight - style.selectedPillHeight) / 2f,
+                                )
+                                .width(selectedPillWidth)
+                                .height(style.selectedPillHeight)
+                                .liquidGlassSurface(
+                                    backdrop = backdrop,
+                                    shape = { style.itemShape },
+                                    surfaceColor = colors.selectedSurfaceColor,
+                                    renderMode = renderMode,
+                                    glassIntensity = glassProgress,
+                                    activeBlur = 5.dp,
+                                    refractionHeight = 9.dp,
+                                    refractionAmount = 12.dp,
+                                    chromaticAberration = true,
+                                    flatWhenIdle = true,
+                                    layerBlock = {
+                                        val scale = lerp(1f, 1.03f, glassProgress)
+                                        scaleX = scale
+                                        scaleY = scale
+                                    },
+                                )
+                        )
+                    }
 
                     Row(
                         modifier = Modifier
@@ -372,9 +361,13 @@ private fun LiquidGlassNavigationActionButton(
             .liquidGlassSurface(
                 backdrop = backdrop,
                 shape = { style.actionButtonShape },
-                surfaceColor = colors.actionSurfaceColor,
+                surfaceColor = if (action.selected) {
+                    colors.selectedSurfaceColor
+                } else {
+                    colors.actionSurfaceColor
+                },
                 renderMode = renderMode,
-                glassIntensity = 0f,
+                glassIntensity = if (action.selected) 0.35f else 0f,
                 baseBlur = 14.dp,
                 activeBlur = 5.dp,
                 refractionHeight = 8.dp,
@@ -383,139 +376,14 @@ private fun LiquidGlassNavigationActionButton(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        action.icon(colors.actionContentColor)
-    }
-}
-
-@Composable
-private fun rememberLiquidGlassResolvedColors(
-    style: LiquidGlassNavigationStyle,
-    adaptiveBackgroundColor: Color,
-): LiquidGlassResolvedColors {
-    val tone = rememberLiquidGlassTone(adaptiveBackgroundColor)
-    val target = resolveLiquidGlassColors(style, tone)
-    val colorAnimationSpec = tween<Color>(durationMillis = 650)
-    val containerSurfaceColor by animateColorAsState(
-        targetValue = target.containerSurfaceColor,
-        animationSpec = colorAnimationSpec,
-        label = "liquid container surface color",
-    )
-    val selectedSurfaceColor by animateColorAsState(
-        targetValue = target.selectedSurfaceColor,
-        animationSpec = colorAnimationSpec,
-        label = "liquid selected surface color",
-    )
-    val actionSurfaceColor by animateColorAsState(
-        targetValue = target.actionSurfaceColor,
-        animationSpec = colorAnimationSpec,
-        label = "liquid action surface color",
-    )
-    val selectedContentColor by animateColorAsState(
-        targetValue = target.selectedContentColor,
-        animationSpec = colorAnimationSpec,
-        label = "liquid selected content color",
-    )
-    val unselectedContentColor by animateColorAsState(
-        targetValue = target.unselectedContentColor,
-        animationSpec = colorAnimationSpec,
-        label = "liquid unselected content color",
-    )
-    val actionContentColor by animateColorAsState(
-        targetValue = target.actionContentColor,
-        animationSpec = colorAnimationSpec,
-        label = "liquid action content color",
-    )
-
-    return LiquidGlassResolvedColors(
-        containerSurfaceColor = containerSurfaceColor,
-        selectedSurfaceColor = selectedSurfaceColor,
-        actionSurfaceColor = actionSurfaceColor,
-        selectedContentColor = selectedContentColor,
-        unselectedContentColor = unselectedContentColor,
-        actionContentColor = actionContentColor,
-    )
-}
-
-@Composable
-private fun rememberLiquidGlassTone(adaptiveBackgroundColor: Color): LiquidGlassTone? {
-    if (adaptiveBackgroundColor == Color.Unspecified) return null
-
-    var tone by remember {
-        mutableStateOf(toneForLuminance(adaptiveBackgroundColor.luminance()))
-    }
-
-    LaunchedEffect(adaptiveBackgroundColor) {
-        val luminance = adaptiveBackgroundColor.luminance()
-        tone = when (tone) {
-            LiquidGlassTone.Light -> {
-                if (luminance < DarkToneLuminanceThreshold) {
-                    LiquidGlassTone.Dark
-                } else {
-                    LiquidGlassTone.Light
-                }
-            }
-
-            LiquidGlassTone.Dark -> {
-                if (luminance > LightToneLuminanceThreshold) {
-                    LiquidGlassTone.Light
-                } else {
-                    LiquidGlassTone.Dark
-                }
-            }
-        }
-    }
-
-    return tone
-}
-
-private fun resolveLiquidGlassColors(
-    style: LiquidGlassNavigationStyle,
-    tone: LiquidGlassTone?,
-): LiquidGlassResolvedColors {
-    if (tone == null) {
-        return LiquidGlassResolvedColors(
-            containerSurfaceColor = style.containerSurfaceColor,
-            selectedSurfaceColor = style.selectedSurfaceColor,
-            actionSurfaceColor = style.selectedSurfaceColor,
-            selectedContentColor = style.selectedContentColor,
-            unselectedContentColor = style.unselectedContentColor,
-            actionContentColor = style.selectedContentColor,
+        action.icon(
+            if (action.selected) {
+                colors.selectedContentColor
+            } else {
+                colors.actionContentColor
+            },
         )
     }
-
-    return when (tone) {
-        LiquidGlassTone.Light -> LiquidGlassResolvedColors(
-            containerSurfaceColor = Color.White.copy(alpha = 0.26f),
-            selectedSurfaceColor = Color.White.copy(alpha = 0.42f),
-            actionSurfaceColor = Color.White.copy(alpha = 0.30f),
-            selectedContentColor = Color(0xFF111111),
-            unselectedContentColor = Color(0xFF2F343A).copy(alpha = 0.52f),
-            actionContentColor = Color(0xFF111111),
-        )
-
-        LiquidGlassTone.Dark -> LiquidGlassResolvedColors(
-            containerSurfaceColor = Color(0xFF34414B).copy(alpha = 0.34f),
-            selectedSurfaceColor = Color(0xFF7E8A94).copy(alpha = 0.38f),
-            actionSurfaceColor = Color(0xFF65717B).copy(alpha = 0.36f),
-            selectedContentColor = Color.White.copy(alpha = 0.98f),
-            unselectedContentColor = Color(0xFFDCE6EF).copy(alpha = 0.54f),
-            actionContentColor = Color.White.copy(alpha = 0.98f),
-        )
-    }
-}
-
-private data class LiquidGlassResolvedColors(
-    val containerSurfaceColor: Color,
-    val selectedSurfaceColor: Color,
-    val actionSurfaceColor: Color,
-    val selectedContentColor: Color,
-    val unselectedContentColor: Color,
-    val actionContentColor: Color,
-)
-
-private enum class LiquidGlassTone {
-    Light,
-    Dark,
 }
 
 private fun Modifier.liquidGlassSurface(
@@ -594,159 +462,11 @@ private fun LiquidGlassNavigationItemContent(
     }
 }
 
-private fun toneForLuminance(luminance: Float): LiquidGlassTone {
-    return if (luminance < InitialDarkToneLuminanceThreshold) {
-        LiquidGlassTone.Dark
-    } else {
-        LiquidGlassTone.Light
-    }
-}
-
-private const val InitialDarkToneLuminanceThreshold = 0.44f
-private const val DarkToneLuminanceThreshold = 0.34f
-private const val LightToneLuminanceThreshold = 0.58f
-
-private suspend fun PointerInputScope.liquidTabGestureInput(
-    itemsSize: Int,
-    contentPaddingStartPx: Float,
-    contentPaddingEndPx: Float,
-    onGlassActiveChanged: (Boolean) -> Unit,
-    onActiveIndexChanged: (Float) -> Unit,
-    onVelocityChanged: (Float) -> Unit,
-    onItemSelected: (Int) -> Unit,
-) {
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false)
-        val tabWidthPx = ((size.width - contentPaddingStartPx - contentPaddingEndPx) / itemsSize)
-            .coerceAtLeast(1f)
-
-        fun indexFor(x: Float): Float {
-            return ((x - contentPaddingStartPx) / tabWidthPx - 0.5f)
-                .coerceIn(0f, (itemsSize - 1).toFloat())
-        }
-
-        var activeIndex = indexFor(down.position.x)
-        var selectedIndex = activeIndex.roundToInt().coerceIn(0, itemsSize - 1)
-        var lastX = down.position.x
-        var movedPastSlop = false
-        var pointerUp = false
-
-        fun processChange(change: PointerInputChange) {
-            val nextIndex = indexFor(change.position.x)
-            val nextSelectedIndex = nextIndex.roundToInt().coerceIn(0, itemsSize - 1)
-            val frameVelocity = ((change.position.x - lastX) / tabWidthPx).coerceIn(-1f, 1f)
-
-            activeIndex = nextIndex
-            lastX = change.position.x
-            onActiveIndexChanged(activeIndex)
-            onVelocityChanged(frameVelocity)
-
-            if (nextSelectedIndex != selectedIndex) {
-                selectedIndex = nextSelectedIndex
-                onItemSelected(selectedIndex)
-            }
-
-            if (change.positionChange().x != 0f || change.positionChange().y != 0f) {
-                change.consume()
-            }
-        }
-
-        onActiveIndexChanged(activeIndex)
-        onItemSelected(selectedIndex)
-        onGlassActiveChanged(false)
-        onVelocityChanged(0f)
-
-        try {
-            withTimeout(viewConfiguration.longPressTimeoutMillis) {
-                while (true) {
-                    val event = awaitPointerEvent()
-                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
-
-                    if (change.changedToUpIgnoreConsumed() || !change.pressed) {
-                        pointerUp = true
-                        break
-                    }
-
-                    val totalDx = change.position.x - down.position.x
-                    val totalDy = change.position.y - down.position.y
-                    if (!movedPastSlop &&
-                        (abs(totalDx) > viewConfiguration.touchSlop ||
-                            abs(totalDy) > viewConfiguration.touchSlop)
-                    ) {
-                        movedPastSlop = true
-                        onGlassActiveChanged(true)
-                        break
-                    }
-
-                    processChange(change)
-                }
-            }
-        } catch (_: PointerEventTimeoutCancellationException) {
-            if (!movedPastSlop && !pointerUp) {
-                onGlassActiveChanged(true)
-            }
-        }
-
-        while (!pointerUp) {
-            val event = awaitPointerEvent()
-            val change = event.changes.firstOrNull { it.id == down.id } ?: break
-
-            if (change.changedToUpIgnoreConsumed() || !change.pressed) {
-                pointerUp = true
-                break
-            }
-
-            processChange(change)
-        }
-
-        onGlassActiveChanged(false)
-        onVelocityChanged(0f)
-    }
-}
-
-private suspend fun PointerInputScope.liquidActionButtonInput(
-    onPressedChanged: (Boolean) -> Unit,
-    onClick: () -> Unit,
-) {
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false)
-        onPressedChanged(true)
-
-        var releasedInside = false
-        while (true) {
-            val event = awaitPointerEvent()
-            val change = event.changes.firstOrNull { it.id == down.id } ?: break
-
-            if (change.changedToUpIgnoreConsumed() || !change.pressed) {
-                releasedInside = change.position.x in 0f..size.width.toFloat() &&
-                    change.position.y in 0f..size.height.toFloat()
-                break
-            }
-
-            if (change.positionChange().x != 0f || change.positionChange().y != 0f) {
-                change.consume()
-            }
-        }
-
-        onPressedChanged(false)
-        if (releasedInside) {
-            onClick()
-        }
-    }
-}
-
 private fun shouldUseLens(renderMode: LiquidGlassRenderMode): Boolean {
     return renderMode != LiquidGlassRenderMode.Legacy &&
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 }
 
-private fun resolveSelectedItemId(
-    items: List<LiquidGlassNavigationItem>,
-    state: LiquidGlassNavigationState,
-): String {
-    return if (items.any { it.id == state.selectedItemId }) {
-        state.selectedItemId
-    } else {
-        items.firstOrNull()?.id.orEmpty()
-    }
+private fun resolveSelectedItemId(state: LiquidGlassNavigationState): String {
+    return state.selectedItemId
 }

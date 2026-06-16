@@ -21,6 +21,7 @@ fun NotmidRouteDetailContent(
     primaryPlace: NotmidPlace,
     listState: LazyListState,
     modifier: Modifier = Modifier,
+    actions: (@Composable () -> Unit)? = null,
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -39,6 +40,12 @@ fun NotmidRouteDetailContent(
                 title = routeTitle,
                 subtitle = routeSubtitle,
             )
+        }
+
+        if (actions != null) {
+            item(key = "route-detail-actions-$routeMeta") {
+                actions()
+            }
         }
 
         item(key = "route-detail-clip-$routeMeta") {

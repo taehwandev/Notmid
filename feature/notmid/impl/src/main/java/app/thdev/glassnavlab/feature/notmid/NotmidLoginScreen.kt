@@ -1,7 +1,6 @@
 package app.thdev.glassnavlab.feature.notmid
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,7 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -41,11 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -58,7 +53,10 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 internal fun NotmidLoginScreen(
+    errorMessage: String?,
+    isAuthenticating: Boolean = false,
     onContinueLocal: () -> Unit,
+    onContinueGoogle: () -> Unit = onContinueLocal,
     onBrowseSignedOut: () -> Unit,
 ) {
     var identity by rememberSaveable { mutableStateOf("") }
@@ -92,10 +90,16 @@ internal fun NotmidLoginScreen(
                 onPasswordChange = { password = it },
                 showPassword = showPassword,
                 onTogglePassword = { showPassword = !showPassword },
+                isAuthenticating = isAuthenticating,
                 onContinueLocal = onContinueLocal,
+                onContinueGoogle = onContinueGoogle,
             )
+            if (!errorMessage.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                LoginErrorMessage(errorMessage)
+            }
             Spacer(modifier = Modifier.height(48.dp))
-            LoginFooter(onJoin = onContinueLocal)
+            LoginFooter(enabled = !isAuthenticating, onJoin = onContinueLocal)
             Spacer(modifier = Modifier.height(48.dp))
         }
 
@@ -109,44 +113,23 @@ internal fun NotmidLoginScreen(
 }
 
 @Composable
-private fun KineticLoginBackdrop() {
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        drawRect(
-            brush = Brush.linearGradient(
-                colors = listOf(LoginBackground, LoginSurfaceContainer),
-                start = Offset.Zero,
-                end = Offset(size.width, size.height),
-            ),
-        )
-        drawLine(
-            color = LoginPrimaryContainer.copy(alpha = 0.22f),
-            start = Offset(-size.width * 0.24f, size.height * 0.16f),
-            end = Offset(size.width * 1.08f, size.height * 0.04f),
-            strokeWidth = 58f,
-            cap = StrokeCap.Round,
-        )
-        drawLine(
-            color = LoginOnSurface.copy(alpha = 0.08f),
-            start = Offset(-size.width * 0.16f, size.height * 0.34f),
-            end = Offset(size.width * 1.18f, size.height * 0.24f),
-            strokeWidth = 106f,
-            cap = StrokeCap.Round,
-        )
-        drawLine(
-            color = LoginTertiaryFixed.copy(alpha = 0.14f),
-            start = Offset(-size.width * 0.1f, size.height * 0.62f),
-            end = Offset(size.width * 1.08f, size.height * 0.44f),
-            strokeWidth = 64f,
-            cap = StrokeCap.Round,
-        )
-        drawRect(
-            brush = Brush.verticalGradient(
-                colors = listOf(Color.Transparent, LoginBackground),
-                startY = size.height * 0.36f,
-                endY = size.height,
-            ),
-        )
-    }
+private fun LoginErrorMessage(message: String) {
+    Text(
+        text = message,
+        modifier = Modifier
+            .widthIn(max = 448.dp)
+            .fillMaxWidth()
+            .clip(LoginControlShape)
+            .background(Color.White.copy(alpha = 0.6f))
+            .border(BorderStroke(1.dp, LoginOnSurface.copy(alpha = 0.12f)), LoginControlShape)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        color = LoginOnSurface,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 0.sp,
+        lineHeight = 18.sp,
+        textAlign = TextAlign.Center,
+    )
 }
 
 @Composable
@@ -189,7 +172,9 @@ private fun LoginCard(
     onPasswordChange: (String) -> Unit,
     showPassword: Boolean,
     onTogglePassword: () -> Unit,
+    isAuthenticating: Boolean,
     onContinueLocal: () -> Unit,
+    onContinueGoogle: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -241,7 +226,8 @@ private fun LoginCard(
                 },
             )
             StitchPrimaryButton(
-                text = "Login",
+                text = if (isAuthenticating) "Checking..." else "Login",
+                enabled = !isAuthenticating,
                 onClick = onContinueLocal,
             )
         }
@@ -255,12 +241,14 @@ private fun LoginCard(
             StitchSocialButton(
                 label = "Google",
                 monogram = "G",
-                onClick = onContinueLocal,
+                enabled = !isAuthenticating,
+                onClick = onContinueGoogle,
                 modifier = Modifier.weight(1f),
             )
             StitchSocialButton(
                 label = "Apple",
                 monogram = "A",
+                enabled = !isAuthenticating,
                 onClick = onContinueLocal,
                 modifier = Modifier.weight(1f),
             )
@@ -353,9 +341,11 @@ private fun StitchPrimaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier
             .fillMaxWidth()
             .height(54.dp),
@@ -414,9 +404,11 @@ private fun StitchSocialButton(
     monogram: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier.height(48.dp),
         shape = LoginControlShape,
         border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)),
@@ -458,7 +450,7 @@ private fun StitchSocialButton(
 }
 
 @Composable
-private fun LoginFooter(onJoin: () -> Unit) {
+private fun LoginFooter(enabled: Boolean, onJoin: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = "Not a member yet?",
@@ -472,7 +464,7 @@ private fun LoginFooter(onJoin: () -> Unit) {
             modifier = Modifier
                 .padding(top = 8.dp)
                 .clip(LoginControlShape)
-                .clickable(onClick = onJoin)
+                .clickable(enabled = enabled, onClick = onJoin)
                 .padding(horizontal = 2.dp, vertical = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -494,34 +486,3 @@ private fun LoginFooter(onJoin: () -> Unit) {
         }
     }
 }
-
-@Composable
-private fun LoginHelpButton(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(48.dp)
-            .shadow(12.dp, CircleShape)
-            .clip(CircleShape)
-            .background(LoginPrimaryContainer),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = "?",
-            color = LoginOnPrimaryContainer,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.ExtraBold,
-            lineHeight = 24.sp,
-        )
-    }
-}
-
-private val LoginBackground = Color(0xFFFAF9F6)
-private val LoginSurfaceContainer = Color(0xFFEFEFEB)
-private val LoginOnSurface = Color(0xFF1A1C1A)
-private val LoginOnSurfaceVariant = Color(0xFF444933)
-private val LoginPrimaryContainer = Color(0xFFCCFF00)
-private val LoginOnPrimaryContainer = Color(0xFF5B7300)
-private val LoginTertiaryFixed = Color(0xFF7DF4FF)
-private val LoginCardShape = RoundedCornerShape(8.dp)
-private val LoginControlShape = RoundedCornerShape(8.dp)
-private val LoginTagShape = RoundedCornerShape(0.dp)

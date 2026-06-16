@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import app.thdev.glassnavlab.core.designsystem.component.liquidglass.LiquidGlassBottomNavigation
+import app.thdev.glassnavlab.core.designsystem.component.liquidglass.LiquidGlassNavigationAction
 import app.thdev.glassnavlab.core.designsystem.component.liquidglass.LiquidGlassNavigationDefaults
 import app.thdev.glassnavlab.core.designsystem.component.liquidglass.LiquidGlassNavigationItem
 import app.thdev.glassnavlab.core.designsystem.component.liquidglass.LiquidGlassNavigationStyle
@@ -32,6 +33,7 @@ fun NotmidBottomNavigation(
     modifier: Modifier = Modifier,
     adaptiveBackgroundColor: Color = Color.Unspecified,
     renderMode: LiquidGlassRenderMode = LiquidGlassRenderMode.Automatic,
+    trailingAction: LiquidGlassNavigationAction? = null,
     onItemSelected: (NotmidBottomNavigationItem) -> Unit = {},
 ) {
     if (items.isEmpty()) return
@@ -48,8 +50,8 @@ fun NotmidBottomNavigation(
     val state = rememberLiquidGlassNavigationState(
         initialSelectedItemId = selectedItemId,
     )
-    LaunchedEffect(selectedItemId, items) {
-        if (state.selectedItemId != selectedItemId && items.any { it.id == selectedItemId }) {
+    LaunchedEffect(selectedItemId) {
+        if (state.selectedItemId != selectedItemId) {
             state.select(selectedItemId)
         }
     }
@@ -62,6 +64,7 @@ fun NotmidBottomNavigation(
         style = NotmidBottomNavigationDefaults.style(),
         renderMode = renderMode,
         adaptiveBackgroundColor = adaptiveBackgroundColor,
+        trailingAction = trailingAction,
         onItemSelected = { item ->
             items.firstOrNull { it.id == item.id }?.let(onItemSelected)
         },
@@ -80,8 +83,8 @@ object NotmidBottomNavigationDefaults {
             actionButtonSize = 62.dp,
             actionButtonSpacing = 10.dp,
             borderColor = NotmidTheme.colors.glassStroke,
-            containerSurfaceColor = NotmidTheme.colors.glassLight.copy(alpha = 0.38f),
-            selectedSurfaceColor = NotmidTheme.colors.glassLightStrong,
+            containerSurfaceColor = NotmidTheme.colors.glassLight.copy(alpha = 0.18f),
+            selectedSurfaceColor = Color(0xFFE1E5EA).copy(alpha = 0.72f),
             menuSurfaceColor = NotmidTheme.colors.glassLight,
             selectedContentColor = NotmidTheme.colors.content,
             unselectedContentColor = NotmidTheme.colors.contentMuted.copy(alpha = 0.62f),

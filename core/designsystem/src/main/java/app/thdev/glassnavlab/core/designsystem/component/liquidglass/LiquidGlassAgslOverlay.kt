@@ -87,9 +87,9 @@ half4 main(float2 coord) {
     float liquid = (waveA * waveB) * 0.5 + 0.5;
 
     float active = progress;
-    float highlight = rim * 0.105
-        + upperSheen * 0.055
-        + diagonal * 0.035
+    float highlight = rim * 0.120
+        + upperSheen * 0.075
+        + diagonal * 0.045
         + liquid * active * 0.052;
     float shade = lowerShade * (0.035 + active * 0.035);
 
@@ -98,11 +98,11 @@ half4 main(float2 coord) {
     color -= float3(shade);
     color = clamp(color, 0.0, 1.0);
 
-    float alpha = surfaceColor.a * 0.18
-        + rim * (0.030 + active * 0.025)
-        + upperSheen * 0.018
+    float alpha = surfaceColor.a * 0.10
+        + rim * (0.048 + active * 0.025)
+        + upperSheen * 0.034
         + liquid * active * 0.020;
-    alpha = clamp(alpha, 0.0, 0.18);
+    alpha = clamp(alpha, 0.0, 0.20);
 
     return half4(color.r, color.g, color.b, alpha);
 }
