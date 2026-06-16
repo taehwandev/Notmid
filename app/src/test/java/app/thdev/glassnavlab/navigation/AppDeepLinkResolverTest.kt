@@ -1,15 +1,16 @@
 package app.thdev.glassnavlab.navigation
 
-import app.thdev.glassnavlab.feature.feed.api.ClipDetailRoute
-import app.thdev.glassnavlab.feature.feed.api.FeedRoute
-import app.thdev.glassnavlab.feature.inbox.api.ChatThreadRoute
-import app.thdev.glassnavlab.feature.inbox.api.InboxRoute
-import app.thdev.glassnavlab.feature.map.api.MapRoute
-import app.thdev.glassnavlab.feature.map.api.PlaceDetailRoute
-import app.thdev.glassnavlab.feature.profile.api.ProfileRoute
-import app.thdev.glassnavlab.feature.profile.api.ProfileSettingsRoute
-import app.thdev.glassnavlab.feature.webview.api.WebViewMode
-import app.thdev.glassnavlab.feature.webview.api.WebViewRoute
+import app.thdev.glassnavlab.core.router.assertions.assertRoutePlan
+import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
+import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
+import app.thdev.glassnavlab.feature.inbox.api.route.ChatThreadRoute
+import app.thdev.glassnavlab.feature.inbox.api.route.InboxRoute
+import app.thdev.glassnavlab.feature.map.api.route.MapRoute
+import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
+import app.thdev.glassnavlab.feature.profile.api.route.ProfileRoute
+import app.thdev.glassnavlab.feature.profile.api.route.ProfileSettingsRoute
+import app.thdev.glassnavlab.feature.webview.api.route.WebViewMode
+import app.thdev.glassnavlab.feature.webview.api.route.WebViewRoute
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -21,10 +22,10 @@ class AppDeepLinkResolverTest {
     fun feedDeepLinkResolvesFeedStack() {
         val plan = resolver.resolve("https://thdev.app/notmid/feed")
 
-        assertEquals(
-            listOf(FeedRoute),
-            plan?.composeStack?.entries,
-        )
+        plan?.assertRoutePlan {
+            hasComposeStack(FeedRoute)
+            hasNoActivityRoutes()
+        }
     }
 
     @Test
@@ -51,20 +52,20 @@ class AppDeepLinkResolverTest {
     fun nestedSettingsDeepLinkResolvesOrderedStack() {
         val plan = resolver.resolve("https://thdev.app/notmid/profile/settings")
 
-        assertEquals(
-            listOf(ProfileRoute, ProfileSettingsRoute),
-            plan?.composeStack?.entries,
-        )
+        plan?.assertRoutePlan {
+            hasComposeStack(ProfileRoute, ProfileSettingsRoute)
+            hasNoActivityRoutes()
+        }
     }
 
     @Test
     fun clipDeepLinkResolvesOrderedFeedStack() {
         val plan = resolver.resolve("https://thdev.app/notmid/feed/clips/cafe-queue-check")
 
-        assertEquals(
-            listOf(FeedRoute, ClipDetailRoute("cafe-queue-check")),
-            plan?.composeStack?.entries,
-        )
+        plan?.assertRoutePlan {
+            hasComposeStack(FeedRoute, ClipDetailRoute("cafe-queue-check"))
+            hasNoActivityRoutes()
+        }
     }
 
     @Test

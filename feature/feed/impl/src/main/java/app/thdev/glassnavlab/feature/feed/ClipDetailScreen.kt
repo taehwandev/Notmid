@@ -7,7 +7,7 @@ import app.thdev.glassnavlab.core.designsystem.component.NotmidButton
 import app.thdev.glassnavlab.core.designsystem.component.NotmidButtonVariant
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidColorTokens
 import app.thdev.glassnavlab.core.model.notmid.NotmidNavigationIcon
-import app.thdev.glassnavlab.feature.feed.api.ClipDetailRoute
+import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
 import app.thdev.glassnavlab.feature.notmid.common.components.NotmidGlassIcon
 import app.thdev.glassnavlab.feature.notmid.common.components.NotmidRouteDetailContent
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidBadge

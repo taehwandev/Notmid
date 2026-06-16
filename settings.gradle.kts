@@ -35,6 +35,7 @@ include(
     ":core:network:api",
     ":core:network:impl",
     ":core:router:api",
+    ":core:router:assertions",
     ":core:router:impl",
     ":feature:capture:api",
     ":feature:capture:impl",

@@ -31,7 +31,7 @@ import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
-import app.thdev.glassnavlab.feature.notmid.api.NotmidRoute
+import app.thdev.glassnavlab.feature.notmid.api.route.NotmidRoute
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
 
 @Composable
@@ -45,7 +45,7 @@ fun ProfileSettingsScreen(
     onSaveProfileSettings: (displayName: String, homeNeighborhood: String) -> Unit = { _, _ -> },
 ) {
     val routeLabel = remember(navigationStack) {
-        navigationStack.joinToString(" > ") { it.webPathSegments.last() }
+        navigationStack.joinToString(" > ") { it.deepLinkPathSegments.last() }
     }
     val currentUser = authState.session?.user
     var displayName by rememberSaveable(currentUser?.id) {

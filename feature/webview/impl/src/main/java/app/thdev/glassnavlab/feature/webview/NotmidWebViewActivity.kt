@@ -10,8 +10,8 @@ import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import app.thdev.glassnavlab.feature.webview.api.WebViewMode
-import app.thdev.glassnavlab.feature.webview.api.WebViewRoute
+import app.thdev.glassnavlab.feature.webview.api.route.WebViewMode
+import app.thdev.glassnavlab.feature.webview.api.route.WebViewRoute
 
 class NotmidWebViewActivity : Activity() {
     private var webView: WebView? = null

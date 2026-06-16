@@ -3,10 +3,10 @@ package app.thdev.glassnavlab.navigation
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import app.thdev.glassnavlab.core.router.ActivityRoute
+import app.thdev.glassnavlab.core.router.route.ActivityRoute
 import app.thdev.glassnavlab.feature.webview.NotmidWebViewActivity
-import app.thdev.glassnavlab.feature.webview.api.WebViewActivityKeys
-import app.thdev.glassnavlab.feature.webview.api.WebViewRoute
+import app.thdev.glassnavlab.feature.webview.api.activity.WebViewActivityKeys
+import app.thdev.glassnavlab.feature.webview.api.route.WebViewRoute
 
 internal object AppActivityRouteLauncher {
     fun launch(

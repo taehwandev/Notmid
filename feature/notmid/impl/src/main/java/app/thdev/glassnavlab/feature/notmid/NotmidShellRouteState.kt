@@ -4,16 +4,16 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
-import app.thdev.glassnavlab.feature.capture.api.CaptureRoute
-import app.thdev.glassnavlab.feature.feed.api.FeedRoute
-import app.thdev.glassnavlab.feature.inbox.api.ChatThreadRoute
-import app.thdev.glassnavlab.feature.inbox.api.InboxRoute
-import app.thdev.glassnavlab.feature.notmid.api.NotmidDestinationIds
-import app.thdev.glassnavlab.feature.notmid.api.NotmidRoute
+import app.thdev.glassnavlab.feature.capture.api.route.CaptureRoute
+import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
+import app.thdev.glassnavlab.feature.inbox.api.route.ChatThreadRoute
+import app.thdev.glassnavlab.feature.inbox.api.route.InboxRoute
+import app.thdev.glassnavlab.feature.notmid.api.destination.NotmidDestinationIds
+import app.thdev.glassnavlab.feature.notmid.api.route.NotmidRoute
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
 import app.thdev.glassnavlab.feature.notmid.common.model.destinationFor
-import app.thdev.glassnavlab.feature.profile.api.ProfileRoute
-import app.thdev.glassnavlab.feature.profile.api.ProfileSettingsRoute
+import app.thdev.glassnavlab.feature.profile.api.route.ProfileRoute
+import app.thdev.glassnavlab.feature.profile.api.route.ProfileSettingsRoute
 
 internal data class NotmidShellRouteState(
     val activeRoute: NotmidRoute,

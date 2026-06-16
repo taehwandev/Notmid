@@ -1,22 +1,23 @@
 package app.thdev.glassnavlab.navigation
 
-import app.thdev.glassnavlab.core.router.RouteCommand
-import app.thdev.glassnavlab.core.router.RoutePlan
-import app.thdev.glassnavlab.core.router.RouteStack
-import app.thdev.glassnavlab.feature.feed.api.ClipDetailRoute
-import app.thdev.glassnavlab.feature.feed.api.FeedRouteEvent
-import app.thdev.glassnavlab.feature.feed.api.FeedRoute
-import app.thdev.glassnavlab.feature.inbox.api.ChatThreadRoute
-import app.thdev.glassnavlab.feature.inbox.api.InboxRoute
-import app.thdev.glassnavlab.feature.inbox.api.InboxRouteEvent
-import app.thdev.glassnavlab.feature.map.api.MapRoute
-import app.thdev.glassnavlab.feature.map.api.MapRouteEvent
-import app.thdev.glassnavlab.feature.map.api.PlaceDetailRoute
-import app.thdev.glassnavlab.feature.notmid.api.NotmidDestinationIds
-import app.thdev.glassnavlab.feature.notmid.api.NotmidRouteEvent
-import app.thdev.glassnavlab.feature.profile.api.ProfileRoute
-import app.thdev.glassnavlab.feature.profile.api.ProfileSettingsRoute
-import app.thdev.glassnavlab.feature.webview.api.WebViewRouteSpec
+import app.thdev.glassnavlab.core.router.runtime.RouteCommand
+import app.thdev.glassnavlab.core.router.runtime.RoutePlan
+import app.thdev.glassnavlab.core.router.runtime.RouteStack
+import app.thdev.glassnavlab.core.router.assertions.TestActivityRoute
+import app.thdev.glassnavlab.core.router.assertions.assertRouteStack
+import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
+import app.thdev.glassnavlab.feature.feed.api.event.FeedRouteEvent
+import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
+import app.thdev.glassnavlab.feature.inbox.api.route.ChatThreadRoute
+import app.thdev.glassnavlab.feature.inbox.api.route.InboxRoute
+import app.thdev.glassnavlab.feature.inbox.api.event.InboxRouteEvent
+import app.thdev.glassnavlab.feature.map.api.route.MapRoute
+import app.thdev.glassnavlab.feature.map.api.event.MapRouteEvent
+import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
+import app.thdev.glassnavlab.feature.notmid.api.destination.NotmidDestinationIds
+import app.thdev.glassnavlab.feature.notmid.api.event.NotmidRouteEvent
+import app.thdev.glassnavlab.feature.profile.api.route.ProfileRoute
+import app.thdev.glassnavlab.feature.profile.api.route.ProfileSettingsRoute
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -100,38 +101,41 @@ class AppRouterTest {
 
         router.navigate(RouteCommand(RouteStack.single(ProfileRoute)))
 
-        assertEquals(
-            listOf(ProfileRoute),
-            router.backStack.entries,
-        )
+        router.backStack.assertRouteStack {
+            hasEntries(ProfileRoute)
+            containsOnlyComposeRoutes()
+        }
     }
 
     @Test
     fun activityRouteCommandQueuesActivityLaunchWithoutReplacingComposeStack() {
         val router = AppRouter()
-        val webViewRoute = WebViewRouteSpec.create(
-            url = "https://thdev.app/help",
-            title = "Help",
+        val activityRoute = TestActivityRoute(
+            route = "settings-activity",
+            activityKey = "settings",
         )
 
-        router.navigate(RouteCommand(webViewRoute))
+        router.navigate(RouteCommand(activityRoute))
 
         assertEquals(
             listOf(FeedRoute),
             router.backStack.entries,
         )
-        assertEquals(webViewRoute, router.pendingActivityRouteRequest?.route)
+        assertEquals(activityRoute, router.pendingActivityRouteRequest?.route)
     }
 
     @Test
     fun routePlanCanUpdateComposeStackAndQueueActivityLaunchTogether() {
         val router = AppRouter()
-        val webViewRoute = WebViewRouteSpec.create(url = "https://thdev.app/help")
+        val activityRoute = TestActivityRoute(
+            route = "settings-activity",
+            activityKey = "settings",
+        )
 
         router.execute(
             RoutePlan(
                 composeStack = RouteStack.single(ProfileRoute),
-                activityRoutes = listOf(webViewRoute),
+                activityRoutes = listOf(activityRoute),
             ),
         )
 
@@ -139,7 +143,7 @@ class AppRouterTest {
             listOf(ProfileRoute),
             router.backStack.entries,
         )
-        assertEquals(webViewRoute, router.pendingActivityRouteRequest?.route)
+        assertEquals(activityRoute, router.pendingActivityRouteRequest?.route)
     }
 
     @Test
@@ -155,27 +159,14 @@ class AppRouterTest {
     }
 
     @Test
-    fun activityRouteDeepLinkQueuesActivityLaunchWithoutReplacingComposeStack() {
-        val router = AppRouter()
-
-        router.navigateDeepLink("https://thdev.app/notmid/web?url=https%3A%2F%2Fthdev.app%2Fhelp")
-
-        assertEquals(
-            listOf(FeedRoute),
-            router.backStack.entries,
-        )
-        assertEquals(
-            WebViewRouteSpec.create(url = "https://thdev.app/help"),
-            router.pendingActivityRouteRequest?.route,
-        )
-    }
-
-    @Test
     fun consumedActivityRouteClearsPendingRequest() {
         val router = AppRouter()
-        val webViewRoute = WebViewRouteSpec.create(url = "https://thdev.app/help")
+        val activityRoute = TestActivityRoute(
+            route = "settings-activity",
+            activityKey = "settings",
+        )
 
-        router.navigate(RouteCommand(webViewRoute))
+        router.navigate(RouteCommand(activityRoute))
         val requestId = router.pendingActivityRouteRequest?.id ?: error("Missing activity route request.")
 
         router.consumeActivityRouteRequest(requestId)

@@ -4,7 +4,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidColorTokens
-import app.thdev.glassnavlab.feature.map.api.PlaceDetailRoute
+import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
 import app.thdev.glassnavlab.feature.notmid.common.components.NotmidRouteDetailContent
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidBadge
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidClip

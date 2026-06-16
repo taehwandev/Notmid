@@ -11,9 +11,9 @@ import androidx.compose.ui.Modifier
 import app.thdev.glassnavlab.core.designsystem.component.liquidglass.LiquidGlassBackdropHost
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
 import app.thdev.glassnavlab.core.model.notmid.NotmidDestination as NotmidDestinationModel
-import app.thdev.glassnavlab.core.router.RouteEvent
-import app.thdev.glassnavlab.feature.feed.api.FeedRoute
-import app.thdev.glassnavlab.feature.notmid.api.NotmidRoute
+import app.thdev.glassnavlab.core.router.runtime.RouteEvent
+import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
+import app.thdev.glassnavlab.feature.notmid.api.route.NotmidRoute
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidBackgroundColor
 import app.thdev.glassnavlab.feature.notmid.common.model.toNotmidDestinations
 

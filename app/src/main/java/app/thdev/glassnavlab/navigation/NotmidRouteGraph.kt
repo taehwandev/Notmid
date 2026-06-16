@@ -1,42 +1,39 @@
 package app.thdev.glassnavlab.navigation
 
-import app.thdev.glassnavlab.core.router.RouteStack
-import app.thdev.glassnavlab.core.router.WebRouteLink
+import app.thdev.glassnavlab.core.router.runtime.RouteStack
+import app.thdev.glassnavlab.core.router.deeplink.DeepLinkRequest
 import app.thdev.glassnavlab.core.router.impl.DefaultRouteRegistry
-import app.thdev.glassnavlab.feature.capture.api.CaptureDeepLinkSpec
-import app.thdev.glassnavlab.feature.capture.api.CaptureRouteSpec
-import app.thdev.glassnavlab.feature.feed.api.ClipDeepLinkSpec
-import app.thdev.glassnavlab.feature.feed.api.ClipDetailRouteSpec
-import app.thdev.glassnavlab.feature.feed.api.FeedDeepLinkSpec
-import app.thdev.glassnavlab.feature.feed.api.FeedRoute
-import app.thdev.glassnavlab.feature.feed.api.FeedRouteSpec
-import app.thdev.glassnavlab.feature.inbox.api.ChatDeepLinkSpec
-import app.thdev.glassnavlab.feature.inbox.api.ChatThreadRouteSpec
-import app.thdev.glassnavlab.feature.inbox.api.InboxRoute
-import app.thdev.glassnavlab.feature.inbox.api.InboxDeepLinkSpec
-import app.thdev.glassnavlab.feature.inbox.api.InboxRouteSpec
-import app.thdev.glassnavlab.feature.map.api.MapDeepLinkSpec
-import app.thdev.glassnavlab.feature.map.api.MapRouteSpec
-import app.thdev.glassnavlab.feature.map.api.MapRoute
-import app.thdev.glassnavlab.feature.map.api.PlaceDeepLinkSpec
-import app.thdev.glassnavlab.feature.map.api.PlaceDetailRouteSpec
-import app.thdev.glassnavlab.feature.notmid.api.NotmidRoute
-import app.thdev.glassnavlab.feature.profile.api.ProfileDeepLinkSpec
-import app.thdev.glassnavlab.feature.profile.api.ProfileRoute
-import app.thdev.glassnavlab.feature.profile.api.ProfileRouteSpec
-import app.thdev.glassnavlab.feature.profile.api.ProfileSettingsDeepLinkSpec
-import app.thdev.glassnavlab.feature.profile.api.ProfileSettingsRoute
-import app.thdev.glassnavlab.feature.webview.api.WebViewDeepLinkSpec
+import app.thdev.glassnavlab.core.router.runtime.RoutePlan
+import app.thdev.glassnavlab.feature.capture.api.deeplink.CaptureDeepLinkSpec
+import app.thdev.glassnavlab.feature.capture.api.route.CaptureRoute
+import app.thdev.glassnavlab.feature.feed.api.deeplink.ClipDeepLinkSpec
+import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
+import app.thdev.glassnavlab.feature.feed.api.deeplink.FeedDeepLinkSpec
+import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
+import app.thdev.glassnavlab.feature.inbox.api.deeplink.ChatDeepLinkSpec
+import app.thdev.glassnavlab.feature.inbox.api.route.ChatThreadRoute
+import app.thdev.glassnavlab.feature.inbox.api.route.InboxRoute
+import app.thdev.glassnavlab.feature.inbox.api.deeplink.InboxDeepLinkSpec
+import app.thdev.glassnavlab.feature.map.api.deeplink.MapDeepLinkSpec
+import app.thdev.glassnavlab.feature.map.api.route.MapRoute
+import app.thdev.glassnavlab.feature.map.api.deeplink.PlaceDeepLinkSpec
+import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
+import app.thdev.glassnavlab.feature.notmid.api.route.NotmidRoute
+import app.thdev.glassnavlab.feature.profile.api.deeplink.ProfileDeepLinkSpec
+import app.thdev.glassnavlab.feature.profile.api.route.ProfileRoute
+import app.thdev.glassnavlab.feature.profile.api.deeplink.ProfileSettingsDeepLinkSpec
+import app.thdev.glassnavlab.feature.profile.api.route.ProfileSettingsRoute
+import app.thdev.glassnavlab.feature.webview.api.deeplink.WebViewDeepLinkSpec
 
 internal object NotmidRouteGraph {
     private val registry = DefaultRouteRegistry(
         defaultRoute = FeedRoute,
-        topLevelRouteSpecs = listOf(
-            FeedRouteSpec,
-            MapRouteSpec,
-            CaptureRouteSpec,
-            InboxRouteSpec,
-            ProfileRouteSpec,
+        topLevelRoutes = listOf(
+            FeedRoute,
+            MapRoute,
+            CaptureRoute,
+            InboxRoute,
+            ProfileRoute,
         ),
         deepLinkSpecs = listOf(
             ClipDeepLinkSpec,
@@ -70,25 +67,25 @@ internal object NotmidRouteGraph {
     fun clipStack(clipId: String): RouteStack {
         return RouteStack.of(
             FeedRoute,
-            ClipDetailRouteSpec.create(clipId),
+            ClipDetailRoute(clipId),
         )
     }
 
     fun placeStack(placeId: String): RouteStack {
         return RouteStack.of(
             MapRoute,
-            PlaceDetailRouteSpec.create(placeId),
+            PlaceDetailRoute(placeId),
         )
     }
 
     fun chatThreadStack(threadId: String): RouteStack {
         return RouteStack.of(
             InboxRoute,
-            ChatThreadRouteSpec.create(threadId),
+            ChatThreadRoute(threadId),
         )
     }
 
-    fun resolveWebLink(link: WebRouteLink): RouteStack? {
-        return registry.resolve(link)
+    fun resolveDeepLink(request: DeepLinkRequest): RoutePlan? {
+        return registry.resolve(request)
     }
 }

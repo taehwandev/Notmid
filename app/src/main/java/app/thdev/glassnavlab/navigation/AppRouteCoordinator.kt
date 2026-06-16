@@ -1,14 +1,17 @@
 package app.thdev.glassnavlab.navigation
 
-import app.thdev.glassnavlab.core.router.RouteCommand
-import app.thdev.glassnavlab.core.router.RouteEvent
-import app.thdev.glassnavlab.core.router.RoutePlan
+import app.thdev.glassnavlab.core.router.runtime.RouteCommand
+import app.thdev.glassnavlab.core.router.runtime.RouteEvent
+import app.thdev.glassnavlab.core.router.runtime.RoutePlan
 
 internal class AppRouteCoordinator(
     private val deepLinkResolver: AppDeepLinkResolver = AppDeepLinkResolver(),
 ) {
     fun planFor(command: RouteCommand): RoutePlan {
-        return command.plan
+        return when (command) {
+            is RouteCommand.LaunchActivity -> command.plan
+            is RouteCommand.SetComposeStack -> command.plan
+        }
     }
 
     fun planFor(event: RouteEvent): RoutePlan? {

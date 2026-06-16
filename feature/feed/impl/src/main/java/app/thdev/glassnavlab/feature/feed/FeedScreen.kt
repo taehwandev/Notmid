@@ -3,7 +3,7 @@ package app.thdev.glassnavlab.feature.feed
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import app.thdev.glassnavlab.feature.feed.api.FeedRouteEvent
+import app.thdev.glassnavlab.feature.feed.api.event.FeedRouteEvent
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
 
 @Composable

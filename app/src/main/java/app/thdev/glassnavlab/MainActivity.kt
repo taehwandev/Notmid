@@ -41,11 +41,11 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidProfileSettingsUpdateReques
 import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidStartThreadRequest
 import app.thdev.glassnavlab.core.network.notmid.OkHttpNotmidNetworkClient
-import app.thdev.glassnavlab.feature.notmid.api.NotmidDestinationIds
+import app.thdev.glassnavlab.feature.notmid.api.destination.NotmidDestinationIds
 import app.thdev.glassnavlab.feature.notmid.NotmidShellErrorScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellLoadingScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellScreen
-import app.thdev.glassnavlab.feature.notmid.api.NotmidRouteEvent
+import app.thdev.glassnavlab.feature.notmid.api.event.NotmidRouteEvent
 import app.thdev.glassnavlab.navigation.AppActivityRouteLauncher
 import app.thdev.glassnavlab.navigation.rememberAppRouter
 

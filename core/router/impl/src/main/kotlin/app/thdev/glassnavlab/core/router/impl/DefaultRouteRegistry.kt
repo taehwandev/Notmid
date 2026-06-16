@@ -1,55 +1,30 @@
 package app.thdev.glassnavlab.core.router.impl
 
-import app.thdev.glassnavlab.core.router.DeepLinkSpec
-import app.thdev.glassnavlab.core.router.Route
-import app.thdev.glassnavlab.core.router.RouteRegistry
-import app.thdev.glassnavlab.core.router.RouteStack
-import app.thdev.glassnavlab.core.router.TopLevelRouteSpec
-import app.thdev.glassnavlab.core.router.WebRoute
-import app.thdev.glassnavlab.core.router.WebRouteLink
+import app.thdev.glassnavlab.core.router.deeplink.DeepLinkRequest
+import app.thdev.glassnavlab.core.router.deeplink.DeepLinkSpec
+import app.thdev.glassnavlab.core.router.route.TopLevelRoute
+import app.thdev.glassnavlab.core.router.registry.RouteRegistry
+import app.thdev.glassnavlab.core.router.runtime.RoutePlan
+import app.thdev.glassnavlab.core.router.runtime.RouteStack
 
 class DefaultRouteRegistry(
-    defaultRoute: Route,
-    override val topLevelRouteSpecs: List<TopLevelRouteSpec<*>>,
+    defaultRoute: TopLevelRoute,
+    override val topLevelRoutes: List<TopLevelRoute>,
     override val deepLinkSpecs: List<DeepLinkSpec>,
 ) : RouteRegistry {
     override val defaultStack: RouteStack = RouteStack.single(defaultRoute)
 
     override fun stackForDestination(destinationId: String): RouteStack? {
-        return topLevelRouteSpecs
+        return topLevelRoutes
             .firstOrNull { it.destinationId == destinationId }
-            ?.route
             ?.let(RouteStack::single)
     }
 
-    override fun resolve(link: WebRouteLink): RouteStack? {
-        if (link.pathSegments.isEmpty()) return defaultStack
+    override fun resolve(request: DeepLinkRequest): RoutePlan? {
+        if (request.pathSegments.isEmpty()) return RoutePlan.compose(defaultStack)
 
         return deepLinkSpecs
             .sortedByDescending(DeepLinkSpec::priority)
-            .firstNotNullOfOrNull { spec -> spec.match(link) }
-    }
-}
-
-class StaticRouteDeepLinkSpec(
-    private val route: WebRoute,
-    private val stackFactory: () -> RouteStack = { RouteStack.single(route) },
-    override val priority: Int = 0,
-) : DeepLinkSpec {
-    override fun match(link: WebRouteLink): RouteStack? {
-        if (link.pathSegments != route.webPathSegments) return null
-        return stackFactory()
-    }
-}
-
-class PrefixRouteDeepLinkSpec(
-    private val pathPrefix: List<String>,
-    private val stackFactory: (remainingPathSegments: List<String>) -> RouteStack?,
-    override val priority: Int = 0,
-) : DeepLinkSpec {
-    override fun match(link: WebRouteLink): RouteStack? {
-        if (link.pathSegments.size < pathPrefix.size) return null
-        if (link.pathSegments.take(pathPrefix.size) != pathPrefix) return null
-        return stackFactory(link.pathSegments.drop(pathPrefix.size))
+            .firstNotNullOfOrNull { spec -> spec.match(request) }
     }
 }

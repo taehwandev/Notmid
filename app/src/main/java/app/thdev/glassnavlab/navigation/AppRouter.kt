@@ -6,15 +6,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import app.thdev.glassnavlab.core.router.ActivityRoute
-import app.thdev.glassnavlab.core.router.Route
-import app.thdev.glassnavlab.core.router.RouteCommand
-import app.thdev.glassnavlab.core.router.RouteEvent
-import app.thdev.glassnavlab.core.router.RouteEventSink
-import app.thdev.glassnavlab.core.router.RoutePlan
-import app.thdev.glassnavlab.core.router.RouteStack
-import app.thdev.glassnavlab.core.router.Router
-import app.thdev.glassnavlab.feature.notmid.api.NotmidRoute
+import app.thdev.glassnavlab.core.router.route.ActivityRoute
+import app.thdev.glassnavlab.core.router.route.Route
+import app.thdev.glassnavlab.core.router.runtime.RouteCommand
+import app.thdev.glassnavlab.core.router.runtime.RouteEvent
+import app.thdev.glassnavlab.core.router.runtime.RouteEventSink
+import app.thdev.glassnavlab.core.router.runtime.RoutePlan
+import app.thdev.glassnavlab.core.router.runtime.RouteStack
+import app.thdev.glassnavlab.core.router.runtime.Router
+import app.thdev.glassnavlab.feature.notmid.api.route.NotmidRoute
 
 @Composable
 internal fun rememberAppRouter(): AppRouter {

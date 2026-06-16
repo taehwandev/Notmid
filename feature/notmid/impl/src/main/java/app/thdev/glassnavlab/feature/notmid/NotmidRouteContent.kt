@@ -2,28 +2,28 @@ package app.thdev.glassnavlab.feature.notmid
 
 import androidx.compose.runtime.Composable
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
-import app.thdev.glassnavlab.core.router.RouteEvent
+import app.thdev.glassnavlab.core.router.runtime.RouteEvent
 import app.thdev.glassnavlab.feature.capture.CaptureScreen
-import app.thdev.glassnavlab.feature.capture.api.CaptureRoute
+import app.thdev.glassnavlab.feature.capture.api.route.CaptureRoute
 import app.thdev.glassnavlab.feature.feed.ClipDetailScreen
 import app.thdev.glassnavlab.feature.feed.FeedScreen
-import app.thdev.glassnavlab.feature.feed.api.ClipDetailRoute
-import app.thdev.glassnavlab.feature.feed.api.FeedRoute
+import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
+import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
 import app.thdev.glassnavlab.feature.inbox.ChatThreadScreen
 import app.thdev.glassnavlab.feature.inbox.InboxScreen
-import app.thdev.glassnavlab.feature.inbox.api.ChatThreadRoute
-import app.thdev.glassnavlab.feature.inbox.api.InboxRoute
+import app.thdev.glassnavlab.feature.inbox.api.route.ChatThreadRoute
+import app.thdev.glassnavlab.feature.inbox.api.route.InboxRoute
 import app.thdev.glassnavlab.feature.map.MapScreen
 import app.thdev.glassnavlab.feature.map.PlaceDetailScreen
-import app.thdev.glassnavlab.feature.map.api.MapRoute
-import app.thdev.glassnavlab.feature.map.api.MapRouteEvent
-import app.thdev.glassnavlab.feature.map.api.PlaceDetailRoute
-import app.thdev.glassnavlab.feature.notmid.api.NotmidRoute
-import app.thdev.glassnavlab.feature.notmid.api.NotmidRouteEvent
+import app.thdev.glassnavlab.feature.map.api.route.MapRoute
+import app.thdev.glassnavlab.feature.map.api.event.MapRouteEvent
+import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
+import app.thdev.glassnavlab.feature.notmid.api.route.NotmidRoute
+import app.thdev.glassnavlab.feature.notmid.api.event.NotmidRouteEvent
 import app.thdev.glassnavlab.feature.profile.ProfileScreen
 import app.thdev.glassnavlab.feature.profile.ProfileSettingsScreen
-import app.thdev.glassnavlab.feature.profile.api.ProfileRoute
-import app.thdev.glassnavlab.feature.profile.api.ProfileSettingsRoute
+import app.thdev.glassnavlab.feature.profile.api.route.ProfileRoute
+import app.thdev.glassnavlab.feature.profile.api.route.ProfileSettingsRoute
 
 @Composable
 internal fun NotmidRouteContent(

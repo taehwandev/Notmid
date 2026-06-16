@@ -1,12 +1,12 @@
 package app.thdev.glassnavlab.navigation
 
-import app.thdev.glassnavlab.core.router.RouteEvent
-import app.thdev.glassnavlab.core.router.RoutePlan
-import app.thdev.glassnavlab.core.router.RouteStack
-import app.thdev.glassnavlab.feature.feed.api.FeedRouteEvent
-import app.thdev.glassnavlab.feature.inbox.api.InboxRouteEvent
-import app.thdev.glassnavlab.feature.map.api.MapRouteEvent
-import app.thdev.glassnavlab.feature.notmid.api.NotmidRouteEvent
+import app.thdev.glassnavlab.core.router.runtime.RouteEvent
+import app.thdev.glassnavlab.core.router.runtime.RoutePlan
+import app.thdev.glassnavlab.core.router.runtime.RouteStack
+import app.thdev.glassnavlab.feature.feed.api.event.FeedRouteEvent
+import app.thdev.glassnavlab.feature.inbox.api.event.InboxRouteEvent
+import app.thdev.glassnavlab.feature.map.api.event.MapRouteEvent
+import app.thdev.glassnavlab.feature.notmid.api.event.NotmidRouteEvent
 
 internal object NotmidRouteEventMapper {
     fun planFor(event: RouteEvent): RoutePlan? {

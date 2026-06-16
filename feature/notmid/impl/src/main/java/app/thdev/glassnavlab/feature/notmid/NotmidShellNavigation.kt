@@ -12,8 +12,8 @@ import androidx.compose.ui.unit.dp
 import app.thdev.glassnavlab.core.designsystem.component.NotmidBottomNavigation
 import app.thdev.glassnavlab.core.designsystem.component.NotmidBottomNavigationItem
 import app.thdev.glassnavlab.core.designsystem.component.liquidglass.LiquidGlassNavigationAction
-import app.thdev.glassnavlab.feature.notmid.api.NotmidDestinationIds
-import app.thdev.glassnavlab.feature.notmid.api.NotmidRouteEvent
+import app.thdev.glassnavlab.feature.notmid.api.destination.NotmidDestinationIds
+import app.thdev.glassnavlab.feature.notmid.api.event.NotmidRouteEvent
 import app.thdev.glassnavlab.feature.notmid.common.components.NotmidGlassIcon
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
 import com.kyant.backdrop.Backdrop

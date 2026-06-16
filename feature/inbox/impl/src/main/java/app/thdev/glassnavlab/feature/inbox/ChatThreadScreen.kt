@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import app.thdev.glassnavlab.core.designsystem.component.NotmidSectionHeader
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidColorTokens
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
-import app.thdev.glassnavlab.feature.inbox.api.ChatThreadRoute
+import app.thdev.glassnavlab.feature.inbox.api.route.ChatThreadRoute
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
 
 @Composable

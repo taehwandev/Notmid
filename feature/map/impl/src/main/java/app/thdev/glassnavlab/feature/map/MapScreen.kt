@@ -48,7 +48,7 @@ import app.thdev.glassnavlab.core.designsystem.component.NotmidText
 import app.thdev.glassnavlab.core.designsystem.component.NotmidTextVariant
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidColorTokens
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
-import app.thdev.glassnavlab.feature.map.api.MapRouteEvent
+import app.thdev.glassnavlab.feature.map.api.event.MapRouteEvent
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidGeoPoint
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidPlace

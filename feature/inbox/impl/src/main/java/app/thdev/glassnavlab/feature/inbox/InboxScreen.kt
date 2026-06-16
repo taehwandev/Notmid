@@ -19,7 +19,7 @@ import app.thdev.glassnavlab.core.designsystem.component.NotmidPillButton
 import app.thdev.glassnavlab.core.designsystem.component.NotmidSectionHeader
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidColorTokens
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
-import app.thdev.glassnavlab.feature.inbox.api.InboxRouteEvent
+import app.thdev.glassnavlab.feature.inbox.api.event.InboxRouteEvent
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
 
 private val InboxFilters = listOf("All", "Unread", "Clips", "Places")
