@@ -4,7 +4,7 @@
 
 notmid should use a production-shaped router, not ad-hoc string navigation.
 
-The design follows the useful part of FirFin's router idea:
+The design follows the useful part of a reference Android router idea:
 
 - feature API modules own their journey/route contracts
 - app-level router gathers those contracts
@@ -16,7 +16,7 @@ The implementation is adapted for notmid's current shape:
 - single Android Activity
 - Compose screen stack today
 - Activity launch support later
-- web links must produce ordered route stacks
+- web links must produce ordered route plans; Compose links carry route stacks
 
 ## Modules
 
@@ -25,33 +25,28 @@ The implementation is adapted for notmid's current shape:
   Route
   ComposeRoute
   ActivityRoute
-  WebRoute
-  RouteSpec
-  ActivityRouteSpec
-  TopLevelRouteSpec
+  TopLevelRoute
   DeepLinkSpec
+  DeepLinkRequest
   RouteStack
+  RoutePlan
   RouteCommand
   Router
   RouteEvent
   RouteRegistry
-  WebRouteLink
 
 :core:router:impl
   DefaultRouteRegistry
-  StaticRouteDeepLinkSpec
-  PrefixRouteDeepLinkSpec
 
 :feature:*:api
-  FeatureRoute
-  FeatureRouteSpec
-  FeatureDeepLinkSpec
-  FeatureRouteEvent when needed
+  route/FeatureRoute
+  deeplink/FeatureDeepLinkSpec
+  event/FeatureRouteEvent when needed
 
 :feature:webview:api
-  WebViewRoute
-  WebViewRouteSpec
-  WebViewDeepLinkSpec
+  route/WebViewRoute
+  deeplink/WebViewDeepLinkSpec
+  activity/WebViewActivityKeys
 
 :feature:*:impl
   Compose screens only
@@ -88,6 +83,32 @@ feature:feed:impl -> constructs Android Intent for another feature
 feature:feed:impl -> parses app web URLs
 ```
 
+## Contract Shape
+
+Use plain interfaces for route contracts that feature modules and app adapters
+must implement independently:
+
+```text
+Route
+ComposeRoute
+ActivityRoute
+TopLevelRoute
+DeepLinkSpec
+RouteRegistry
+Router
+```
+
+Use `sealed interface` only for closed families owned by one module:
+
+```text
+RouteCommand
+FeatureRouteEvent
+local route policy/result families
+```
+
+`RouteStack` is the ordered Compose back stack. Activity-backed destinations are
+execution requests in `RoutePlan.activityRoutes`, not entries in `RouteStack`.
+
 ## Route Targets
 
 Most app screens are `ComposeRoute`.
@@ -116,7 +137,6 @@ Each feature API owns its contract:
 
 ```kotlin
 object FeedRoute : NotmidTopLevelRoute
-object FeedRouteSpec : NotmidTopLevelRouteSpec<FeedRoute>
 object FeedDeepLinkSpec : NotmidStaticDeepLinkSpec(FeedRoute)
 ```
 
@@ -131,7 +151,6 @@ data class PlaceDetailRoute(
     val placeId: String,
 ) : NotmidRoute
 
-object PlaceDetailRouteSpec : NotmidRouteSpec<PlaceDetailRoute>
 object PlaceDeepLinkSpec : DeepLinkSpec
 ```
 
@@ -142,13 +161,14 @@ data class WebViewRoute(
     val url: String,
 ) : ActivityRoute
 
-object WebViewRouteSpec : ActivityRouteSpec<WebViewRoute>
 object WebViewDeepLinkSpec : DeepLinkSpec
 ```
 
 ## Deep Link Behavior
 
-Deep links must resolve to ordered stacks, not just a destination.
+Deep links must resolve to ordered route plans, not just a destination. Compose
+destinations use `RouteStack`; Activity-backed destinations use
+`RoutePlan.activityRoutes`.
 
 ```text
 https://thdev.app/notmid
@@ -170,7 +190,7 @@ https://thdev.app/notmid/inbox/chats/{threadId}
   -> [Inbox, ChatThread(threadId)]
 
 https://thdev.app/notmid/web?url={encodedUrl}
-  -> [WebViewRoute(url)]
+  -> RoutePlan(activityRoutes=[WebViewRoute(url)])
 ```
 
 The parser also accepts the shorter canonical object paths:
@@ -215,11 +235,11 @@ interface ActivityRoute {
 Then app-level dispatch decides:
 
 ```text
-RouteCommand([Capture])
+RouteCommand.SetComposeStack(RouteStack.single(CaptureRoute))
   -> Compose destination today
   -> Activity launcher tomorrow if Capture becomes a separate Activity
 
-RouteCommand([WebViewRoute])
+RouteCommand.LaunchActivity(WebViewRoute)
   -> WebViewActivity launch
 ```
 
@@ -229,7 +249,8 @@ The feature API remains stable either way.
 
 Minimum tests:
 
-- deep link string resolves to expected `RouteStack`
+- deep link string resolves to expected `RoutePlan`; Compose links assert the
+  expected `RouteStack`
 - unknown deep link returns null
 - route event resolves to expected stack
 - default app route is Feed

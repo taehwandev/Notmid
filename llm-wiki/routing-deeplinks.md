@@ -4,7 +4,22 @@
 
 notmid uses typed route contracts, route events, and a registry. Avoid ad-hoc string navigation.
 
-Feature API modules own route contracts. App shell assembles and executes route stacks.
+Feature API modules own route contracts. App shell assembles and executes route
+plans.
+
+Feature API contracts should be split by caller-facing role once they contain
+more than one contract family:
+
+```text
+route/       route keys and typed route data
+deeplink/    DeepLinkSpec implementations and path matchers
+event/       UI-emitted route events
+destination/ shared destination ids, when used by multiple features
+activity/    Activity keys, when an ActivityRoute needs launcher lookup
+```
+
+Avoid catch-all navigation contract files that mix route data, deep-link
+matching, events, destination ids, and Activity keys.
 
 ## Core Types
 
@@ -12,18 +27,20 @@ Feature API modules own route contracts. App shell assembles and executes route 
 Route
 ComposeRoute
 ActivityRoute
-WebRoute
-RouteSpec
-StaticRouteSpec
-TopLevelRouteSpec
-ActivityRouteSpec
+TopLevelRoute
 DeepLinkSpec
+DeepLinkRequest
 RouteStack
+RoutePlan
 RouteCommand
 RouteEvent
 Router
-WebRouteLink
 ```
+
+`RouteStack` is the ordered Compose back stack only. `ActivityRoute` execution
+requests live in `RoutePlan.activityRoutes`. `RouteCommand` is the app/router
+execution command family that chooses between setting a Compose stack and
+launching Activity-backed destinations.
 
 ## Route Targets
 
@@ -51,7 +68,9 @@ WebView is intentionally an Activity because lifecycle, reload behavior, file ch
 
 ## Deep-Link Behavior
 
-Deep links resolve to ordered stacks.
+Deep links resolve to ordered route plans. Compose destinations produce an
+ordered `RouteStack`; Activity-backed destinations produce an `ActivityRoute`
+launch request.
 
 ```text
 https://thdev.app/notmid
@@ -76,21 +95,20 @@ https://thdev.app/notmid/chats/{threadId}
   -> [Inbox, ChatThread(threadId)]
 
 https://thdev.app/notmid/web?url={encodedUrl}
-  -> [WebViewRoute(url)]
+  -> RoutePlan(activityRoutes=[WebViewRoute(url)])
 ```
 
 WebView URL accepts only `http` and `https`.
 
 ## Adding A Dynamic Screen
 
-1. Add route data class in the owning `feature:*:api`.
-2. Add `RouteSpec`.
-3. Add `DeepLinkSpec`.
-4. Add feature route event if UI opens it.
-5. Register spec in `NotmidRouteGraph`.
-6. Handle event in `AppRouter`.
-7. Render route in `NotmidShellScreen` or owning shell.
-8. Add tests:
+1. Add route data class in the owning `feature:*:api` `route/` package.
+2. Add `DeepLinkSpec` in `deeplink/` when the destination is externally addressable.
+3. Add feature route event in `event/` if UI opens it.
+4. Register the top-level route or deep-link spec in `NotmidRouteGraph` when app-level resolution needs it.
+5. Handle event in `AppRouter`.
+6. Render route in `NotmidShellScreen` or owning shell.
+7. Add tests:
    - `AppDeepLinkResolverTest`
    - `AppRouterTest`
 
@@ -100,8 +118,8 @@ Allowed:
 
 ```text
 feature impl emits FeatureRouteEvent
-app converts event to RouteStack
-app launches ActivityRoute
+app converts event to RoutePlan
+app mutates Compose RouteStack or launches ActivityRoute
 ```
 
 Not allowed:

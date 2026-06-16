@@ -11,6 +11,7 @@
    - routing: `routing-deeplinks.md`
    - web/API: `platform-backend.md`
    - Firebase/security: `firebase-open-source.md`
+   - Android commonization: `../docs/specs/android-commonization/README.md`
 4. Search with `rg` or `rg --files`.
 5. Keep unrelated dirty files untouched.
 
@@ -18,6 +19,9 @@
 
 - Prefer existing module patterns.
 - Keep `api` and `impl` responsibilities separate.
+- Add `assertions` modules only for reusable test doubles, recording fakes, fixtures, and assertion helpers that compile against stable API contracts.
+- Keep `:core:*` pure or implementation-neutral; use `:core-app:*` for Android/Compose app-runtime commonization such as feedback, permission, WebView, ActivityRoute launching, resources, and app-shell helpers.
+- Avoid broad `BaseActivity` or `BaseViewModel` commonization. Prefer small Compose-first runtime contracts and injected delegates.
 - Use `Notmid*` design components in feature/app code.
 - Add route contracts in feature API, not app.
 - Let app shell register and execute routes.

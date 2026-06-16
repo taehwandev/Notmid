@@ -65,6 +65,15 @@ llm-wiki/
 - fake fixtures used by web/API local mode
 - route stack resolver for server/web parity checks
 
+As it grows, `packages/contracts` must split by caller-facing contract family:
+
+- `routes/` for canonical paths and URL helpers.
+- `dto/` or `schema/` for request/response shapes and validation contracts.
+- `fixtures/` for deterministic local data.
+- `parity/` for route/API parity resolvers when a separate caller needs them.
+
+Do not hide all contract families behind one broad `index` export.
+
 `packages/api-client` owns:
 
 - typed fetch wrapper for web and server-side tools

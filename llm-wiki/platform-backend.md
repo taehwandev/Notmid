@@ -51,9 +51,10 @@ apps/web
   production web auth config gate for firebase/disabled vs local fake mode
 
 packages/contracts
-  route helpers
-  shared DTOs
+  route/path helpers
+  shared DTOs or schemas
   deterministic fixture data
+  parity resolvers only when route/API parity needs a reusable contract
 
 packages/api-client
   typed fetch client
@@ -65,6 +66,15 @@ packages/api-client
 - Do not make Android depend on TypeScript packages directly.
 - Keep shared behavior as URL/API docs and generated contracts later.
 - Web and Android should use the same canonical URL shapes.
+- Split TypeScript contract packages by caller-facing role as they grow:
+  route/path helpers, DTO or schema shapes, fixture data, parity resolvers, and
+  API-client transport helpers should not be hidden behind one broad barrel.
+- Keep `apps/api` route handlers, request validation, product policy,
+  repository ports, repository adapters, and error mapping in separate owners
+  when callers or tests need them independently.
+- Keep `apps/web` route rendering, server actions, auth/session cookie handling,
+  API-client calls, and feature UI contracts separate. Client-visible code must
+  not import server-only runtime helpers through a broad shared export.
 - API owns product write policy and token verification.
 - API mutating routes must reject malformed JSON and non-object bodies with a
   stable `NotmidErrorResponse`; invalid bodies should not be treated as empty

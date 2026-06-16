@@ -5,6 +5,7 @@
 ```text
 app/                 Android entry point
 core/                Android core modules
+core-app/            planned Android/Compose app-runtime common modules
 feature/             Android feature api/impl modules
 build-logic/         Android Gradle conventions
 
@@ -18,6 +19,39 @@ packages/
 ```
 
 Android and TypeScript builds are intentionally separate. Share product contracts through URL/API schema and docs, not by making Android consume TypeScript source.
+
+## Planned Android Commonization
+
+The current Android graph already uses feature `api` / `impl` modules. The next
+architecture direction is documented in
+`docs/specs/android-commonization/README.md` and should be applied in small,
+testable slices instead of as a large structure copy.
+
+Target families:
+
+```text
+:core:*                 pure Kotlin or implementation-neutral contracts
+:core-app:*             Android/Compose app-runtime commonization
+:feature:*:api          feature route, event, and public contracts
+:feature:*:impl         feature screens, state holders, and orchestration
+:*:assertions           reusable test doubles, fixtures, recording helpers, assertion DSLs
+```
+
+Rules:
+
+- Keep `:core:*` free of Android and Compose runtime unless a legacy boundary is
+  being migrated.
+- Use `:core-app:*` for feedback hosts, permission adapters, ActivityRoute
+  launch adapters, reusable WebView runtime, resources, and app-shell helpers.
+- `assertions` modules should depend on stable API contracts and test
+  libraries, not production impl modules by default.
+- Do not recreate broad `BaseActivity` or `BaseViewModel` inheritance. Prefer
+  small Compose-first contracts such as `AppEnvironment`, `AppRoot`,
+  `RouteCoordinator`, `FeedbackHost`, and `PermissionHost`.
+- Keep `:core:designsystem` as the visual component/token owner until a
+  deliberate extraction is implemented. If feedback runtime is extracted, its
+  target is `:core-app:feedback`, while visual rendering components can remain
+  in the design system.
 
 ## Ownership
 
@@ -73,15 +107,18 @@ Android and TypeScript builds are intentionally separate. Share product contract
 
 :core:router:api
   pure Kotlin route contracts
-  Route, ComposeRoute, ActivityRoute, WebRoute
-  DeepLinkSpec, RouteStack, RouteCommand
+  Route, ComposeRoute, ActivityRoute, TopLevelRoute
+  DeepLinkSpec, DeepLinkRequest, RouteStack, RoutePlan, RouteCommand
 
 :core:router:impl
-  DefaultRouteRegistry and matching helpers
+  DefaultRouteRegistry
   no Android Activity launching
 
 :feature:notmid:api
-  shared notmid route markers, destination ids, route events
+  route/ shared notmid route markers
+  deeplink/ notmid static deep-link helper
+  destination/ shared destination ids
+  event/ route events
 
 :feature:notmid:common
   product-shaped UI adapters and shared screen sections
@@ -90,7 +127,10 @@ Android and TypeScript builds are intentionally separate. Share product contract
   notmid app shell and feature orchestration
 
 :feature:*:api
-  route contracts, specs, deep-link specs, route events
+  route/ typed route data and top-level route metadata
+  deeplink/ deep-link specs
+  event/ public route events
+  activity/ Activity lookup keys only when the feature exposes ActivityRoute
 
 :feature:*:impl
   Compose screens for that feature only
@@ -104,11 +144,32 @@ apps/web
   React app shell, web routes, shareable detail surfaces
 
 packages/contracts
-  shared TypeScript DTOs, canonical web route helpers, deterministic fixtures
+  routes/ canonical web route helpers and URL shapes
+  dto/ or schema/ shared TypeScript DTO and validation shapes
+  fixtures/ deterministic fixture data
+  parity/ route/API parity resolvers only when needed
 
 packages/api-client
   typed fetch client for web/server-side tooling
 ```
+
+## Cross-Language Contract Boundaries
+
+The split rule is not Android-only. Kotlin modules, TypeScript packages, API
+server folders, web feature folders, and reusable test-support modules should
+all separate caller-facing contract families once their callers differ.
+
+Use separate files/folders or exports for:
+
+- route/path helpers and navigation events
+- DTOs, schemas, and generated contract shapes
+- typed API clients and transport errors
+- server handlers, validation, product policy, and repository adapters
+- fixtures, recording fakes, and assertion helpers
+
+Avoid catch-all `contracts`, `api`, `common`, `utils`, or `index` exports that
+force a caller to import routes, schemas, fixtures, server code, and runtime
+adapters together.
 
 ## Dependency Direction
 
