@@ -34,6 +34,7 @@ include(
     ":core:model",
     ":core:network:api",
     ":core:network:impl",
+    ":core-app",
     ":core:router:api",
     ":core:router:assertions",
     ":core:router:impl",

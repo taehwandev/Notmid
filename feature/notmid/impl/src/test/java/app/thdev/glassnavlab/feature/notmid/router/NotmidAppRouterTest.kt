@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.navigation
+package app.thdev.glassnavlab.feature.notmid.router
 
 import app.thdev.glassnavlab.core.router.runtime.RouteCommand
 import app.thdev.glassnavlab.core.router.runtime.RoutePlan
@@ -22,10 +22,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-class AppRouterTest {
+class NotmidAppRouterTest {
     @Test
     fun startsWithDefaultFeedRoute() {
-        val router = AppRouter()
+        val router = createNotmidAppRouter()
 
         assertEquals(
             listOf(FeedRoute),
@@ -35,7 +35,7 @@ class AppRouterTest {
 
     @Test
     fun destinationSelectedNavigatesThroughRouteRegistry() {
-        val router = AppRouter()
+        val router = createNotmidAppRouter()
 
         router.onRouteEvent(
             NotmidRouteEvent.DestinationSelected(NotmidDestinationIds.MAP),
@@ -49,7 +49,7 @@ class AppRouterTest {
 
     @Test
     fun settingsEventBuildsOrderedProfileStack() {
-        val router = AppRouter()
+        val router = createNotmidAppRouter()
 
         router.onRouteEvent(NotmidRouteEvent.SettingsRequested)
 
@@ -61,7 +61,7 @@ class AppRouterTest {
 
     @Test
     fun feedClipEventBuildsOrderedClipStack() {
-        val router = AppRouter()
+        val router = createNotmidAppRouter()
 
         router.onRouteEvent(FeedRouteEvent.ClipRequested("cafe-queue-check"))
 
@@ -73,7 +73,7 @@ class AppRouterTest {
 
     @Test
     fun mapPlaceEventBuildsOrderedPlaceStack() {
-        val router = AppRouter()
+        val router = createNotmidAppRouter()
 
         router.onRouteEvent(MapRouteEvent.PlaceRequested("millo-roasters"))
 
@@ -85,7 +85,7 @@ class AppRouterTest {
 
     @Test
     fun inboxChatEventBuildsOrderedChatStack() {
-        val router = AppRouter()
+        val router = createNotmidAppRouter()
 
         router.onRouteEvent(InboxRouteEvent.ChatThreadRequested("clip-thread"))
 
@@ -97,7 +97,7 @@ class AppRouterTest {
 
     @Test
     fun directRouteCommandReplacesStack() {
-        val router = AppRouter()
+        val router = createNotmidAppRouter()
 
         router.navigate(RouteCommand(RouteStack.single(ProfileRoute)))
 
@@ -109,7 +109,7 @@ class AppRouterTest {
 
     @Test
     fun activityRouteCommandQueuesActivityLaunchWithoutReplacingComposeStack() {
-        val router = AppRouter()
+        val router = createNotmidAppRouter()
         val activityRoute = TestActivityRoute(
             route = "settings-activity",
             activityKey = "settings",
@@ -126,7 +126,7 @@ class AppRouterTest {
 
     @Test
     fun routePlanCanUpdateComposeStackAndQueueActivityLaunchTogether() {
-        val router = AppRouter()
+        val router = createNotmidAppRouter()
         val activityRoute = TestActivityRoute(
             route = "settings-activity",
             activityKey = "settings",
@@ -148,7 +148,7 @@ class AppRouterTest {
 
     @Test
     fun deepLinkNavigationUsesRoutePlanExecution() {
-        val router = AppRouter()
+        val router = createNotmidAppRouter()
 
         router.navigateDeepLink("https://thdev.app/notmid/profile/settings")
 
@@ -160,7 +160,7 @@ class AppRouterTest {
 
     @Test
     fun consumedActivityRouteClearsPendingRequest() {
-        val router = AppRouter()
+        val router = createNotmidAppRouter()
         val activityRoute = TestActivityRoute(
             route = "settings-activity",
             activityKey = "settings",

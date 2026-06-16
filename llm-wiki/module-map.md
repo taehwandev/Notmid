@@ -5,7 +5,7 @@
 ```text
 app/                 Android entry point
 core/                Android core modules
-core-app/            planned Android/Compose app-runtime common modules
+core-app/            Android/Compose app-runtime common module
 feature/             Android feature api/impl modules
 build-logic/         Android Gradle conventions
 
@@ -31,7 +31,7 @@ Target families:
 
 ```text
 :core:*                 pure Kotlin or implementation-neutral contracts
-:core-app:*             Android/Compose app-runtime commonization
+:core-app               Android/Compose app-runtime commonization
 :feature:*:api          feature route, event, and public contracts
 :feature:*:impl         feature screens, state holders, and orchestration
 :*:assertions           reusable test doubles, fixtures, recording helpers, assertion DSLs
@@ -41,7 +41,7 @@ Rules:
 
 - Keep `:core:*` free of Android and Compose runtime unless a legacy boundary is
   being migrated.
-- Use `:core-app:*` for feedback hosts, permission adapters, ActivityRoute
+- Use `:core-app` packages for feedback hosts, permission adapters, ActivityRoute
   launch adapters, reusable WebView runtime, resources, and app-shell helpers.
 - `assertions` modules should depend on stable API contracts and test
   libraries, not production impl modules by default.
@@ -50,16 +50,17 @@ Rules:
   `RouteCoordinator`, `FeedbackHost`, and `PermissionHost`.
 - Keep `:core:designsystem` as the visual component/token owner until a
   deliberate extraction is implemented. If feedback runtime is extracted, its
-  target is `:core-app:feedback`, while visual rendering components can remain
-  in the design system.
+  target is the `:core-app` feedback package, while visual rendering components
+  can remain in the design system.
 
 ## Ownership
 
 ```text
 :app
   Android entry point, MainActivity, app theme wiring
-  AppRouter, AppDeepLinkResolver, NotmidRouteGraph
-  ActivityRoute dispatch
+  runtime config injection and top-level composition
+  pending external deep-link handoff to the app router runtime
+  concrete ActivityRoute launch binding through core-app launcher registry
   notmid runtime content-source selection and async app-shell loading state
   NotmidAppViewModel for top-level state, auth/write orchestration, and UI effects
   Android Credential Manager Google ID-token provider for Firebase REST exchange
@@ -105,13 +106,27 @@ Rules:
 :core:network:impl
   OkHttp-backed client implementation for the API network boundary
 
+:core-app
+  router/config AppRouterBundleConfig, AppDeepLinkUrlConfig, DefaultAppRouterBundle
+  router/planner AppRoutePlanner and DefaultAppRoutePlanner
+  router/deeplink AppDeepLinkResolver and DefaultAppDeepLinkResolver
+  router/runtime AppRouterRuntime, DefaultAppRouterRuntime, PendingActivityRouteRequest
+  router/activity ActivityRouteLauncher, ActivityRouteLaunchHandler, DefaultActivityRouteLauncher, ActivityRouteLauncherEffect
+  no Notmid feature policy, repositories, feature impl imports, WebView Intent construction, auth policy, or data access
+  test source owns module-local app-router test doubles such as fake deep-link
+  resolver and recording ActivityRoute launcher
+
 :core:router:api
   pure Kotlin route contracts
   Route, ComposeRoute, ActivityRoute, TopLevelRoute
-  DeepLinkSpec, DeepLinkRequest, RouteStack, RoutePlan, RouteCommand
+  DeepLinkSpec, DeepLinkRequest, DeepLinkResolver, RouteStack, RoutePlan
+  RouteCommand, RouteEventHandler, RouteEventPlanner
 
 :core:router:impl
-  DefaultRouteRegistry
+  registry/ DefaultRouteRegistry
+  event/ DefaultRouteEventPlanner
+  deeplink/ DefaultDeepLinkResolver, DeepLinkUrlPolicy, UriDeepLinkRequestParser
+  deeplink/ StaticRouteDeepLinkSpec, PrefixRouteDeepLinkSpec
   no Android Activity launching
 
 :feature:notmid:api
@@ -125,6 +140,8 @@ Rules:
 
 :feature:notmid:impl
   notmid app shell and feature orchestration
+  router/ Notmid route registrations, deep-link registrations, event handlers,
+  rememberNotmidAppRouter, and notmidRouteStack over the reusable core-app bundle
 
 :feature:*:api
   route/ typed route data and top-level route metadata
@@ -187,7 +204,7 @@ Not allowed:
 
 ```text
 feature:feed:impl -> feature:map:impl
-feature impl -> AppRouter
+feature impl -> app router implementation
 core:model -> Compose/Android
 core:designsystem -> product routes or repositories
 core:router:impl -> Android Activity launch

@@ -59,7 +59,7 @@ Notmid는 이미 단일 샘플 앱이 아니라 Android, Web, API, shared contra
 
 현재 부족한 경계:
 
-- `core-app` 모듈군이 아직 없다.
+- `core-app` 단일 모듈이 이제 생겼지만, router 외의 feedback, permission, WebView 런타임 패키지는 아직 없다.
 - `assertions` 모듈군이 없다.
 - `:core:designsystem`이 Android/Compose 앱 UI 런타임인데 `core` 아래 있다.
 - `:core:model`이 순수 모델과 UI feedback/effect 계약을 함께 갖고 있다.
@@ -74,7 +74,7 @@ Notmid는 이미 단일 샘플 앱이 아니라 Android, Web, API, shared contra
 
 ```text
 :core:*                       저수준 계약, lifecycle, router, secure, resource-provider, collector
-:core-app:*                   Android app runtime, Compose, network, dialog, toast, permission, resources
+core-app family               Android app runtime, Compose, network, dialog, toast, permission, resources
 :core-data:domain:*           domain/use case 계열
 :core-data:repository:*:*     repository api/impl 계열
 :feature:*:*                  화면/기능 구현
@@ -85,10 +85,10 @@ Notmid는 이미 단일 샘플 앱이 아니라 Android, Web, API, shared contra
 참조 프로젝트에서 확인한 대표 패턴:
 
 - `core/router/router-api`, `router`, `router-assertion`.
-- `core-app/network/network-api`, `network`, `network-assertion`.
-- `core-app/network/exception/network-exception-api`, `network-exception`, `network-exception-assertion`.
-- `core-app/toast/toast-api`, `toast`, `toast-assertion`.
-- `core-app/dialog/dialog-api`, `dialog`, `dialog-assertion`.
+- app-runtime network API/implementation/assertion families.
+- app-runtime network exception API/implementation/assertion families.
+- app-runtime toast API/implementation/assertion families.
+- app-runtime dialog API/implementation/assertion families.
 - `feature/web-view/common/web-view-api`, `web-view`, `feature/web-view/holder/web-view-holder`.
 - feature마다 `*-api`와 구현 모듈을 나누고, 앱 또는 router가 계약을 통해 이동한다.
 
@@ -109,9 +109,10 @@ Notmid 적용:
 :core:network:impl
 :core:network:assertions
 
-:core-app:feedback:api
-:core-app:feedback:impl
-:core-app:feedback:assertions
+:core-app
+  feedback API package
+  feedback implementation package
+  feedback assertions in test source or a later extracted module only after reuse pressure
 ```
 
 `assertions`는 production 구현이 아니라 테스트용 관찰 지점이다. 예를 들면:
@@ -138,7 +139,7 @@ Notmid 해석:
 차용할 점:
 
 - caller-facing route contract는 feature API가 소유한다.
-- app-level registry/coordinator가 실제 실행을 결정한다.
+- product shell route registration과 `core-app` coordinator가 실제 실행을 결정한다.
 - ActivityRoute를 ComposeRoute와 같은 route plan 안에 둔다.
 - assertions 모듈에서 router 호출을 기록한다.
 
@@ -159,7 +160,7 @@ Notmid 적용:
 
 Notmid 적용:
 
-- `core-app:feedback:assertions`에서 `RecordingFeedbackSink`, `FeedbackAssertions`를 제공한다.
+- `:core-app` feedback test source에서 `RecordingFeedbackSink`, `FeedbackAssertions`를 제공한다.
 - `Toast`와 `Alert`는 같은 feedback contract의 presentation variant로 두되 렌더러는 분리한다.
 - feature 테스트는 Android `Toast`나 Compose `AlertDialog` 구현에 의존하지 않는다.
 
@@ -192,11 +193,11 @@ Notmid에는 다음을 들여오지 않는다.
 | 참조 프로젝트 | Notmid 변형 |
 | --- | --- |
 | `JourneyGuidance` | route keys, route events, route plans |
-| `ActivityRouter` | `AppRouteCoordinator` + `ActivityRouteLauncher`, 이후 `core-app:router` 후보 |
-| `toast-api/toast/toast-assertion` | `core-app:feedback:api/impl/assertions` |
-| `dialog-api/dialog/dialog-assertion` | `core-app:feedback`의 Alert renderer/assertions |
-| `network-exception-*` | `core:network` typed failure + `core-app:feedback` presentation mapping |
-| `web-view-holder` | 필요한 시점에 `core-app:webview` reusable holder |
+| `ActivityRouter` | `:core-app` router package runtime + app-owned `ActivityRouteLauncher` |
+| `toast-api/toast/toast-assertion` | `:core-app` feedback API/implementation/test-source assertions |
+| `dialog-api/dialog/dialog-assertion` | `:core-app` feedback Alert renderer/assertions |
+| `network-exception-*` | `core:network` typed failure + `:core-app` feedback presentation mapping |
+| `web-view-holder` | 필요한 시점에 `:core-app` webview reusable holder package |
 | `feature-common/holder` | Notmid에서는 `feature:notmid:common` 또는 feature-local로 축소 |
 
 ## 스킬 문서와의 차이
@@ -207,7 +208,7 @@ Notmid에는 다음을 들여오지 않는다.
 
 - `llm-wiki/module-map.md`: 새 모듈 ownership 반영.
 - `llm-wiki/implementation-checklist.md`: assertions와 core-app 체크 추가.
-- `.agents/skills/glassnavlab-android-stewardship/SKILL.md`: `core-app`/`assertions` route 추가.
+- `.agents/skills/glassnavlab-android-stewardship/SKILL.md`: `core-app`/`assertions` route 유지.
 - `.agents/skills/notmid-product-engineering/SKILL.md`: feedback/network/WebView event 처리 기준 반영.
 
 ## Decision
@@ -220,5 +221,5 @@ Notmid에는 다음을 들여오지 않는다.
 
 - 이미 `:core:router:api`/`:core:router:impl`이 있다.
 - `assertions` 모듈을 추가해도 product behavior가 바뀌지 않는다.
-- AppRouter/AppDeepLinkResolver 테스트가 이미 있어 검증 경로가 명확하다.
+- AppRouter/AppDeepLinkResolver 테스트와 `:core-app` router runtime 테스트가 있어 검증 경로가 명확하다.
 - 이후 WebView, feedback, protected action navigation에도 같은 테스트 패턴을 재사용할 수 있다.

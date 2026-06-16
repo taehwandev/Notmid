@@ -39,14 +39,15 @@ This works, but `core:model` now carries UI effect concepts and `core:designsyst
 
 ## Decision
 
-Create a dedicated feedback module family before adding more feedback behavior.
+Create a dedicated feedback package family inside `:core-app` before adding more feedback behavior.
 
 Target:
 
 ```text
-:core-app:feedback:api
-:core-app:feedback:impl
-:core-app:feedback:assertions
+:core-app
+  feedback API package
+  feedback implementation package
+  feedback assertions in test source until external reuse proves a module boundary
 ```
 
 Short-term compatibility:
@@ -212,7 +213,7 @@ Feature/app maps that trigger to an owned action:
 ```text
 FeedbackAction.Retry -> NotmidAppAction.ReloadContent
 FeedbackAction.SignIn -> NotmidAppAction.ContinueAuth(...)
-FeedbackAction.OpenDeepLink -> AppRouter.navigateDeepLink(...)
+FeedbackAction.OpenDeepLink -> AppRouterRuntime.navigateDeepLink(...)
 ```
 
 Forbidden:
@@ -232,13 +233,13 @@ Feedback module owns runtime orchestration.
 Target split:
 
 ```text
-:core-app:feedback:impl
+:core-app feedback implementation package
   NotmidFeedbackHost
   NotmidFeedbackEffectCollector
   NotmidToastRenderer
   NotmidAlertRenderer
 
-:core:designsystem or future :core-app:designsystem
+:core:designsystem
   NotmidSnackbarHost visual style
   NotmidButton
   NotmidSurface
@@ -285,10 +286,10 @@ The assertion helper should not require Compose runtime.
 
 ## Migration Steps
 
-1. Add `:core-app:feedback:api` with types equivalent to current `NotmidUiFeedback`.
-2. Add `:core-app:feedback:assertions` with recording sink.
+1. Add a `:core-app` feedback API package with types equivalent to current `NotmidUiFeedback`.
+2. Add `:core-app` feedback assertions in test source with recording sink.
 3. Add adapters from old `NotmidUiFeedback` to new `FeedbackRequest` if needed.
-4. Move `NotmidFeedbackEffectHandler` from `:core:designsystem` to `:core-app:feedback:impl`.
+4. Move `NotmidFeedbackEffectHandler` from `:core:designsystem` to the `:core-app` feedback implementation package.
 5. Keep design-system visual components reusable and product-free.
 6. Update app to use `FeedbackHost`.
 7. Remove old duplicates from `:core:model` only after callers migrate.
@@ -308,14 +309,13 @@ Stop and redesign if:
 Pure feedback API/assertions:
 
 ```bash
-./gradlew :core-app:feedback:api:test
-./gradlew :core-app:feedback:assertions:test
+./gradlew :core-app:testDebugUnitTest
 ```
 
 Feedback impl:
 
 ```bash
-./gradlew :core-app:feedback:impl:compileDebugKotlin
+./gradlew :core-app:compileDebugKotlin
 ./gradlew :app:compileDebugKotlin
 ```
 

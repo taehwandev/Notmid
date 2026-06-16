@@ -7,6 +7,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core-app"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:model"))
     implementation(project(":feature:capture:api"))
@@ -21,4 +22,8 @@ dependencies {
     implementation(project(":feature:notmid:common"))
     implementation(project(":feature:profile:api"))
     implementation(project(":feature:profile:impl"))
+    implementation(project(":feature:webview:api"))
+
+    testImplementation(project(":core:router:assertions"))
+    testImplementation(libs.junit)
 }

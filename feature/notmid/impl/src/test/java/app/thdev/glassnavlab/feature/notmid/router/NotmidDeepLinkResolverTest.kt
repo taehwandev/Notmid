@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.navigation
+package app.thdev.glassnavlab.feature.notmid.router
 
 import app.thdev.glassnavlab.core.router.assertions.assertRoutePlan
 import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
@@ -15,8 +15,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-class AppDeepLinkResolverTest {
-    private val resolver = AppDeepLinkResolver()
+class NotmidDeepLinkResolverTest {
+    private val resolver = NotmidRouteGraph.deepLinkResolver
 
     @Test
     fun feedDeepLinkResolvesFeedStack() {

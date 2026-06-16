@@ -36,24 +36,56 @@ Notmid already has the right foundation:
   RouteEventSink
 
 :core:router:impl
-  DefaultRouteRegistry
+  registry/DefaultRouteRegistry
+  event/DefaultRouteEventPlanner
+  deeplink/DefaultDeepLinkResolver
+  deeplink/DeepLinkUrlPolicy
+  deeplink/UriDeepLinkRequestParser
+  deeplink/StaticRouteDeepLinkSpec
+  deeplink/PrefixRouteDeepLinkSpec
+
+:core-app
+  router/config/AppRouterBundleConfig
+  router/config/AppDeepLinkUrlConfig
+  router/config/DefaultAppRouterBundle
+  router/planner/AppRoutePlanner
+  router/planner/DefaultAppRoutePlanner
+  router/deeplink/AppDeepLinkResolver
+  router/deeplink/DefaultAppDeepLinkResolver
+  router/runtime/AppRouterRuntime
+  router/runtime/DefaultAppRouterRuntime
+  router/runtime/PendingActivityRouteRequest
+  router/runtime/rememberAppRouterRuntime
+  router/activity/ActivityRouteLauncher
+  router/activity/ActivityRouteLaunchHandler
+  router/activity/DefaultActivityRouteLauncher
+  router/activity/ActivityRouteLauncherEffect
+  router test source owns module-local FakeAppDeepLinkResolver,
+  and RecordingActivityRouteLauncher until external reuse justifies an
+  assertions module
 
 :feature:*:api
   route/ typed route contracts
   deeplink/ deep-link specs
   event/ route events
 
-:app
-  AppRouter
-  AppRouteCoordinator
-  AppDeepLinkResolver
+:feature:notmid:impl
   NotmidRouteGraph
-  AppActivityRouteLauncher
+  NotmidRouteEventMapper
+  rememberNotmidAppRouter
 
 :feature:webview:api
   route/WebViewRoute
   deeplink/WebViewDeepLinkSpec
   activity/WebViewActivityKeys
+
+:feature:webview:impl
+  NotmidWebViewActivity
+  WebViewActivityRouteLaunchHandler
+
+:app
+  MainActivity pending deep-link handoff
+  DefaultActivityRouteLauncher binding with feature launch handlers
 
 :feature:webview:impl
   NotmidWebViewActivity
@@ -63,39 +95,44 @@ This is already more appropriate for Compose than the reference project's Activi
 
 ## Decision
 
-Keep Notmid's route contract shape. Add testing and app-runtime extraction gradually.
+Keep Notmid's route contract shape. `core:router` remains pure Kotlin, while
+drop-in Android/Compose execution now lives in the `:core-app` router package.
 
-Immediate target:
+Current reusable runtime:
 
 ```text
-:core:router:assertions
+:core-app
 ```
 
-First router slice scope:
+An app should be able to add this module, provide product route registrations,
+event handlers, host/base-path values, and Activity launch handlers, then get
+the standard runtime behavior:
 
 - `ComposeRoute` typed keys that the base/app shell maps to Compose content.
 - `ActivityRoute` launch requests that do not mutate the Compose back stack by default.
 - deep link input from `Activity` intent or feedback callbacks into a `RoutePlan`.
 - route callback/event recording for feature UI tests.
-- Nav3-style back stack ownership: the app owns the ordered route key list and the base shell resolves Compose keys to content.
-- Nav3 advanced deep-link behavior: app entry builds a synthetic back stack and treats current-task and new-task launches as separate Back/Up acceptance paths.
+- Nav3-style back stack ownership: the router runtime owns the ordered route key list and the product/base shell resolves Compose keys to content.
+- Nav3 advanced deep-link behavior: app entry hands off external URI input, the product route bundle builds a synthetic back stack, and current-task/new-task launches remain separate Back/Up acceptance paths.
 
-Excluded from the first router slice:
+Still product-shell owned:
+
+- Notmid route registrations.
+- Notmid event-to-stack mapping.
+- app host/scheme/base path values passed into `AppRouterBundleConfig`.
+- auth-gated route deferral policy when added.
+
+Still app-owned:
+
+- Activity intent/deep-link handoff into the router runtime.
+- concrete ActivityRoute launcher binding.
+
+Excluded from this runtime:
 
 - WebView runtime and URL policy.
 - WebView Activity implementation.
 - browser fallback and external URL handling.
 - WebView-specific deep-link hardening.
-
-Later optional target:
-
-```text
-:core-app:router:api
-:core-app:router:impl
-:core-app:router:assertions
-```
-
-Only create `core-app:router` when Android `ActivityRoute` launching, pending activity requests, auth-gated route deferral, or multiple app shells need a reusable runtime contract.
 
 ## Contract Ownership
 
@@ -127,15 +164,19 @@ feature:feed:api
   FeedRouteEvent.ClipRequested
 ```
 
-### App
+### Product Shell And App
+
+Product shell owns:
+
+- route registrations through `AppRouterBundleConfig`.
+- app host/scheme/base path values.
+- top-level default route.
+- cross-feature route event mapping.
 
 App owns:
 
-- route graph assembly.
-- app host/scheme/base path.
-- top-level default route.
-- cross-feature route event mapping.
-- ActivityRoute launch dispatch.
+- external intent/deep-link handoff.
+- concrete ActivityRoute launcher binding.
 - auth-gated route deferral.
 
 Example:
@@ -163,6 +204,31 @@ Core router does not own:
 - product-specific default route.
 - Compose entry providers, NavDisplay, or Activity-local Nav3 rendering.
 
+### Core App Router Package
+
+Core app router owns reusable app-runtime execution:
+
+- `AppRouterRuntime` state holder for current Compose `RouteStack`.
+- pending `ActivityRoute` request queue and consume-on-success behavior.
+- `DefaultAppRoutePlanner` that dispatches route commands, route event planner
+  results, and deep-link resolver results.
+- `DefaultAppDeepLinkResolver` as a thin adapter over a core router
+  `DeepLinkResolver`.
+- `DefaultAppRouterBundle` that creates default registry, deep-link resolver,
+  route-event planner, app planner, and runtime from an `AppRouterBundleConfig`.
+- `DefaultActivityRouteLauncher` and `ActivityRouteLaunchHandler` for reusable
+  ActivityRoute dispatch without an app-local `when` block.
+- `ActivityRouteLauncherEffect` for Compose lifecycle-safe pending launch
+  consumption.
+
+Core app router does not own:
+
+- feature route keys or events.
+- Notmid destination ids.
+- WebView `Intent` construction.
+- auth/session/deferred-route product policy.
+- DI container bindings.
+
 ## Nav3 Advanced Deep-Link Application
 
 The Android Navigation 3 advanced deep-link recipe is a better fit than a
@@ -170,19 +236,23 @@ simple "URL opens one destination" model. For Notmid, apply it as:
 
 ```text
 Activity intent data
-  -> app deep-link request
-  -> app host/base-path validation
-  -> feature deep-link spec
+  -> product-shell AppRouterBundleConfig
+  -> core-app DefaultAppRouterBundle
+  -> core router DefaultDeepLinkResolver
+  -> product-provided host/base-path values
+  -> product route registry and feature deep-link specs
   -> synthetic RoutePlan
-  -> base shell Compose route mapping and/or ActivityRoute launch request
+  -> core-app DefaultAppRouterRuntime
+  -> base shell Compose route mapping and/or ActivityRoute launch effect
 ```
 
 Rules:
 
 - `MainActivity` is the external deep-link entrypoint. It should normalize
-  `Intent.ACTION_VIEW` / `intent.data` into a request and hand that request to
-  the app route coordinator.
-- The app route coordinator builds the synthetic stack before rendering. Feature
+  `Intent.ACTION_VIEW` / `intent.data` into a URI string and hand it to the
+  app-router runtime. Core router impl owns URI parsing; the app provides
+  host/base-path values and registered specs.
+- The app route planner builds the synthetic stack before rendering. Feature
   impl screens should only emit callbacks/events.
 - Base shell code maps `ComposeRoute` keys to Compose content. Feature API owns
   route keys; feature impl or the base shell owns entry/content builders.
@@ -269,26 +339,25 @@ Add hardening before feature growth:
 Long term, if WebView becomes reusable:
 
 ```text
-:core-app:webview:api
-  WebViewRequest
-  WebViewMode
-  WebViewState
-  WebViewNavigator
-  WebFileChooserRequest
-  WebViewSecurityPolicy
-
-:core-app:webview:impl
-  Compose/Android WebView holder
-  WebViewClient/ChromeClient adapters
-  file chooser and permission adapters
-
-:core-app:webview:assertions
-  FakeWebViewNavigator
-  RecordingWebViewEventSink
-  WebViewSecurityPolicyAssertions
+:core-app
+  webview API package:
+    WebViewRequest
+    WebViewMode
+    WebViewState
+    WebViewNavigator
+    WebFileChooserRequest
+    WebViewSecurityPolicy
+  webview implementation package:
+    Compose/Android WebView holder
+    WebViewClient/ChromeClient adapters
+    file chooser and permission adapters
+  test source:
+    FakeWebViewNavigator
+    RecordingWebViewEventSink
+    WebViewSecurityPolicyAssertions
 ```
 
-Keep `:feature:webview:api` as Notmid's route target even if reusable runtime moves to `core-app:webview`.
+Keep `:feature:webview:api` as Notmid's route target even if reusable runtime moves into the `:core-app` webview package.
 
 ## Auth-Gated Routes
 
@@ -314,13 +383,15 @@ Canonical host/base path remains app-owned:
 https://thdev.app/notmid
 ```
 
-Feature deep-link specs should match route path segments after app strips the base path.
+Feature deep-link specs should match route path segments after the core router
+resolver strips the app-provided base path.
 
 Good:
 
 ```text
-AppDeepLinkResolver validates scheme/host/base path
-NotmidRouteGraph resolves featurePathSegments
+DefaultAppRouterBundle composes AppRouterBundleConfig into registry/resolver/planner/runtime defaults
+DefaultDeepLinkResolver validates scheme/host/base path from DeepLinkUrlPolicy
+product-shell route graph registers feature DeepLinkSpec values
 Feature DeepLinkSpec maps segments to RoutePlan
 ```
 
@@ -335,12 +406,18 @@ core router knows Notmid host
 ## Migration Steps
 
 1. Add `:core:router:assertions`.
-2. Move duplicated router test helpers from app tests into assertions.
-3. Add assertions for `RoutePlan.compose` and `RoutePlan.activity`; do not mix
+2. Add `:core-app` as the single Android/Compose runtime module.
+3. Move pure route test helpers into `:core:router:assertions`; keep app-runtime
+   fakes in `:core-app` test source until external reuse appears.
+4. Add assertions for `RoutePlan.compose` and `RoutePlan.activity`; do not mix
    `ActivityRoute` into `RouteStack`.
-4. Add `RecordingRouteEventSink` and use it in feature route event tests.
-5. Harden WebView route validation without moving modules.
-6. Add `core-app:webview` only when a second WebView runtime surface appears or WebView state grows beyond `NotmidWebViewActivity`.
+5. Add `RecordingRouteEventSink` and use it in feature route event tests.
+6. Move reusable app runtime state, deep-link URI normalization, and pending
+   ActivityRoute consume effect into the `:core-app` router package.
+7. Keep Notmid graph, feature event mapping, and WebView Activity launch in
+   `:app`.
+8. Harden WebView route validation without moving modules.
+9. Add a `:core-app` webview package only when a second WebView runtime surface appears or WebView state grows beyond `NotmidWebViewActivity`.
 
 ## Verification
 
@@ -349,6 +426,7 @@ Router:
 ```bash
 ./gradlew :core:router:api:test
 ./gradlew :core:router:impl:test
+./gradlew :core-app:testDebugUnitTest
 ./gradlew :app:test --tests '*AppRouterTest'
 ./gradlew :app:test --tests '*AppDeepLinkResolverTest'
 ```

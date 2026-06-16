@@ -46,8 +46,11 @@ import app.thdev.glassnavlab.feature.notmid.NotmidShellErrorScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellLoadingScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellScreen
 import app.thdev.glassnavlab.feature.notmid.api.event.NotmidRouteEvent
-import app.thdev.glassnavlab.navigation.AppActivityRouteLauncher
-import app.thdev.glassnavlab.navigation.rememberAppRouter
+import app.thdev.glassnavlab.coreapp.router.activity.ActivityRouteLauncherEffect
+import app.thdev.glassnavlab.coreapp.router.activity.DefaultActivityRouteLauncher
+import app.thdev.glassnavlab.feature.notmid.router.notmidRouteStack
+import app.thdev.glassnavlab.feature.notmid.router.rememberNotmidAppRouter
+import app.thdev.glassnavlab.feature.webview.WebViewActivityRouteLaunchHandler
 
 class MainActivity : ComponentActivity() {
     private var pendingDeepLink by mutableStateOf<PendingDeepLink?>(null)
@@ -141,19 +144,23 @@ class MainActivity : ComponentActivity() {
                 factory = notmidAppViewModelFactory,
             )
             val appState by notmidAppViewModel.state.collectAsStateWithLifecycle()
-            val appRouter = rememberAppRouter()
+            val appRouter = rememberNotmidAppRouter()
+            val activityRouteLauncher = remember(context) {
+                DefaultActivityRouteLauncher(
+                    context = context,
+                    handlers = listOf(WebViewActivityRouteLaunchHandler()),
+                )
+            }
 
             LaunchedEffect(pendingDeepLink) {
                 val uri = pendingDeepLink?.uri ?: return@LaunchedEffect
                 appRouter.navigateDeepLink(uri)
             }
 
-            LaunchedEffect(appRouter.pendingActivityRouteRequest) {
-                val request = appRouter.pendingActivityRouteRequest ?: return@LaunchedEffect
-                if (AppActivityRouteLauncher.launch(context, request.route)) {
-                    appRouter.consumeActivityRouteRequest(request.id)
-                }
-            }
+            ActivityRouteLauncherEffect(
+                router = appRouter,
+                launcher = activityRouteLauncher,
+            )
 
             notmidTheme(darkTheme = false) {
                 NotmidFeedbackEffectHandler(
@@ -200,7 +207,7 @@ class MainActivity : ComponentActivity() {
                             profileSettingsMessage = appState.messageFor(
                                 NotmidProtectedWriteAction.ProfileSettings,
                             ),
-                            navigationStack = appRouter.notmidRouteStack,
+                            navigationStack = appRouter.notmidRouteStack(),
                             onRouteEvent = { event -> appRouter.onRouteEvent(event) },
                             onContinueLocalAuth = {
                                 notmidAppViewModel.onAction(

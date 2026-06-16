@@ -138,12 +138,13 @@ dependencies {
 
 If the API can be pure Kotlin, use `glassnavlab.kotlin.library` instead.
 
-## Module Template: Android/Compose App Impl
+## Package Template: Android/Compose App Runtime In `:core-app`
 
 Use when:
 
 - rendering Toast, AlertDialog, Snackbar, permission launcher, ActivityResult, WebView.
 - implementation depends on Compose Material3 or Android framework.
+- the code belongs to app-runtime commonization but does not deserve a new Gradle module.
 
 ```kotlin
 plugins {
@@ -151,19 +152,19 @@ plugins {
 }
 
 android {
-    namespace = "app.thdev.glassnavlab.coreapp.feedback.impl"
+    namespace = "app.thdev.glassnavlab.coreapp"
 }
 
 dependencies {
-    implementation(project(":core-app:feedback:api"))
     implementation(project(":core:router:api"))
 }
 ```
 
 Rule:
 
-- `impl` may depend on `api`.
-- `api` must not depend on `impl`.
+- Keep API-shaped contracts in a stable package such as `coreapp.feedback.api`.
+- Keep production implementation in a sibling package such as `coreapp.feedback.impl`.
+- Keep shared test helpers in `src/test` until two or more external test boundaries need them as a real Gradle artifact.
 
 ## Module Template: Assertions
 
@@ -186,7 +187,7 @@ dependencies {
 }
 ```
 
-Android/Compose:
+Android/Compose inside `:core-app`:
 
 ```kotlin
 plugins {
@@ -194,11 +195,10 @@ plugins {
 }
 
 android {
-    namespace = "app.thdev.glassnavlab.coreapp.feedback.assertions"
+    namespace = "app.thdev.glassnavlab.coreapp"
 }
 
 dependencies {
-    api(project(":core-app:feedback:api"))
     testImplementation(libs.junit)
 }
 ```
@@ -220,9 +220,7 @@ include(
 )
 
 include(
-    ":core-app:feedback:api",
-    ":core-app:feedback:impl",
-    ":core-app:feedback:assertions",
+    ":core-app",
 )
 ```
 

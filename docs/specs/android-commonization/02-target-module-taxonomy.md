@@ -30,7 +30,8 @@ Notmid의 목표 구조는 다음 두 축을 분리한다.
 
 ```text
 app/
-  app graph assembly, MainActivity, app-specific auth/deep-link/route coordination
+  MainActivity, runtime config injection, pending deep-link handoff,
+  concrete platform launch binding
 
 core/
   model/
@@ -49,26 +50,11 @@ core/
     assertions/        only if auth tests need shared fake gateway
 
 core-app/
-  feedback/
-    api/
-    impl/
-    assertions/
-  designsystem/
-    api/               optional later; do not start with a broad move
-    impl/              optional later; current :core:designsystem remains until migration
-    assertions/        optional only for preview/test fixtures
-  permissions/
-    api/
-    impl/
-    assertions/
-  router/
-    api/               optional app-runtime launcher contracts
-    impl/              optional Android Activity launcher implementation
-    assertions/
-  webview/
-    api/               only after more than one reusable WebView surface exists
-    impl/
-    assertions/
+  router/              active app-runtime contract + implementation package
+  feedback/            later package inside the same module
+  permissions/         later package inside the same module
+  webview/             later package inside the same module after reusable WebView pressure appears
+  src/test/...         app-runtime fakes, recorders, and assertions until external reuse proves a module boundary
 
 feature/
   <name>/
@@ -82,16 +68,17 @@ feature/
 
 | Current | Target | Migration |
 | --- | --- | --- |
-| `:core:model` | keep in `core` | Pure models stay. UI feedback/effect contracts should move out only when `core-app:feedback:api` exists. |
+| `:core:model` | keep in `core` | Pure models stay. UI feedback/effect contracts should move out only when the `:core-app` feedback API package exists. |
 | `:core:domain` | keep in `core` | Keep repository contracts/use cases pure. |
 | `:core:data` | keep short term | Later split repository APIs/impl only when there are real multi-caller contracts. |
 | `:core:network:api` | keep in `core` | Expand typed failures and safe server error envelope. |
 | `:core:network:impl` | keep in `core` or move to `core-app` only if Android-specific | OkHttp JVM impl can stay `core`; Android connectivity/auth interceptors go `core-app`. |
-| `:core:router:api` | keep in `core` | Add assertions first. |
-| `:core:router:impl` | keep in `core` | Pure registry/matcher only. |
-| `:core:designsystem` | transitional | Do not rename first. New app runtime feedback should move to `core-app:feedback`; later decide design system migration. |
-| `:feature:webview:api/impl` | keep first | Route target remains feature. Extract reusable holder to `core-app:webview` only after hardening need appears. |
-| `:app` route launcher/coordinator | keep first | Extract `core-app:router` only when multiple launchers or app shells need it. |
+| `:core:router:api` | keep in `core` | Pure contracts stay here. |
+| `:core:router:impl` | keep in `core` | Pure route registry, route event planner, URI parser, scheme/host/base-path normalizer, deep-link resolver, and static/prefix matcher implementations. |
+| `:core-app` router package | active app-runtime commonization | Single Android/Compose runtime module package that owns runtime execution state, app deep-link resolver adapter, pending ActivityRoute queue/effect, and module-local runtime test doubles. Split into a submodule only after external caller/test pressure proves the boundary. |
+| `:core:designsystem` | transitional | Do not rename first. New app runtime feedback should move to the `:core-app` feedback package; later decide design system migration. |
+| `:feature:webview:api/impl` | keep first | Route target remains feature. Extract reusable holder to a `:core-app` webview package only after hardening need appears. |
+| `:app` route graph/event mapper/activity launcher | keep app-owned | App provides Notmid route/spec registration values, host/base path values, feature event handlers, and concrete Activity launch to core router impl and the `:core-app` runtime. |
 
 ## Module Family Rules
 
@@ -190,8 +177,8 @@ Use plural `assertions`.
 ```text
 :core:router:assertions
 :core:network:assertions
-:core-app:feedback:assertions
 :feature:feed:assertions
+router assertions Gradle module only after external router fake reuse appears
 ```
 
 Do not use the reference project's singular `assertion` naming in new Notmid modules.
@@ -216,16 +203,16 @@ Allowed:
 app -> feature:*:api
 app -> feature:*:impl
 app -> core:*:api/impl selected by app graph
-app -> core-app:*:api/impl selected by app graph
+app -> core-app selected packages selected by app graph
 
 feature:*:impl -> feature:*:api
 feature:*:impl -> core:model
 feature:*:impl -> core:domain
-feature:*:impl -> core-app:feedback:api
-feature:*:impl -> core-app:designsystem or current core:designsystem
+feature:*:impl -> core-app feedback API package
+feature:*:impl -> core:designsystem
 
-core-app:*:impl -> core-app:*:api
-core-app:*:impl -> core:*:api where needed
+core-app implementation package -> sibling core-app API package
+core-app implementation package -> core:*:api where needed
 
 assertions -> matching api
 test source -> assertions
@@ -239,9 +226,9 @@ core -> app
 core -> feature:*:impl
 feature:*:api -> feature:*:impl
 feature:*:api -> app
-feature:*:api -> core-app:*:impl
+feature:*:api -> core-app implementation package
 assertions -> production impl by default
-core-app:feedback -> feature route decisions
+core-app feedback package -> feature route decisions
 ```
 
 ## Base/App Shell Rule
@@ -276,8 +263,8 @@ Do not start by moving all existing modules.
 Order:
 
 1. Add `assertions` where existing API boundary already exists.
-2. Add new `core-app` modules for new app-runtime contracts.
-3. Move feedback renderer out of `:core:designsystem` only after `core-app:feedback` API is stable.
+2. Add new `:core-app` packages for new app-runtime contracts.
+3. Move feedback renderer out of `:core:designsystem` only after the `:core-app` feedback API package is stable.
 4. Decide design system migration separately. `:core:designsystem` can remain as a compatibility module until there is a real need to rename.
 5. Split `:core:data` only after repository API pressure repeats across features or tests.
 

@@ -164,19 +164,19 @@ Verification:
 
 Goal:
 
-Move feedback contracts toward `core-app` without a broad design-system move.
+Move feedback contracts into the single `:core-app` module without a broad design-system move.
 
 Proposed changes:
 
 ```text
-:core-app:feedback:api
+:core-app feedback API package
   FeedbackRequest
   FeedbackPresentation
   FeedbackTone
   FeedbackAction
   FeedbackSink
 
-:core-app:feedback:assertions
+:core-app feedback test source
   RecordingFeedbackSink
   FeedbackAssertions
 ```
@@ -191,8 +191,7 @@ Acceptance:
 Verification:
 
 ```bash
-./gradlew :core-app:feedback:api:test
-./gradlew :core-app:feedback:assertions:test
+./gradlew :core-app:testDebugUnitTest
 ./gradlew :app:test --tests '*NotmidAppViewModelTest'
 ```
 
@@ -205,7 +204,7 @@ Move runtime rendering out of `:core:designsystem` into `core-app`.
 Proposed changes:
 
 ```text
-:core-app:feedback:impl
+:core-app feedback implementation package
   FeedbackHost
   FeedbackEffectCollector
   ToastFeedbackRenderer
@@ -228,7 +227,7 @@ Acceptance:
 Verification:
 
 ```bash
-./gradlew :core-app:feedback:impl:compileDebugKotlin
+./gradlew :core-app:compileDebugKotlin
 ./gradlew :app:compileDebugKotlin
 ./gradlew :app:test
 ```
@@ -284,7 +283,7 @@ Keep module placement:
 :feature:webview:impl
 ```
 
-Only add `:core-app:webview:*` after a second caller or reusable holder pressure appears.
+Only add a `:core-app` webview package after a second caller or reusable holder pressure appears.
 
 Acceptance:
 

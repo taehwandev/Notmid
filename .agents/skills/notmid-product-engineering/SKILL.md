@@ -48,14 +48,31 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
 
 ## Android Architecture Rules
 
-- `:app` owns Android entry points, app router, deep-link resolver, activity route launcher, and top-level composition.
+- `:app` owns Android entry points, manifest/theme wiring, top-level composition,
+  runtime config injection, and concrete platform launch binding. It must not
+  own reusable router assembly, route registry construction, deep-link resolver
+  construction, or feature event mapping.
 - `:core:designsystem` owns `NotmidTheme`, tokens, Material3 wrappers, reusable Notmid components, and Liquid Glass primitives.
 - `:core:model` remains pure Kotlin models. No Compose, Android, `Color`, or `Dp`.
 - `:core:domain` owns repository contracts and use cases.
 - `:core:data` owns fake/static implementations and mapping into domain models.
 - `:core:router:api` stays pure Kotlin route contracts.
 - `:core:router:impl` owns default route registry/matching, not Android Activity launching.
-- `:core-app:*` owns Android/Compose app-runtime common contracts such as feedback hosts, permission adapters, ActivityRoute launch adapters, reusable WebView runtime, resources, and app-shell helpers.
+- `:core-app` owns Android/Compose app-runtime common contracts such as router runtime, router bundle/config assembly, feedback hosts, permission adapters, ActivityRoute launch adapters, reusable WebView runtime, resources, and app-shell helpers.
+- `:core-app` router packages must be split by role: `config/` for reusable
+  bundle/config assembly, `planner/` for app route planning, `runtime/` for
+  Compose back-stack and pending ActivityRoute state, `deeplink/` for app
+  resolver adapters, and `activity/` for ActivityRoute launch contracts and
+  launch handler registries. Do not put every router file in one package.
+- `:core:router:impl` owns reusable pure router implementation: route registry,
+  route event planner, URI-to-deep-link request parsing, scheme/host/base-path
+  normalization, static/prefix deep-link specs, and deep-link resolver. Split
+  implementation packages by role: `registry/`, `event/`, and `deeplink/`.
+  `:core-app` may compose these defaults behind a reusable bundle config, but it
+  must not own Notmid feature route policy, WebView Intent construction, auth
+  policy, repositories, or feature impl imports. Add a separate router
+  assertions Gradle module only after app-runtime fakes have multiple external
+  test consumers.
 - `:feature:*:api` owns feature route contracts, deep-link specs, and route events. Split them by caller-facing role once more than one contract family exists: `route/`, `deeplink/`, `event/`, and `destination/` or `activity/` only when those are real import boundaries.
 - `:feature:*:impl` owns Compose screens and emits events. It must not depend on another feature impl.
 - `:*:assertions` modules own reusable test doubles, recording fakes, fixtures, and assertion helpers. They should depend on matching API contracts, not production impl modules.
@@ -102,15 +119,20 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
 - Deep links must resolve to ordered route plans, not just a top destination.
   Compose destinations carry a `RouteStack`; Activity-backed destinations carry
   `ActivityRoute` launch requests.
-- Feature impl modules emit events; `:app` converts events into route plans and
-  Compose stacks when needed.
+- Feature impl modules emit events. The product shell or owning feature runtime
+  supplies route registrations and event handlers to the `:core-app` router
+  bundle; `:app` should not reimplement registry/resolver/planner construction.
 - WebView is an `ActivityRoute`; normal screens are `ComposeRoute`.
 - Keep `RouteStack` and `RouteCommand` as router execution artifacts where possible. Feature UI should prefer route events or route intents so callers do not need to know whether a destination is Activity-backed or Compose-backed.
 - Kotlin route contracts that feature modules must implement stay open
   interfaces. Use `sealed interface` only for closed families owned by one
   module, such as feature route events or core router execution commands. Do not
   seal core route/spec/registry contracts only to make `when` exhaustive.
-- App owns scheme/host/base path policy, auth/deferred routing, pending deep-link consumption, and Activity launch dispatch. Feature API owns route data, top-level route metadata when needed, deep-link specs, and public route events.
+- The product shell owns scheme/host/base path values and feature route/event
+  registrations. `:core-app` owns the reusable bundle assembly from those
+  values. `:app` owns external intent entry, pending deep-link handoff, and
+  concrete platform launch binding. Feature API owns route data, top-level route
+  metadata when needed, deep-link specs, and public route events.
 - For Nav3-style deep links, `MainActivity` is the intent entrypoint, `:app`
   builds the synthetic route plan, and the app/base shell maps Compose route keys
   to screen content. Feature impl modules should not parse URLs or own the
@@ -120,8 +142,8 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
   - route data class under the owning feature API `route/` package
   - `DeepLinkSpec` under `deeplink/` when externally addressable
   - route event under `event/` when opened from UI
-  - `NotmidRouteGraph` registration when external links or top-level navigation need it
-  - `AppRouterTest` and `AppDeepLinkResolverTest`
+  - product-shell router registration when external links or top-level navigation need it
+  - `NotmidAppRouterTest` and `NotmidDeepLinkResolverTest`
 
 ## Verification
 

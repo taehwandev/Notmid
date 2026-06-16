@@ -67,12 +67,25 @@ core router api
   RoutePlan, RouteStack, RouteEvent, DeepLinkRequest, DeepLinkMatch
 
 core router impl
-  owns registry, path matching, route intent resolution helpers
+  owns registry, path matching, route-event handler dispatch, URI parsing,
+  scheme/host/base-path normalization, and deep-link resolution helpers
+
+core-app router package
+  owns reusable Android/Compose app-router runtime contracts and default
+  execution state: bundle/config assembly, route planner dispatch, app deep-link
+  resolver adapter, pending ActivityRoute queueing, ActivityRoute launch handler
+  registry, and lifecycle-safe ActivityRoute launch effect
 
 app
-  owns route graph assembly, route coordinator, auth/deferred routing,
-  host/scheme policy, pending deep-link consumption, Compose stack state,
-  Activity or Intent launch dispatch
+  owns Android entrypoint handling, runtime config injection, auth/deferred
+  routing when it is truly app-global, pending external intent handoff, Compose
+  route-to-content mapping, and concrete platform launch binding. It should not
+  copy reusable registry/resolver/planner assembly for every app.
+
+product shell or app-base feature
+  owns product route registrations, feature event handler lists, host/scheme
+  policy values, and typed stack factories, then passes them into the core-app
+  router bundle
 ```
 
 Keep `Context`, `Intent`, `Activity`, `NavController`, app-link host policy, and
@@ -173,7 +186,8 @@ Extend the router by choosing the correct seam:
 - New Activity-backed destination: add an `ActivityRoute` plus Activity key in
   the owning feature API module, then launch it from the app Activity dispatcher.
 - New external URL or notification target: add a feature `DeepLinkSpec` that
-  returns a `RoutePlan`, then register it in the app route graph.
+  returns a `RoutePlan`, then register it in the product shell or app-base route
+  bundle configuration.
 - New in-app callback: add or extend the feature-owned sealed `RouteEvent`
   family, then map it to a `RoutePlan` in app code.
 - New execution kind that every router must understand: add a new
@@ -311,7 +325,7 @@ the entire implementation.
 Borrow:
 
 - caller-facing journey or route contracts in feature API modules
-- app-level registry or route graph assembly
+- product shell or app-base route bundle registration
 - deep-link declarations near the destination contract
 - URI normalization into path nodes and params before matching
 - auth/session state transforming or deferring the final route plan
@@ -350,7 +364,8 @@ without rewriting feature callers.
 3. Add route events or route intents for caller-facing actions.
 4. Add a central route graph or registry in the app layer.
 5. Add a route coordinator that resolves events, intents, and deep links.
-6. Move Activity launching behind an app-level dispatcher.
+6. Move Activity launching behind the core-app launcher registry and a concrete
+   app binding.
 7. Move host, scheme, and base path policy out of feature code.
 8. Replace feature implementation navigation calls with route events/intents.
 9. Add tests for route resolution and Activity/Compose execution split.
@@ -383,8 +398,10 @@ coordinator.
   deep-link specs, and public route events. Do not add a separate route-spec
   abstraction unless a real caller consumes pattern metadata without creating a
   route instance.
-- App owns route graph assembly, auth gating, host/scheme policy, pending route
-  consumption, and Activity launch dispatch.
+- Core-app owns reusable bundle/planner/runtime assembly. The product shell or
+  app-base feature owns product route registrations, host/scheme policy values,
+  and feature event handlers. App owns external intent entry, auth gating when
+  app-global, pending route consumption, and concrete platform launch binding.
 - Core router contracts are pure and testable without Android framework classes.
 - Callers do not need to know whether a destination is Compose or
   Activity-backed.

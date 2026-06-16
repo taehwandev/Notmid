@@ -25,8 +25,8 @@ Notmid에는 참조 프로젝트 구조를 그대로 적용하지 않는다.
 채택할 것은 다음 세 가지다.
 
 - 호출자는 안정 계약만 보고 구현은 모르게 하는 `api`/`impl` 경계.
-- 테스트가 구현 모듈이나 앱 쉘을 끌어오지 않게 하는 `assertions` 모듈.
-- Android/Compose 앱 런타임 공통 요소를 `core-app`으로 빼고, 순수 계약과 도메인은 `core`에 남기는 경계.
+- 테스트가 구현 모듈이나 앱 쉘을 끌어오지 않게 하는 `assertions` 경계.
+- Android/Compose 앱 런타임 공통 요소를 단일 `core-app` 모듈로 빼고, 순수 계약과 도메인은 `core`에 남기는 경계.
 
 버릴 것은 다음이다.
 
@@ -44,7 +44,7 @@ Notmid에는 참조 프로젝트 구조를 그대로 적용하지 않는다.
 | [03-build-logic-module-templates.md](03-build-logic-module-templates.md) | Gradle convention과 모듈 템플릿 | `assertions` convention 추가 여부 결정 |
 | [04-router-webview-contract.md](04-router-webview-contract.md) | 라우터, 딥링크, ActivityRoute, WebView 계약 | 라우터 assertions와 WebView hardening |
 | [05-network-error-contract.md](05-network-error-contract.md) | 네트워크 클라이언트, 서버 오류, 공통 오류 모델 | network API/impl/assertions 개편 |
-| [06-feedback-alert-toast-contract.md](06-feedback-alert-toast-contract.md) | toast/snackbar/alert/full-page feedback 공통화 | `core-app:feedback` 분리 |
+| [06-feedback-alert-toast-contract.md](06-feedback-alert-toast-contract.md) | toast/snackbar/alert/full-page feedback 공통화 | `core-app` 내부 feedback 패키지 |
 | [07-state-assertions-testing.md](07-state-assertions-testing.md) | ViewModel/state/reducer 테스트와 assertions 모듈 규칙 | 테스트 대역/검증 DSL 도입 |
 | [08-implementation-work-breakdown.md](08-implementation-work-breakdown.md) | 실제 적용 순서, acceptance, 검증 명령 | 작업 티켓/커밋 분리 기준 |
 
@@ -69,12 +69,12 @@ Notmid에는 참조 프로젝트 구조를 그대로 적용하지 않는다.
 
 ```text
 :core:*             순수 Kotlin 계약, 도메인, 라우터/네트워크 핵심 계약, 테스트 가능한 fake/assertion
-:core-app:*         Android/Compose 앱 런타임 공통 요소, feedback, permission, WebView runtime, app shell helper
+:core-app           Android/Compose 앱 런타임 공통 요소 단일 모듈, router bundle/runtime, feedback, permission, WebView runtime, app shell helper
 :feature:*:api      feature route/event/entry contract
 :feature:*:impl     Compose screen, ViewModel/state owner, feature-local UI
 :feature:*:assertions
                     feature 계약을 여러 테스트가 공유할 때만 추가
-:app                MainActivity, app graph assembly, top-level auth/deep-link/route coordination
+:app                MainActivity, runtime config injection, pending deep-link handoff, concrete platform launch binding
 ```
 
 ## 적용 순서 요약
@@ -83,8 +83,8 @@ Notmid에는 참조 프로젝트 구조를 그대로 적용하지 않는다.
 2. `assertions` convention과 naming을 먼저 정한다.
 3. 가장 위험이 낮은 `core:router:assertions`부터 만든다.
 4. network error 모델과 network assertions를 추가한다.
-5. feedback/toast/alert 렌더러를 `core-app:feedback`으로 분리한다.
-6. WebView는 현재 `feature:webview`를 유지하되, reusable holder가 필요해지는 시점에 `core-app:webview`로 뺀다.
+5. feedback/toast/alert 렌더러를 `core-app` 내부 feedback 패키지로 분리한다.
+6. WebView는 현재 `feature:webview`를 유지하되, reusable holder가 필요해지는 시점에 `core-app` 내부 webview 패키지로 뺀다.
 7. 앱 shell/base는 BaseActivity 상속 구조가 아니라 Compose `AppRoot`/`AppEnvironment`/`RouteCoordinator`/`FeedbackHost` 조합으로 분리한다.
 
 ## 중단 조건

@@ -28,15 +28,44 @@ The implementation is adapted for notmid's current shape:
   TopLevelRoute
   DeepLinkSpec
   DeepLinkRequest
+  DeepLinkResolver
   RouteStack
   RoutePlan
   RouteCommand
   Router
   RouteEvent
+  RouteEventHandler
+  RouteEventPlanner
   RouteRegistry
 
 :core:router:impl
-  DefaultRouteRegistry
+  registry/DefaultRouteRegistry
+  event/DefaultRouteEventPlanner
+  deeplink/DefaultDeepLinkResolver
+  deeplink/DeepLinkUrlPolicy
+  deeplink/UriDeepLinkRequestParser
+  deeplink/StaticRouteDeepLinkSpec
+  deeplink/PrefixRouteDeepLinkSpec
+
+:core-app
+  router/config/AppRouterBundleConfig
+  router/config/AppDeepLinkUrlConfig
+  router/config/DefaultAppRouterBundle
+  router/planner/AppRoutePlanner
+  router/planner/DefaultAppRoutePlanner
+  router/deeplink/AppDeepLinkResolver
+  router/deeplink/DefaultAppDeepLinkResolver
+  router/runtime/AppRouterRuntime
+  router/runtime/DefaultAppRouterRuntime
+  router/runtime/PendingActivityRouteRequest
+  router/runtime/rememberAppRouterRuntime
+  router/activity/ActivityRouteLauncher
+  router/activity/ActivityRouteLaunchHandler
+  router/activity/DefaultActivityRouteLauncher
+  router/activity/ActivityRouteLauncherEffect
+  router test source owns module-local FakeAppDeepLinkResolver,
+  and RecordingActivityRouteLauncher until external reuse justifies an
+  assertions module
 
 :feature:*:api
   route/FeatureRoute
@@ -51,16 +80,21 @@ The implementation is adapted for notmid's current shape:
 :feature:*:impl
   Compose screens only
 
+:feature:notmid:impl
+  router/NotmidAppRouter binding
+  router/NotmidRouteGraph
+  router/NotmidRouteEventMapper
+  product shell route registrations and event handlers
+
 :feature:webview:impl
   WebViewActivity
   WebView intent factory
+  WebViewActivityRouteLaunchHandler
 
 :app
-  AppRouter
-  AppDeepLinkResolver
-  NotmidRouteGraph
+  MainActivity external intent and pending deep-link handoff
   auth gate
-  Activity dispatch for ActivityRoute
+  concrete ActivityRoute launcher binding
 ```
 
 ## Rule
@@ -220,6 +254,46 @@ With a registry:
 - tests assert stack output
 - feature implementation stays independent
 
+## Why Core Router Impl And Core App Router Package
+
+`DefaultRouteRegistry`, `DefaultDeepLinkResolver`, and
+`DefaultRouteEventPlanner` do not execute navigation. They parse, normalize,
+match, and resolve reusable route inputs into a `RoutePlan`.
+
+Reusable execution belongs in the `:core-app` router package only after a
+`RoutePlan` exists because it needs Compose runtime state and ActivityRoute
+side-effect orchestration, but it must not know Notmid feature contracts.
+
+The drop-in shape is:
+
+```text
+app provides:
+  ActivityRouteLauncher binding
+
+product shell provides:
+  AppRouterBundleConfig
+  RouteEventHandler list
+  host/scheme/base-path values
+  feature route and deep-link registrations
+
+core router impl provides:
+  DefaultDeepLinkResolver
+  DefaultRouteEventPlanner
+  DefaultRouteRegistry
+
+core-app provides:
+  DefaultAppRouterBundle
+  DefaultAppDeepLinkResolver adapter
+  DefaultAppRoutePlanner
+  DefaultAppRouterRuntime
+  DefaultActivityRouteLauncher
+  ActivityRouteLauncherEffect
+```
+
+This keeps DI optional. A future app-level DI container can bind these
+interfaces, but the reusable runtime works today with constructors and Compose
+`remember`.
+
 ## Activity Support
 
 When a feature needs a separate Activity, do not replace the route system.
@@ -232,7 +306,8 @@ interface ActivityRoute {
 }
 ```
 
-Then app-level dispatch decides:
+Then core-app runtime queues execution and the ActivityRoute launcher binding
+decides the concrete Android launch through feature-owned launch handlers:
 
 ```text
 RouteCommand.SetComposeStack(RouteStack.single(CaptureRoute))

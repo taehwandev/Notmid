@@ -104,20 +104,33 @@ Current Notmid contracts should continue to point here:
   RouteEvent
 
 :core:router:impl
-  DefaultRouteRegistry
+  registry/DefaultRouteRegistry
+  event/DefaultRouteEventPlanner
+  deeplink/DefaultDeepLinkResolver, DeepLinkUrlPolicy, UriDeepLinkRequestParser
+  deeplink/StaticRouteDeepLinkSpec, PrefixRouteDeepLinkSpec
 
 :feature:*:api
   route data
   deep-link specs
   public route events
 
-:app
+:feature:notmid:impl router package
   NotmidRouteGraph
-  NotmidRouteEventMapper or future route coordinator
-  AppDeepLinkResolver
-  AppRouter state holder
-  AppActivityRouteLauncher
-  auth/deferred route handling
+  NotmidRouteEventMapper
+  NotmidAppRouter binding
+
+:core-app router package
+  config/AppRouterBundleConfig, AppDeepLinkUrlConfig, DefaultAppRouterBundle
+  planner/AppRoutePlanner, DefaultAppRoutePlanner
+  deeplink/AppDeepLinkResolver, DefaultAppDeepLinkResolver
+  runtime/AppRouterRuntime, DefaultAppRouterRuntime
+  activity/ActivityRouteLauncherEffect, ActivityRouteLaunchHandler,
+  DefaultActivityRouteLauncher
+
+:app
+  MainActivity external intent handoff
+  auth/deferred route handling when app-global
+  concrete launcher binding with feature-owned launch handlers
 ```
 
 When the app route surface grows, introduce a `RouteIntent` or app-owned
@@ -133,6 +146,8 @@ UI.
 - Does a deep link resolve through the same route path as an in-app event?
 - Does an `ActivityRoute` launch without accidentally replacing the Compose
   stack?
-- Are app-link host/scheme/base-path rules kept in `:app`, not feature code?
+- Are app-link host/scheme/base-path rules kept in the product shell router
+  bundle config and passed through `:core-app`, not duplicated in `:app` or
+  feature screens?
 - Could `RouteStack.entries` become `List<NavKey>` later without rewriting
   feature callers?

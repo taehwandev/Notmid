@@ -1,6 +1,6 @@
-package app.thdev.glassnavlab.navigation
+package app.thdev.glassnavlab.feature.notmid.router
 
-import app.thdev.glassnavlab.core.router.runtime.RouteEvent
+import app.thdev.glassnavlab.core.router.runtime.RouteEventHandler
 import app.thdev.glassnavlab.core.router.runtime.RoutePlan
 import app.thdev.glassnavlab.core.router.runtime.RouteStack
 import app.thdev.glassnavlab.feature.feed.api.event.FeedRouteEvent
@@ -9,21 +9,22 @@ import app.thdev.glassnavlab.feature.map.api.event.MapRouteEvent
 import app.thdev.glassnavlab.feature.notmid.api.event.NotmidRouteEvent
 
 internal object NotmidRouteEventMapper {
-    fun planFor(event: RouteEvent): RoutePlan? {
-        return stackFor(event)?.let(RoutePlan::compose)
-    }
+    val handlers: List<RouteEventHandler> = listOf(
+        RouteEventHandler { event ->
+            (event as? NotmidRouteEvent)?.let(::planForNotmidEvent)
+        },
+        RouteEventHandler { event ->
+            (event as? FeedRouteEvent)?.let(::planForFeedEvent)
+        },
+        RouteEventHandler { event ->
+            (event as? MapRouteEvent)?.let(::planForMapEvent)
+        },
+        RouteEventHandler { event ->
+            (event as? InboxRouteEvent)?.let(::planForInboxEvent)
+        },
+    )
 
-    fun stackFor(event: RouteEvent): RouteStack? {
-        return when (event) {
-            is NotmidRouteEvent -> stackForNotmidEvent(event)
-            is FeedRouteEvent -> stackForFeedEvent(event)
-            is MapRouteEvent -> stackForMapEvent(event)
-            is InboxRouteEvent -> stackForInboxEvent(event)
-            else -> null
-        }
-    }
-
-    private fun stackForNotmidEvent(event: NotmidRouteEvent): RouteStack {
+    private fun planForNotmidEvent(event: NotmidRouteEvent): RoutePlan {
         return when (event) {
             is NotmidRouteEvent.DestinationSelected -> {
                 RouteStack.single(NotmidRouteGraph.destination(event.destinationId))
@@ -32,30 +33,30 @@ internal object NotmidRouteEventMapper {
             NotmidRouteEvent.SettingsRequested -> {
                 NotmidRouteGraph.settingsStack()
             }
-        }
+        }.let(RoutePlan::compose)
     }
 
-    private fun stackForFeedEvent(event: FeedRouteEvent): RouteStack {
+    private fun planForFeedEvent(event: FeedRouteEvent): RoutePlan {
         return when (event) {
             is FeedRouteEvent.ClipRequested -> {
                 NotmidRouteGraph.clipStack(event.clipId)
             }
-        }
+        }.let(RoutePlan::compose)
     }
 
-    private fun stackForMapEvent(event: MapRouteEvent): RouteStack {
+    private fun planForMapEvent(event: MapRouteEvent): RoutePlan {
         return when (event) {
             is MapRouteEvent.PlaceRequested -> {
                 NotmidRouteGraph.placeStack(event.placeId)
             }
-        }
+        }.let(RoutePlan::compose)
     }
 
-    private fun stackForInboxEvent(event: InboxRouteEvent): RouteStack {
+    private fun planForInboxEvent(event: InboxRouteEvent): RoutePlan {
         return when (event) {
             is InboxRouteEvent.ChatThreadRequested -> {
                 NotmidRouteGraph.chatThreadStack(event.threadId)
             }
-        }
+        }.let(RoutePlan::compose)
     }
 }

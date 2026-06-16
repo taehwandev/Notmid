@@ -42,6 +42,33 @@ requests live in `RoutePlan.activityRoutes`. `RouteCommand` is the app/router
 execution command family that chooses between setting a Compose stack and
 launching Activity-backed destinations.
 
+## Core App Runtime
+
+Pure planning and matching are reusable through `:core:router:impl`; runtime
+execution is reusable through the `:core-app` router package:
+
+```text
+AppRouterBundleConfig
+  -> DefaultAppRouterBundle
+  -> DefaultRouteRegistry + DefaultDeepLinkResolver + DefaultRouteEventPlanner
+  -> DefaultAppDeepLinkResolver adapter + DefaultAppRoutePlanner
+RoutePlan
+  -> DefaultAppRouterRuntime
+  -> Compose RouteStack and/or pending ActivityRoute request
+pending ActivityRoute
+  -> ActivityRouteLauncherEffect
+  -> DefaultActivityRouteLauncher
+  -> feature-owned ActivityRouteLaunchHandler
+```
+
+The Notmid product shell provides route registration, feature event handlers,
+and host/base-path values to the reusable `core-app` bundle. Core router impl
+owns URI parsing, base-path stripping, deep-link matching, and route-event
+handler dispatch. The core-app runtime owns Compose state, pending request
+queueing, lifecycle-safe consume-on-success behavior, and ActivityRoute launch
+handler composition. The app owns only the external intent handoff and concrete
+runtime binding.
+
 ## Route Targets
 
 Compose routes:
@@ -105,8 +132,8 @@ WebView URL accepts only `http` and `https`.
 1. Add route data class in the owning `feature:*:api` `route/` package.
 2. Add `DeepLinkSpec` in `deeplink/` when the destination is externally addressable.
 3. Add feature route event in `event/` if UI opens it.
-4. Register the top-level route or deep-link spec in `NotmidRouteGraph` when app-level resolution needs it.
-5. Handle event in `AppRouter`.
+4. Register the top-level route or deep-link spec in the product-shell router bundle config when app-level resolution needs it.
+5. Add a product-shell route event handler when UI opens it.
 6. Render route in `NotmidShellScreen` or owning shell.
 7. Add tests:
    - `AppDeepLinkResolverTest`

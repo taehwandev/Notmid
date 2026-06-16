@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.router.impl
+package app.thdev.glassnavlab.core.router.impl.registry
 
 import app.thdev.glassnavlab.core.router.deeplink.DeepLinkRequest
 import app.thdev.glassnavlab.core.router.deeplink.DeepLinkSpec
