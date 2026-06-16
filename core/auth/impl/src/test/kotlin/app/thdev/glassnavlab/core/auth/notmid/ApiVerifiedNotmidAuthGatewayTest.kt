@@ -3,13 +3,12 @@ package app.thdev.glassnavlab.core.auth.notmid
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthRequiredAction
+import app.thdev.glassnavlab.core.network.assertions.QueuedNetworkFailure
+import app.thdev.glassnavlab.core.network.assertions.QueuedNetworkResponse
+import app.thdev.glassnavlab.core.network.assertions.RecordingNotmidNetworkClient
 import app.thdev.glassnavlab.core.network.notmid.NotmidApiPaths
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkClient
 import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkError
 import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkErrorCode
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkException
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkRequest
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -18,7 +17,7 @@ import org.junit.Test
 class ApiVerifiedNotmidAuthGatewayTest {
     @Test
     fun firebaseAnonymousSignInVerifiesTokenWithApi() {
-        val client = FakeNotmidNetworkClient(success(authenticatedStatusJson))
+        val client = RecordingNotmidNetworkClient(QueuedNetworkResponse(authenticatedStatusJson))
         val gateway = ApiVerifiedNotmidAuthGateway(
             client = client,
             idTokenProvider = StaticFirebaseIdTokenProvider("firebase.id.token"),
@@ -60,7 +59,7 @@ class ApiVerifiedNotmidAuthGatewayTest {
     @Test
     fun firebaseGoogleSignInPreservesProviderAndSafeReturnPath() {
         val gateway = ApiVerifiedNotmidAuthGateway(
-            client = FakeNotmidNetworkClient(success(authenticatedStatusJson)),
+            client = RecordingNotmidNetworkClient(QueuedNetworkResponse(authenticatedStatusJson)),
             idTokenProvider = StaticFirebaseIdTokenProvider("google.firebase.id.token"),
         )
 
@@ -81,7 +80,7 @@ class ApiVerifiedNotmidAuthGatewayTest {
 
     @Test
     fun firebaseModeRejectsFakeProviderBeforeNetworkRequest() {
-        val client = FakeNotmidNetworkClient(success(authenticatedStatusJson))
+        val client = RecordingNotmidNetworkClient(QueuedNetworkResponse(authenticatedStatusJson))
         val gateway = ApiVerifiedNotmidAuthGateway(
             client = client,
             idTokenProvider = StaticFirebaseIdTokenProvider("firebase.id.token"),
@@ -100,7 +99,7 @@ class ApiVerifiedNotmidAuthGatewayTest {
 
     @Test
     fun tokenProviderRejectionKeepsSignedOutState() {
-        val client = FakeNotmidNetworkClient(success(authenticatedStatusJson))
+        val client = RecordingNotmidNetworkClient(QueuedNetworkResponse(authenticatedStatusJson))
         val gateway = ApiVerifiedNotmidAuthGateway(
             client = client,
             idTokenProvider = RejectingFirebaseIdTokenProvider,
@@ -123,7 +122,7 @@ class ApiVerifiedNotmidAuthGatewayTest {
     @Test
     fun unverifiedApiStatusIsRejected() {
         val gateway = ApiVerifiedNotmidAuthGateway(
-            client = FakeNotmidNetworkClient(success(signedOutStatusJson)),
+            client = RecordingNotmidNetworkClient(QueuedNetworkResponse(signedOutStatusJson)),
             idTokenProvider = StaticFirebaseIdTokenProvider("firebase.id.token"),
         )
 
@@ -141,8 +140,8 @@ class ApiVerifiedNotmidAuthGatewayTest {
     @Test
     fun apiTransportFailureIsRejected() {
         val gateway = ApiVerifiedNotmidAuthGateway(
-            client = FakeNotmidNetworkClient(
-                networkFailure(
+            client = RecordingNotmidNetworkClient(
+                QueuedNetworkFailure(
                     NotmidNetworkError(
                         code = NotmidNetworkErrorCode.Transport,
                         message = "offline",
@@ -168,7 +167,7 @@ class ApiVerifiedNotmidAuthGatewayTest {
     @Test
     fun malformedApiStatusIsRejected() {
         val gateway = ApiVerifiedNotmidAuthGateway(
-            client = FakeNotmidNetworkClient(success("""{"authenticated":true}""")),
+            client = RecordingNotmidNetworkClient(QueuedNetworkResponse("""{"authenticated":true}""")),
             idTokenProvider = StaticFirebaseIdTokenProvider("firebase.id.token"),
         )
 
@@ -186,7 +185,7 @@ class ApiVerifiedNotmidAuthGatewayTest {
     fun signOutClearsFirebaseTokenProviderSession() {
         val idTokenProvider = StaticFirebaseIdTokenProvider("firebase.id.token")
         val gateway = ApiVerifiedNotmidAuthGateway(
-            client = FakeNotmidNetworkClient(success(authenticatedStatusJson)),
+            client = RecordingNotmidNetworkClient(QueuedNetworkResponse(authenticatedStatusJson)),
             idTokenProvider = idTokenProvider,
         )
 
@@ -197,17 +196,6 @@ class ApiVerifiedNotmidAuthGatewayTest {
 
         assertFalse(state.isAuthenticated)
         assertEquals(1, idTokenProvider.clearSessionCalls)
-    }
-}
-
-private class FakeNotmidNetworkClient(
-    private val result: Result<NotmidNetworkResponse>,
-) : NotmidNetworkClient {
-    val requests = mutableListOf<NotmidNetworkRequest>()
-
-    override suspend fun execute(request: NotmidNetworkRequest): NotmidNetworkResponse {
-        requests += request
-        return result.getOrThrow()
     }
 }
 
@@ -233,25 +221,6 @@ private object RejectingFirebaseIdTokenProvider : FirebaseIdTokenProvider {
             message = "Google sign-in is not available.",
         )
     }
-}
-
-private fun success(
-    body: String,
-    statusCode: Int = 200,
-): Result<NotmidNetworkResponse> {
-    return Result.success(
-        NotmidNetworkResponse(
-            statusCode = statusCode,
-            body = body,
-            headers = emptyMap(),
-        ),
-    )
-}
-
-private fun networkFailure(
-    error: NotmidNetworkError,
-): Result<NotmidNetworkResponse> {
-    return Result.failure(NotmidNetworkException(error))
 }
 
 private val authenticatedStatusJson = """

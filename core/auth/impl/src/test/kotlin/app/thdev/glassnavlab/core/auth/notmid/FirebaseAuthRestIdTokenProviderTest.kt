@@ -1,12 +1,11 @@
 package app.thdev.glassnavlab.core.auth.notmid
 
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkClient
+import app.thdev.glassnavlab.core.network.assertions.QueuedNetworkFailure
+import app.thdev.glassnavlab.core.network.assertions.QueuedNetworkResponse
+import app.thdev.glassnavlab.core.network.assertions.RecordingNotmidNetworkClient
 import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkError
 import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkErrorCode
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkException
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkRequest
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -14,7 +13,7 @@ import org.junit.Test
 class FirebaseAuthRestIdTokenProviderTest {
     @Test
     fun anonymousProviderUsesFirebaseSignUpRestEndpoint() {
-        val client = RecordingNetworkClient(success("""{"idToken":"firebase.id.token"}"""))
+        val client = RecordingNotmidNetworkClient(QueuedNetworkResponse("""{"idToken":"firebase.id.token"}"""))
         val provider = FirebaseAuthRestIdTokenProvider(
             client = client,
             config = FirebaseAuthRestConfig(apiKey = "public api key"),
@@ -32,7 +31,7 @@ class FirebaseAuthRestIdTokenProviderTest {
 
     @Test
     fun googleProviderExchangesInjectedGoogleIdToken() {
-        val client = RecordingNetworkClient(success("""{"idToken":"firebase.google.token"}"""))
+        val client = RecordingNotmidNetworkClient(QueuedNetworkResponse("""{"idToken":"firebase.google.token"}"""))
         val provider = FirebaseAuthRestIdTokenProvider(
             client = client,
             config = FirebaseAuthRestConfig(
@@ -61,9 +60,9 @@ class FirebaseAuthRestIdTokenProviderTest {
 
     @Test
     fun googleProviderLinksCurrentAnonymousSessionWhenAvailable() {
-        val client = RecordingNetworkClient(
-            success("""{"idToken":"anonymous.firebase.token"}"""),
-            success("""{"idToken":"linked.firebase.token"}"""),
+        val client = RecordingNotmidNetworkClient(
+            QueuedNetworkResponse("""{"idToken":"anonymous.firebase.token"}"""),
+            QueuedNetworkResponse("""{"idToken":"linked.firebase.token"}"""),
         )
         val provider = FirebaseAuthRestIdTokenProvider(
             client = client,
@@ -86,9 +85,9 @@ class FirebaseAuthRestIdTokenProviderTest {
 
     @Test
     fun clearSessionPreventsGoogleLinkingWithPreviousAnonymousSession() {
-        val client = RecordingNetworkClient(
-            success("""{"idToken":"anonymous.firebase.token"}"""),
-            success("""{"idToken":"google.firebase.token"}"""),
+        val client = RecordingNotmidNetworkClient(
+            QueuedNetworkResponse("""{"idToken":"anonymous.firebase.token"}"""),
+            QueuedNetworkResponse("""{"idToken":"google.firebase.token"}"""),
         )
         val provider = FirebaseAuthRestIdTokenProvider(
             client = client,
@@ -110,7 +109,7 @@ class FirebaseAuthRestIdTokenProviderTest {
 
     @Test
     fun missingConfigRejectsBeforeNetwork() {
-        val client = RecordingNetworkClient(success("""{"idToken":"firebase.id.token"}"""))
+        val client = RecordingNotmidNetworkClient(QueuedNetworkResponse("""{"idToken":"firebase.id.token"}"""))
         val provider = FirebaseAuthRestIdTokenProvider(
             client = client,
             config = FirebaseAuthRestConfig(apiKey = ""),
@@ -125,7 +124,7 @@ class FirebaseAuthRestIdTokenProviderTest {
 
     @Test
     fun googleProviderRejectionReturnsTypedFailureBeforeNetwork() {
-        val client = RecordingNetworkClient(success("""{"idToken":"firebase.google.token"}"""))
+        val client = RecordingNotmidNetworkClient(QueuedNetworkResponse("""{"idToken":"firebase.google.token"}"""))
         val provider = FirebaseAuthRestIdTokenProvider(
             client = client,
             config = FirebaseAuthRestConfig(apiKey = "public-key"),
@@ -145,7 +144,9 @@ class FirebaseAuthRestIdTokenProviderTest {
     @Test
     fun firebaseHttpErrorIsRejected() {
         val provider = FirebaseAuthRestIdTokenProvider(
-            client = RecordingNetworkClient(success("""{"error":"bad"}""", statusCode = 400)),
+            client = RecordingNotmidNetworkClient(
+                QueuedNetworkResponse("""{"error":"bad"}""", statusCode = 400),
+            ),
             config = FirebaseAuthRestConfig(apiKey = "public-key"),
         )
 
@@ -161,7 +162,7 @@ class FirebaseAuthRestIdTokenProviderTest {
     @Test
     fun malformedFirebaseBodyIsRejected() {
         val provider = FirebaseAuthRestIdTokenProvider(
-            client = RecordingNetworkClient(success("""{"refreshToken":"refresh"}""")),
+            client = RecordingNotmidNetworkClient(QueuedNetworkResponse("""{"refreshToken":"refresh"}""")),
             config = FirebaseAuthRestConfig(apiKey = "public-key"),
         )
 
@@ -177,8 +178,8 @@ class FirebaseAuthRestIdTokenProviderTest {
     @Test
     fun transportFailureIsRejected() {
         val provider = FirebaseAuthRestIdTokenProvider(
-            client = RecordingNetworkClient(
-                networkFailure(
+            client = RecordingNotmidNetworkClient(
+                QueuedNetworkFailure(
                     NotmidNetworkError(
                         code = NotmidNetworkErrorCode.Transport,
                         message = "offline",
@@ -198,62 +199,10 @@ class FirebaseAuthRestIdTokenProviderTest {
     }
 }
 
-private class RecordingNetworkClient(
-    vararg result: RecordedNetworkResult,
-) : NotmidNetworkClient {
-    val requests = mutableListOf<NotmidNetworkRequest>()
-    private val results = result.toMutableList()
-
-    override suspend fun execute(request: NotmidNetworkRequest): NotmidNetworkResponse {
-        requests += request
-        return when (results.size) {
-            0 -> error("No recorded network result.")
-            1 -> results.single()
-            else -> results.removeAt(0)
-        }.responseOrThrow()
-    }
-}
-
-private sealed interface RecordedNetworkResult {
-    data class Success(
-        val response: NotmidNetworkResponse,
-    ) : RecordedNetworkResult
-
-    data class Failure(
-        val exception: NotmidNetworkException,
-    ) : RecordedNetworkResult
-}
-
 private class StaticGoogleIdTokenProvider(
     private val token: String,
 ) : GoogleIdTokenProvider {
     override suspend fun idToken(): GoogleIdTokenResult {
         return GoogleIdTokenResult.Success(token)
-    }
-}
-
-private fun success(
-    body: String,
-    statusCode: Int = 200,
-): RecordedNetworkResult {
-    return RecordedNetworkResult.Success(
-        NotmidNetworkResponse(
-            statusCode = statusCode,
-            body = body,
-            headers = emptyMap(),
-        ),
-    )
-}
-
-private fun networkFailure(
-    error: NotmidNetworkError,
-): RecordedNetworkResult {
-    return RecordedNetworkResult.Failure(NotmidNetworkException(error))
-}
-
-private fun RecordedNetworkResult.responseOrThrow(): NotmidNetworkResponse {
-    return when (this) {
-        is RecordedNetworkResult.Failure -> throw exception
-        is RecordedNetworkResult.Success -> response
     }
 }

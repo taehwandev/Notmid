@@ -33,6 +33,7 @@ include(
     ":core:domain",
     ":core:model",
     ":core:network:api",
+    ":core:network:assertions",
     ":core:network:impl",
     ":core:app",
     ":core:router:api",

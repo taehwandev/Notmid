@@ -3,13 +3,12 @@ package app.thdev.glassnavlab.core.data.notmid
 import app.thdev.glassnavlab.core.model.notmid.NotmidCaptureMediaState
 import app.thdev.glassnavlab.core.model.notmid.NotmidCaptureVisibility
 import app.thdev.glassnavlab.core.model.notmid.NotmidMessageAttachment
+import app.thdev.glassnavlab.core.network.assertions.QueuedNetworkFailure
+import app.thdev.glassnavlab.core.network.assertions.QueuedNetworkResponse
+import app.thdev.glassnavlab.core.network.assertions.RecordingNotmidNetworkClient
 import app.thdev.glassnavlab.core.network.notmid.NotmidApiPaths
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkClient
 import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkError
 import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkErrorCode
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkException
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkRequest
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -18,14 +17,12 @@ import org.junit.Test
 class ApiNotmidContentRepositoryTest {
     @Test
     fun destinationsMapsFeedMapCaptureAndInboxResponses() {
-        val client = FakeNotmidNetworkClient(
-            responses = mapOf(
-                NotmidApiPaths.FEED to success(feedJson),
-                NotmidApiPaths.MAP to success(mapJson),
-                NotmidApiPaths.CAPTURE_DRAFT to success(captureDraftJson),
-                NotmidApiPaths.INBOX_THREADS to success(inboxJson),
-                NotmidApiPaths.threadDetail("tonight-seongsu") to success(threadDetailJson),
-            ),
+        val client = RecordingNotmidNetworkClient(
+            QueuedNetworkResponse(feedJson),
+            QueuedNetworkResponse(mapJson),
+            QueuedNetworkResponse(captureDraftJson),
+            QueuedNetworkResponse(inboxJson),
+            QueuedNetworkResponse(threadDetailJson),
         )
         val repository = ApiNotmidContentRepository(client)
 
@@ -73,10 +70,8 @@ class ApiNotmidContentRepositoryTest {
     @Test
     fun httpFailureThrowsTypedException() {
         val repository = ApiNotmidContentRepository(
-            FakeNotmidNetworkClient(
-                responses = mapOf(
-                    NotmidApiPaths.FEED to success("""{"error":{"code":"broken"}}""", statusCode = 500),
-                ),
+            RecordingNotmidNetworkClient(
+                QueuedNetworkResponse("""{"error":{"code":"broken"}}""", statusCode = 500),
             ),
         )
 
@@ -92,13 +87,11 @@ class ApiNotmidContentRepositoryTest {
     @Test
     fun transportFailureThrowsTypedException() {
         val repository = ApiNotmidContentRepository(
-            FakeNotmidNetworkClient(
-                responses = mapOf(
-                    NotmidApiPaths.FEED to networkFailure(
-                        NotmidNetworkError(
-                            code = NotmidNetworkErrorCode.Transport,
-                            message = "offline",
-                        ),
+            RecordingNotmidNetworkClient(
+                QueuedNetworkFailure(
+                    NotmidNetworkError(
+                        code = NotmidNetworkErrorCode.Transport,
+                        message = "offline",
                     ),
                 ),
             ),
@@ -115,10 +108,8 @@ class ApiNotmidContentRepositoryTest {
     @Test
     fun malformedJsonThrowsTypedException() {
         val repository = ApiNotmidContentRepository(
-            FakeNotmidNetworkClient(
-                responses = mapOf(
-                    NotmidApiPaths.FEED to success("""{"clips":[]}"""),
-                ),
+            RecordingNotmidNetworkClient(
+                QueuedNetworkResponse("""{"clips":[]}"""),
             ),
         )
 
@@ -128,38 +119,6 @@ class ApiNotmidContentRepositoryTest {
 
         assertEquals(NotmidApiPaths.FEED, exception.path)
     }
-}
-
-private class FakeNotmidNetworkClient(
-    private val responses: Map<String, Result<NotmidNetworkResponse>>,
-) : NotmidNetworkClient {
-    val requests = mutableListOf<NotmidNetworkRequest>()
-
-    override suspend fun execute(request: NotmidNetworkRequest): NotmidNetworkResponse {
-        requests += request
-        return responses[request.path]
-            ?.getOrThrow()
-            ?: error("Unexpected request path: ${request.path}")
-    }
-}
-
-private fun success(
-    body: String,
-    statusCode: Int = 200,
-): Result<NotmidNetworkResponse> {
-    return Result.success(
-        NotmidNetworkResponse(
-            statusCode = statusCode,
-            body = body,
-            headers = emptyMap(),
-        ),
-    )
-}
-
-private fun networkFailure(
-    error: NotmidNetworkError,
-): Result<NotmidNetworkResponse> {
-    return Result.failure(NotmidNetworkException(error))
 }
 
 private val feedJson = """

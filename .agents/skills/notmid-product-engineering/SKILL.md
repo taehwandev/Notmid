@@ -73,6 +73,11 @@ If the task changes low-level Liquid Glass rendering, AGSL, backdrop capture, or
   policy, repositories, or feature impl imports. Add a separate router
   assertions Gradle module only after app-runtime fakes have multiple external
   test consumers.
+- `:core:network:assertions` owns reusable `NotmidNetworkClient` test doubles,
+  queued network responses/failures, request assertion subjects, safe header
+  redaction helpers, and API error envelope fixtures. Do not keep duplicate
+  fake network clients inside auth/data repository tests once this boundary can
+  be reused.
 - `:feature:*:api` owns feature route contracts, deep-link specs, and route events. Split them by caller-facing role once more than one contract family exists: `route/`, `deeplink/`, `event/`, and `destination/` or `activity/` only when those are real import boundaries.
 - `:feature:*:impl` owns Compose screens and emits events. It must not depend on another feature impl.
 - `:*:assertions` modules own reusable test doubles, recording fakes, fixtures, and assertion helpers. They should depend on matching API contracts, not production impl modules.

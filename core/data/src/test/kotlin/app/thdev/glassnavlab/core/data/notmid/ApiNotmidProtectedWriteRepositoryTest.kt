@@ -14,14 +14,14 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteDecision
 import app.thdev.glassnavlab.core.model.notmid.NotmidProfileSettingsUpdateRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidStartThreadRequest
+import app.thdev.glassnavlab.core.network.assertions.ApiErrorEnvelopeFixtures
+import app.thdev.glassnavlab.core.network.assertions.QueuedNetworkFailure
+import app.thdev.glassnavlab.core.network.assertions.QueuedNetworkResponse
+import app.thdev.glassnavlab.core.network.assertions.RecordingNotmidNetworkClient
 import app.thdev.glassnavlab.core.network.notmid.NotmidApiPaths
 import app.thdev.glassnavlab.core.network.notmid.NotmidHttpMethod
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkClient
 import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkError
 import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkErrorCode
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkException
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkRequest
-import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -31,7 +31,7 @@ class ApiNotmidProtectedWriteRepositoryTest {
     @Test
     fun publishCaptureSendsBearerTokenAndParsesReceipt() {
         val client = RecordingNotmidNetworkClient(
-            responses = mapOf(NotmidApiPaths.CAPTURE_PUBLISH to success(publishResponseJson)),
+            QueuedNetworkResponse(publishResponseJson),
         )
         val repository = ApiNotmidProtectedWriteRepository(client)
 
@@ -61,7 +61,7 @@ class ApiNotmidProtectedWriteRepositoryTest {
     @Test
     fun saveClipUsesEncodedPathAndBearerToken() {
         val path = NotmidApiPaths.clipSave("clip/one")
-        val client = RecordingNotmidNetworkClient(responses = mapOf(path to success(saveClipResponseJson)))
+        val client = RecordingNotmidNetworkClient(QueuedNetworkResponse(saveClipResponseJson))
         val repository = ApiNotmidProtectedWriteRepository(client)
 
         val receipt = runSuspend { repository.saveClip(signedInAuthState, "clip/one") }
@@ -74,9 +74,8 @@ class ApiNotmidProtectedWriteRepositoryTest {
 
     @Test
     fun sendThreadMessagePostsBodyAndParsesMessage() {
-        val path = NotmidApiPaths.threadMessages("thread one")
         val client = RecordingNotmidNetworkClient(
-            responses = mapOf(path to success(sendMessageResponseJson)),
+            QueuedNetworkResponse(sendMessageResponseJson),
         )
         val repository = ApiNotmidProtectedWriteRepository(client)
 
@@ -95,7 +94,7 @@ class ApiNotmidProtectedWriteRepositoryTest {
     @Test
     fun startThreadPostsBodyAndParsesThreadReceipt() {
         val client = RecordingNotmidNetworkClient(
-            responses = mapOf(NotmidApiPaths.INBOX_THREADS to success(startThreadResponseJson)),
+            QueuedNetworkResponse(startThreadResponseJson),
         )
         val repository = ApiNotmidProtectedWriteRepository(client)
 
@@ -125,7 +124,7 @@ class ApiNotmidProtectedWriteRepositoryTest {
     fun acceptThreadInvitePostsPathAndParsesThread() {
         val path = NotmidApiPaths.threadInviteAccept("thread one")
         val client = RecordingNotmidNetworkClient(
-            responses = mapOf(path to success(chatInviteResponseJson)),
+            QueuedNetworkResponse(chatInviteResponseJson),
         )
         val repository = ApiNotmidProtectedWriteRepository(client)
 
@@ -146,7 +145,7 @@ class ApiNotmidProtectedWriteRepositoryTest {
     @Test
     fun updateProfileSettingsPatchesBodyAndUpdatesUser() {
         val client = RecordingNotmidNetworkClient(
-            responses = mapOf(NotmidApiPaths.PROFILE_SETTINGS to success(profileSettingsResponseJson)),
+            QueuedNetworkResponse(profileSettingsResponseJson),
         )
         val repository = ApiNotmidProtectedWriteRepository(client)
 
@@ -171,7 +170,7 @@ class ApiNotmidProtectedWriteRepositoryTest {
 
     @Test
     fun missingAuthDoesNotCallNetwork() {
-        val client = RecordingNotmidNetworkClient(responses = emptyMap())
+        val client = RecordingNotmidNetworkClient()
         val repository = ApiNotmidProtectedWriteRepository(client)
 
         val exception = assertThrows(NotmidProtectedWriteException::class.java) {
@@ -185,11 +184,9 @@ class ApiNotmidProtectedWriteRepositoryTest {
     @Test
     fun httpErrorReturnsTypedFailure() {
         val client = RecordingNotmidNetworkClient(
-            responses = mapOf(
-                NotmidApiPaths.CAPTURE_PUBLISH to success(
-                    body = """{"error":{"code":"auth_required"}}""",
-                    statusCode = 401,
-                ),
+            QueuedNetworkResponse(
+                body = ApiErrorEnvelopeFixtures.AuthRequired,
+                statusCode = 401,
             ),
         )
         val repository = ApiNotmidProtectedWriteRepository(client)
@@ -205,20 +202,17 @@ class ApiNotmidProtectedWriteRepositoryTest {
 
     @Test
     fun httpBusinessErrorPreservesServerCodeAndMessage() {
-        val path = NotmidApiPaths.threadMessages("thread one")
         val client = RecordingNotmidNetworkClient(
-            responses = mapOf(
-                path to success(
-                    body = """
-                    {
-                      "error": {
-                        "code": "chat_invite_required",
-                        "message": "Accept the chat request before sending a message."
-                      }
-                    }
-                    """.trimIndent(),
-                    statusCode = 403,
-                ),
+            QueuedNetworkResponse(
+                body = """
+                {
+                  "error": {
+                    "code": "chat_invite_required",
+                    "message": "Accept the chat request before sending a message."
+                  }
+                }
+                """.trimIndent(),
+                statusCode = 403,
             ),
         )
         val repository = ApiNotmidProtectedWriteRepository(client)
@@ -243,12 +237,10 @@ class ApiNotmidProtectedWriteRepositoryTest {
     @Test
     fun transportErrorReturnsTypedFailure() {
         val client = RecordingNotmidNetworkClient(
-            responses = mapOf(
-                NotmidApiPaths.CAPTURE_PUBLISH to networkFailure(
-                    NotmidNetworkError(
-                        code = NotmidNetworkErrorCode.Transport,
-                        message = "offline",
-                    ),
+            QueuedNetworkFailure(
+                NotmidNetworkError(
+                    code = NotmidNetworkErrorCode.Transport,
+                    message = "offline",
                 ),
             ),
         )
@@ -266,7 +258,7 @@ class ApiNotmidProtectedWriteRepositoryTest {
     @Test
     fun malformedSuccessReturnsTypedFailure() {
         val client = RecordingNotmidNetworkClient(
-            responses = mapOf(NotmidApiPaths.CAPTURE_PUBLISH to success("""{"clip":{}}""")),
+            QueuedNetworkResponse("""{"clip":{}}"""),
         )
         val repository = ApiNotmidProtectedWriteRepository(client)
 
@@ -277,37 +269,6 @@ class ApiNotmidProtectedWriteRepositoryTest {
         val failure = exception.failure
         assertTrue(failure is NotmidProtectedWriteFailure.MalformedResponse)
     }
-}
-
-private class RecordingNotmidNetworkClient(
-    private val responses: Map<String, Result<NotmidNetworkResponse>>,
-) : NotmidNetworkClient {
-    val requests = mutableListOf<NotmidNetworkRequest>()
-
-    override suspend fun execute(request: NotmidNetworkRequest): NotmidNetworkResponse {
-        requests += request
-        val response = responses[request.path] ?: error("Unexpected path: ${request.path}")
-        return response.getOrThrow()
-    }
-}
-
-private fun success(
-    body: String,
-    statusCode: Int = 200,
-): Result<NotmidNetworkResponse> {
-    return Result.success(
-        NotmidNetworkResponse(
-            statusCode = statusCode,
-            body = body,
-            headers = emptyMap(),
-        ),
-    )
-}
-
-private fun networkFailure(
-    error: NotmidNetworkError,
-): Result<NotmidNetworkResponse> {
-    return Result.failure(NotmidNetworkException(error))
 }
 
 private fun bodyValue(body: String): String {

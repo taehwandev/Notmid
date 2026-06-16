@@ -103,6 +103,11 @@ Rules:
   notmid API config, paths, HTTP method, request/response contracts
   typed NotmidNetworkException for transport, timeout, and invalid-request failures
 
+:core:network:assertions
+  FakeNotmidNetworkClient and RecordingNotmidNetworkClient for tests
+  queued success/failure responses, request assertions, safe header redaction
+  depends on :core:network:api, not production :core:network:impl
+
 :core:network:impl
   OkHttp-backed client implementation for the API network boundary
 
