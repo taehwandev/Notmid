@@ -73,6 +73,7 @@ wait_for_url "${WEB_BASE_URL}/notmid"
 
 echo "== API smoke =="
 curl -fsS "${API_BASE_URL}/health" | grep -q '"service":"notmid-api"'
+curl -fsS "${API_BASE_URL}/openapi.json" | grep -q '"operationId":"getFeed"'
 curl -fsS "${API_BASE_URL}/v1/auth/status" | grep -q '"authenticated":false'
 curl -fsS -X POST "${API_BASE_URL}/v1/auth/fake-sign-in" \
   -H 'content-type: application/json' \
@@ -83,11 +84,59 @@ curl -fsS "${API_BASE_URL}/v1/deeplinks/resolve?url=https%3A%2F%2Fthdev.app%2Fno
   grep -q '"profile-settings"'
 curl -fsS "${API_BASE_URL}/v1/deeplinks/resolve?url=https%3A%2F%2Fthdev.app%2Fnotmid%2Flogin%3Fnext%3D%252Fnotmid%252Fcapture" |
   grep -q '"login"'
+if [[ "$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE_URL}/v1/capture/publish" \
+  -H 'content-type: application/json' \
+  --data '{"draftId":"draft-local-receipt","caption":"Smoke publish","placeId":"neon-yard","moodTags":["smoke"],"visibility":"public"}')" != "401" ]]; then
+  echo "Expected unauthenticated capture publish to return 401" >&2
+  exit 1
+fi
+if [[ "$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE_URL}/v1/clips/latte-line-was-worth-it/save")" != "401" ]]; then
+  echo "Expected unauthenticated clip save to return 401" >&2
+  exit 1
+fi
+if [[ "$(curl -sS -o /dev/null -w '%{http_code}' -X PATCH "${API_BASE_URL}/v1/profile/settings" \
+  -H 'content-type: application/json' \
+  --data '{"displayName":"Smoke User","homeNeighborhood":"Seongsu"}')" != "401" ]]; then
+  echo "Expected unauthenticated profile settings update to return 401" >&2
+  exit 1
+fi
+curl -fsS -X POST "${API_BASE_URL}/v1/capture/publish" \
+  -H 'authorization: Bearer notmid-fake-local-dev-token' \
+  -H 'content-type: application/json' \
+  --data '{"draftId":"draft-local-receipt","caption":"Smoke publish","placeId":"neon-yard","moodTags":["smoke"],"visibility":"public"}' |
+  grep -q '"moderationStatus":"queued"'
+curl -fsS -X POST "${API_BASE_URL}/v1/clips/latte-line-was-worth-it/save" \
+  -H 'authorization: Bearer notmid-fake-local-dev-token' |
+  grep -q '"saved":true'
+curl -fsS "${API_BASE_URL}/v1/profile/settings" \
+  -H 'authorization: Bearer notmid-fake-local-dev-token' |
+  grep -q '"displayName":"Local You"'
+curl -fsS -X PATCH "${API_BASE_URL}/v1/profile/settings" \
+  -H 'authorization: Bearer notmid-fake-local-dev-token' \
+  -H 'content-type: application/json' \
+  --data '{"displayName":"Smoke User","homeNeighborhood":"Seongsu Smoke"}' |
+  grep -q '"updated":true'
+if [[ "$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE_URL}/v1/inbox/threads/tonight-seongsu/messages" \
+  -H 'content-type: application/json' \
+  --data '{"body":"Smoke message"}')" != "401" ]]; then
+  echo "Expected unauthenticated chat send to return 401" >&2
+  exit 1
+fi
+curl -fsS -X POST "${API_BASE_URL}/v1/inbox/threads/tonight-seongsu/messages" \
+  -H 'authorization: Bearer notmid-fake-local-dev-token' \
+  -H 'content-type: application/json' \
+  --data '{"body":"Smoke message"}' |
+  grep -q '"mine":true'
 
 echo "== Web smoke =="
 curl -fsS "${WEB_BASE_URL}/notmid" | grep -q 'latte line was worth it'
-curl -fsS "${WEB_BASE_URL}/notmid/login?next=%2Fnotmid%2Fcapture" | grep -q 'keep your receipts attached'
+curl -fsS "${WEB_BASE_URL}/notmid/login?next=%2Fnotmid%2Fcapture" | grep -q 'show receipts'
+curl -fsS "${WEB_BASE_URL}/notmid/capture" | grep -q 'sign in to publish receipts'
+curl -fsS "${WEB_BASE_URL}/notmid/inbox" | grep -q 'pull up plans'
+curl -fsS "${WEB_BASE_URL}/notmid/chats/tonight-seongsu" | grep -q 'Attached context'
 curl -fsSI "${WEB_BASE_URL}/notmid/clips/latte-line-was-worth-it" | grep -q '200 OK'
 curl -fsSI "${WEB_BASE_URL}/notmid/places/neon-yard" | grep -q '200 OK'
+curl -fsS "${WEB_BASE_URL}/notmid/profile" | grep -q 'profile starts after sign in'
+curl -fsS "${WEB_BASE_URL}/notmid/profile/settings" | grep -q 'open-source mode'
 
 echo "smoke-web-api passed"

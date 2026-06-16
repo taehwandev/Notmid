@@ -31,6 +31,20 @@ Hosting or App Hosting for web if useful
 - Anonymous browsing should not require production Firebase config.
 - Fake/local mode should remain usable without Firebase credentials.
 - If Firebase Auth is used, clients send ID tokens to `apps/api`; the API verifies and maps them to notmid users.
+- Web Firebase Auth uses public `NEXT_PUBLIC_NOTMID_FIREBASE_*` values only.
+  The client obtains an anonymous ID token through Firebase Auth REST, sends it
+  to the Next.js session bridge, and the bridge sets an HTTP-only cookie only
+  after API verification succeeds. The refresh token is kept only in an
+  HTTP-only cookie and exchanged server-side through the refresh route. The
+  web Google path uses public `NEXT_PUBLIC_NOTMID_GOOGLE_CLIENT_ID`, receives a
+  Google Identity Services ID token, exchanges it for a Firebase session through
+  Next.js, and links to the current anonymous Firebase session when possible.
+  The `/notmid` middleware may refresh expired or near-expired ID tokens before
+  server-rendered product routes continue, after verifying the refreshed ID
+  token with `apps/api`. Web sign-out must clear both Firebase cookies and the
+  legacy fake session cookie server-side. Protected web write actions should
+  retry once through the same server-side refresh path after API 401, then
+  redirect to login if no verified session remains.
 
 ## Secret Rules
 
@@ -83,9 +97,11 @@ google-services.example.json
 2. Keep API fixture endpoints and web fixture fallback working.
 3. Add server auth/session contracts before client SDK wiring.
 4. Add Android `:core:network:*` and `:core:auth:*` boundaries.
-5. Add Firebase Admin/FCM/App Check only behind `apps/api`.
-6. Add production config loading only through ignored local files or secret stores.
-7. Add App Check and server write policy before exposing public writes.
+5. Add web Firebase Auth client wiring only after the API verification boundary
+   exists.
+6. Add Firebase Admin/FCM/App Check only behind `apps/api`.
+7. Add production config loading only through ignored local files or secret stores.
+8. Add App Check and server write policy before exposing public writes.
 
 ## Documentation
 

@@ -46,6 +46,13 @@ Domain or router behavior:
 ./gradlew test
 ```
 
+Android data/auth boundary:
+
+```bash
+./gradlew :core:data:test
+./gradlew :core:auth:impl:test
+```
+
 Formatting/patch hygiene:
 
 ```bash

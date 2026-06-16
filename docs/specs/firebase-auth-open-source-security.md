@@ -20,6 +20,31 @@ Use Firebase only when fake local data stops being useful and the server boundar
 
 Do not add Firebase just to make the sample feel production-like. Add it when a feature needs real identity, push, app integrity, emulator coverage, or another explicit Firebase capability.
 
+Current persistence boundary:
+
+- `NOTMID_DATA_BACKEND=fixture` is the deterministic local default.
+- `NODE_ENV=production` requires `NOTMID_DATA_BACKEND=postgres` and
+  `DATABASE_URL`, and rejects fixture storage.
+- `apps/api/db/postgres/schema.sql` and additive migration files such as
+  `0002_chat_thread_access.sql` and `0003_user_relationships.sql` are the
+  reviewed source artifacts for Postgres tables. Local verification checks them
+  but does not apply them to a real database.
+- `apps/api/src/postgresNotmidRepository.ts` provides a CI-safe Postgres
+  repository adapter behind a small query-port abstraction; local verification
+  uses a fake query client and does not require a database or committed
+  credentials.
+- `apps/api/src/postgresQueryClient.ts` wires `NOTMID_DATA_BACKEND=postgres` to
+  a runtime Postgres.js query client. Config validation and CI health checks do
+  not open a production database connection.
+- `apps/api/src/postgresMigrations.ts` and `scripts/migrate-api-postgres.sh`
+  provide the explicit Postgres migration workflow. `--plan` is CI/local safe;
+  `--apply` requires `DATABASE_URL` and `NOTMID_MIGRATION_CONFIRM=apply`.
+- `.github/workflows/api-postgres-migrations.yml` is the manual GitHub Actions
+  migration job. It uses GitHub Environment approval, the environment-scoped
+  `NOTMID_DATABASE_URL` secret, and typed confirmation before applying.
+- Production migrations must run only through an approved deployment or
+  migration job, not through general local verification.
+
 ## Auth Policy
 
 MVP login should be low-friction but not anonymous-only:
@@ -58,6 +83,72 @@ The first web/auth slice keeps Firebase optional and makes the auth boundary vis
 - Capture, saves, chats, profile edits, and moderation remain the protected action set.
 
 This fake token is not a credential and must not be accepted in production mode. When `NOTMID_AUTH_MODE` moves to `firebase`, clients should send Firebase ID tokens to `apps/api` and the API should map verified identities into notmid users.
+
+Current API auth boundary:
+
+- `apps/api/src/authPolicy.ts` owns API auth context resolution and protected write checks.
+- The deterministic fake token authenticates only when `NOTMID_AUTH_MODE=fake`.
+- `NOTMID_AUTH_MODE=disabled` and `NOTMID_AUTH_MODE=firebase` reject fake-token writes.
+- `NOTMID_AUTH_MODE=firebase` verifies Firebase SecureToken ID tokens in
+  `apps/api/src/firebaseTokenVerifier.ts` with `FIREBASE_PROJECT_ID`, RS256
+  issuer/audience/expiry checks, and Google's public SecureToken certificates
+  before protected writes are allowed.
+- `bash scripts/verify-api-auth-policy.sh` verifies those mode boundaries without requiring Firebase credentials.
+- `bash scripts/verify-api-firebase-auth.sh` verifies signed-token acceptance,
+  invalid-token rejection, provider mapping, and fake-token rejection with local
+  generated keys.
+
+Current web auth boundary:
+
+- `NEXT_PUBLIC_NOTMID_AUTH_PROVIDER=fake` is the local default. Production must
+  explicitly choose `firebase` or `disabled`; fake mode is rejected by config
+  verification.
+- `NEXT_PUBLIC_NOTMID_AUTH_PROVIDER=firebase` requires public Firebase web app
+  values: API key, auth domain, project id, and app id. It also requires a
+  public `NEXT_PUBLIC_NOTMID_GOOGLE_CLIENT_ID` so the first permanent provider
+  is available in production. These values are public client config, not
+  service-account credentials or OAuth client secrets.
+- `apps/web/src/lib/notmidFirebaseClient.ts` uses Firebase Auth REST for
+  anonymous sign-in. It does not use localStorage, sessionStorage,
+  browser-local persistence, or a committed Firebase service account.
+- `apps/web/src/app/notmid/login/FirebaseLoginActions.tsx` loads Google Identity
+  Services for Google sign-in. The browser receives a short-lived Google ID
+  token only in memory and posts it to
+  `apps/web/src/app/notmid/login/firebase-session/google/route.ts`.
+- The Google session route exchanges the Google ID token through Firebase Auth
+  REST `accounts:signInWithIdp`, includes the current HTTP-only Firebase ID
+  token when present to link an anonymous session, verifies the resulting
+  Firebase ID token with `apps/api`, then sets the same HTTP-only session
+  cookies used by anonymous sign-in.
+- `apps/web/src/app/notmid/login/firebase-session/route.ts` accepts a Firebase
+  ID token from the browser, asks `apps/api` to verify it through
+  `GET /v1/auth/status`, and sets the HTTP-only `/notmid` cookie only after the
+  API reports an authenticated user.
+- The web session cookie stores the short-lived Firebase ID token as a bearer
+  token for server-rendered web routes. The refresh token is stored in a
+  separate HTTP-only cookie and can be exchanged by
+  `apps/web/src/app/notmid/login/firebase-session/refresh/route.ts`; the refresh
+  route verifies the new ID token with `apps/api` before updating cookies.
+- `apps/web/src/middleware.ts` retries expired or near-expired Firebase sessions
+  before `/notmid` server-rendered product routes continue, forwarding the
+  refreshed ID token into the same request and writing the renewed HTTP-only
+  cookies on the response.
+- `apps/web/src/app/notmid/profile/settings/page.tsx` owns the server-side
+  sign-out action for the web shell. It clears the Firebase ID-token cookie, the
+  Firebase refresh-token cookie, and the legacy local fake session cookie.
+- `apps/web/src/lib/notmidServerActions.ts` owns the server-action write
+  boundary for protected web forms. Capture publish and chat send actions pass
+  the HTTP-only access token to `apps/api`, retry once after a server-side
+  Firebase refresh when the API returns 401, and redirect to login when no
+  verified session is available.
+- `bash scripts/verify-web-firebase-auth-config.sh` verifies production web auth
+  config, client-visible secret rejection, anonymous ID-token acquisition
+  wiring, Google Identity Services wiring, Firebase Google exchange/linking,
+  HTTP-only cookie bridge wiring, server-side refresh-token exchange wiring, and
+  middleware refresh retry wiring without requiring real Firebase credentials.
+- `bash scripts/verify-web-write-actions.sh` verifies protected web write action
+  wiring for capture publish, chat send, typed API errors, and action-level
+  refresh retry wiring without requiring real Firebase credentials.
 
 ## Module Shape
 
@@ -150,6 +241,7 @@ Local development:
 
 - Real `google-services.json` stays untracked.
 - `app/google-services.example.json` may document the expected shape.
+- Android local runtime values, including Maps provider keys, stay in root `local.properties`.
 - Developers create their own Firebase project or request access to a shared dev project.
 - App Check debug tokens stay in local environment variables or local secure storage, not files committed to Git.
 
@@ -170,6 +262,60 @@ For every Firebase API key:
 - Do not reuse a Firebase API key for non-Firebase services such as Maps, Places, or Gemini. Use separate restricted keys for those APIs.
 
 Do not rely on API key restrictions for data access. Firestore and Storage access must be enforced by Firebase Security Rules and App Check.
+
+## Android Local Properties
+
+The Android app reads local runtime values from three sources, in this order:
+
+1. Gradle property: `-PNOTMID_GOOGLE_MAPS_API_KEY=...`
+2. Root `local.properties`
+3. Environment variable: `NOTMID_GOOGLE_MAPS_API_KEY=...`
+
+Use `local.properties.example` as the safe template. Real local values belong only in ignored `local.properties`:
+
+```properties
+NOTMID_DEBUG_API_BASE_URL=http://10.0.2.2:8787
+NOTMID_RELEASE_API_BASE_URL=https://thdev.app
+NOTMID_DEBUG_AUTH_MODE=fake
+NOTMID_RELEASE_AUTH_MODE=disabled
+NOTMID_DEBUG_FIREBASE_API_KEY=
+NOTMID_RELEASE_FIREBASE_API_KEY=
+NOTMID_DEBUG_FIREBASE_AUTH_REQUEST_URI=https://thdev.app/notmid/firebase-auth/android
+NOTMID_RELEASE_FIREBASE_AUTH_REQUEST_URI=https://thdev.app/notmid/firebase-auth/android
+NOTMID_DEBUG_GOOGLE_SERVER_CLIENT_ID=
+NOTMID_RELEASE_GOOGLE_SERVER_CLIENT_ID=
+NOTMID_DEBUG_MAP_PROVIDER=fake
+NOTMID_RELEASE_MAP_PROVIDER=fake
+NOTMID_GOOGLE_SERVER_CLIENT_ID=
+NOTMID_GOOGLE_MAPS_API_KEY=
+NOTMID_MAPBOX_ACCESS_TOKEN=
+```
+
+Client-side Firebase API keys, Google OAuth web client ids, and map keys are
+packaged into debug/release APKs when set, so they must be treated as public
+identifiers, not authorization secrets. Restrict them in Google Cloud or the map
+provider console by package name, signing certificate fingerprint, API scope,
+and quota.
+
+Android release builds must not package local fake auth. Until Firebase Auth is
+fully configured for a release environment, release candidates should use
+`disabled`. Android `:core:auth:impl` now has `ApiVerifiedNotmidAuthGateway`,
+which accepts
+anonymous or Google Firebase ID tokens from an injected provider, sends them to
+`GET /v1/auth/status`, and opens an in-memory notmid session only after the API
+reports an authenticated Firebase user. The checked-in fallback provider is
+unavailable when public Firebase config is absent, so no Firebase project values
+or client secrets are committed. The checked-in REST provider can use a public,
+provider-restricted Firebase API key for anonymous sign-in and can exchange an
+injected Google ID token for a Firebase session. The Android app-layer
+Credential Manager provider obtains the Google ID token with
+`NOTMID_*_GOOGLE_SERVER_CLIENT_ID`, which should be the OAuth web client id used
+for Sign in with Google. When an anonymous session exists, the Android REST
+provider passes that Firebase ID token to `accounts:signInWithIdp` so Firebase
+links the anonymous account to the Google provider. Use
+`NOTMID_RELEASE_AUTH_MODE=firebase` only with `NOTMID_RELEASE_FIREBASE_API_KEY` and
+`NOTMID_RELEASE_GOOGLE_SERVER_CLIENT_ID` injected from ignored local config or
+CI secrets, and keep ID-token verification on the notmid API boundary.
 
 ## App Check
 
@@ -281,7 +427,8 @@ Auth, API restrictions, and App Check do not solve product abuse. Before public 
 ## Implementation Phases
 
 1. Keep fake repositories and finish product-shaped feature modules.
-2. Add `:core:auth:api` and `:core:auth:impl` with anonymous and Google sign-in.
+2. Extend `:core:auth:api` and `:core:auth:impl` from the local release-safe
+   boundary to anonymous and Google sign-in.
 3. Add Firebase Emulator Suite and rules tests.
 4. Add `:core:data:firebase` for Firestore read/write metadata.
 5. Add Storage upload for capture drafts and published clips.
@@ -307,6 +454,7 @@ Before merging Firebase work:
 - Firebase API key guidance: https://firebase.google.com/docs/projects/api-keys
 - Firebase Auth anonymous Android flow: https://firebase.google.com/docs/auth/android/anonymous-auth
 - Firebase Auth Google sign-in Android flow: https://firebase.google.com/docs/auth/android/google-signin
+- Android Credential Manager Sign in with Google: https://developer.android.com/identity/sign-in/credential-manager-siwg-implementation
 - Firebase Security Rules basics: https://firebase.google.com/docs/rules/basics
 - Firestore Security Rules getting started: https://firebase.google.com/docs/firestore/security/get-started
 - Firebase App Check with Play Integrity: https://firebase.google.com/docs/app-check/android/play-integrity-provider

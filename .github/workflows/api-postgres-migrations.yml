@@ -1,0 +1,80 @@
+name: API Postgres Migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: GitHub Environment that owns the database secret.
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      mode:
+        description: Plan is safe. Apply runs migrations after environment approval.
+        required: true
+        type: choice
+        default: plan
+        options:
+          - plan
+          - apply
+      confirmation:
+        description: Type apply-notmid-postgres-migrations when mode is apply.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-postgres-migrations-${{ inputs.target_environment }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: API Postgres migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ inputs.target_environment }}
+    env:
+      CI: true
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.12.1 --activate
+
+      - name: Install Web/API dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify migration workflow contract
+        run: bash scripts/verify-api-postgres-migration-workflow.sh
+
+      - name: Plan Postgres migrations
+        run: bash scripts/migrate-api-postgres.sh --plan
+
+      - name: Require apply confirmation
+        if: inputs.mode == 'apply'
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          if [[ "$CONFIRMATION" != "apply-notmid-postgres-migrations" ]]; then
+            echo "Refusing apply: confirmation must be apply-notmid-postgres-migrations." >&2
+            exit 1
+          fi
+
+      - name: Apply Postgres migrations
+        if: inputs.mode == 'apply'
+        env:
+          DATABASE_URL: ${{ secrets.NOTMID_DATABASE_URL }}
+          NOTMID_MIGRATION_CONFIRM: apply
+        run: bash scripts/migrate-api-postgres.sh --apply

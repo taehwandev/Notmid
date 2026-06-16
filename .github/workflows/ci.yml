@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify Android, Web, API
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: true
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.12.1 --activate
+
+      - name: Resolve pnpm store
+        run: echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PNPM_STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-36.1" \
+            "build-tools;36.1.0"
+
+      - name: Verify secret hygiene
+        run: bash scripts/verify-secret-hygiene.sh
+
+      - name: Run local verification gate
+        run: bash scripts/verify-local.sh
+
+      - name: Run Web/API smoke
+        run: bash scripts/smoke-web-api.sh
+
+      - name: Verify OpenAPI contract
+        run: bash scripts/verify-openapi-contract.sh
+
+      - name: Verify API auth policy
+        run: bash scripts/verify-api-auth-policy.sh
+
+      - name: Verify API Firebase auth
+        run: bash scripts/verify-api-firebase-auth.sh
+
+      - name: Verify API repository boundary
+        run: bash scripts/verify-api-repository-boundary.sh
+
+      - name: Verify API Postgres repository adapter
+        run: bash scripts/verify-api-postgres-repository.sh
+
+      - name: Verify API Postgres runtime wiring
+        run: bash scripts/verify-api-postgres-runtime.sh
+
+      - name: Verify API Postgres migration workflow
+        run: bash scripts/verify-api-postgres-migrations.sh
+
+      - name: Verify API Postgres migration deployment workflow
+        run: bash scripts/verify-api-postgres-migration-workflow.sh
+
+      - name: Verify API persistence config
+        run: bash scripts/verify-api-persistence-config.sh
+
+      - name: Verify API diagnostics
+        run: bash scripts/verify-api-diagnostics.sh
+
+      - name: Verify API audit logs
+        run: bash scripts/verify-api-audit-logs.sh
+
+      - name: Verify API rate limit
+        run: bash scripts/verify-api-rate-limit.sh
+
+      - name: Verify Web/API production config safety
+        run: bash scripts/verify-web-api-production-config.sh
+
+      - name: Verify Web Firebase auth config
+        run: bash scripts/verify-web-firebase-auth-config.sh
+
+      - name: Verify Web write actions
+        run: bash scripts/verify-web-write-actions.sh
+
+      - name: Verify release configuration safety
+        run: bash scripts/verify-release-config.sh
