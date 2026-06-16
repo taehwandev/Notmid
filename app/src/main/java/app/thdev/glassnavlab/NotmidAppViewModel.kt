@@ -11,10 +11,10 @@ import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
-import app.thdev.glassnavlab.core.feedback.api.effect.FeedbackEffect
-import app.thdev.glassnavlab.core.feedback.api.effect.FeedbackEffectDelegate
-import app.thdev.glassnavlab.core.feedback.api.effect.FeedbackEffectViewModel
-import app.thdev.glassnavlab.core.feedback.api.effect.MutableFeedbackEffectDelegate
+import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
+import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectDelegate
+import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectViewModel
+import app.thdev.glassnavlab.core.notice.api.effect.MutableNoticeEffectDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.model.notmid.ChannelNotmidActionDelegate
@@ -39,9 +39,9 @@ internal class NotmidAppViewModel(
     private val authGateway: NotmidAuthGateway,
     private val actionDelegate: NotmidActionDelegate<NotmidAppAction> =
         ChannelNotmidActionDelegate(),
-    private val uiEffects: FeedbackEffectDelegate = MutableFeedbackEffectDelegate(),
+    private val uiEffects: NoticeEffectDelegate = MutableNoticeEffectDelegate(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-) : ViewModel(), FeedbackEffectViewModel by uiEffects {
+) : ViewModel(), NoticeEffectViewModel by uiEffects {
     private val getDestinations = GetNotmidDestinationsUseCase(contentRepository)
     private val mutableState = MutableStateFlow(
         NotmidAppUiState(
@@ -231,7 +231,7 @@ internal class NotmidAppViewModel(
             mutableState.update { state ->
                 state.copy(
                     protectedActionInFlight = action.writeAction,
-                    protectedActionFeedback = null,
+                    protectedActionNotice = null,
                 )
             }
 
@@ -239,8 +239,8 @@ internal class NotmidAppViewModel(
             var contentUpdate: (NotmidContentUiState) -> NotmidContentUiState = { content ->
                 content
             }
-            var followUpEffect: FeedbackEffect? = null
-            val feedback = runCatching {
+            var followUpEffect: NoticeEffect? = null
+            val notice = runCatching {
                 when (action) {
                     is PendingNotmidProtectedAction.PublishCapture -> {
                         withContext(ioDispatcher) {
@@ -249,7 +249,7 @@ internal class NotmidAppViewModel(
                                 request = action.request,
                             )
                         }
-                        action.writeAction.toSuccessFeedback()
+                        action.writeAction.toSuccessNotice()
                     }
 
                     is PendingNotmidProtectedAction.SaveClip -> {
@@ -259,7 +259,7 @@ internal class NotmidAppViewModel(
                                 clipId = action.clipId,
                             )
                         }
-                        action.writeAction.toSuccessFeedback()
+                        action.writeAction.toSuccessNotice()
                     }
 
                     is PendingNotmidProtectedAction.SendThreadMessage -> {
@@ -273,7 +273,7 @@ internal class NotmidAppViewModel(
                         contentUpdate = { content ->
                             content.withThreadMessage(receipt.message)
                         }
-                        action.writeAction.toSuccessFeedback()
+                        action.writeAction.toSuccessNotice()
                     }
 
                     is PendingNotmidProtectedAction.StartThread -> {
@@ -288,10 +288,10 @@ internal class NotmidAppViewModel(
                             receipt.message?.let(contentWithThread::withThreadMessage)
                                 ?: contentWithThread
                         }
-                        followUpEffect = FeedbackEffect.NavigateDeepLink(
+                        followUpEffect = NoticeEffect.NavigateDeepLink(
                             notmidChatThreadDeepLink(receipt.thread.id),
                         )
-                        action.writeAction.toSuccessFeedback()
+                        action.writeAction.toSuccessNotice()
                     }
 
                     is PendingNotmidProtectedAction.RespondThreadInvite -> {
@@ -305,7 +305,7 @@ internal class NotmidAppViewModel(
                         contentUpdate = { content ->
                             content.withThread(receipt.thread)
                         }
-                        action.writeAction.toSuccessFeedback()
+                        action.writeAction.toSuccessNotice()
                     }
 
                     is PendingNotmidProtectedAction.UpdateProfileSettings -> {
@@ -318,11 +318,11 @@ internal class NotmidAppViewModel(
                         updatedAuthState = updatedAuthState.copy(
                             session = updatedAuthState.session?.copy(user = receipt.settings.user),
                         )
-                        action.writeAction.toSuccessFeedback()
+                        action.writeAction.toSuccessNotice()
                     }
                 }
             }.getOrElse { throwable ->
-                throwable.toProtectedActionFeedback(action.writeAction)
+                throwable.toProtectedActionNotice(action.writeAction)
             }
 
             mutableState.update { state ->
@@ -330,15 +330,15 @@ internal class NotmidAppViewModel(
                     authState = updatedAuthState,
                     content = contentUpdate(state.content),
                     protectedActionInFlight = null,
-                    protectedActionFeedback = feedback,
+                    protectedActionNotice = notice,
                 )
             }
-            emitEffect(feedback.effect)
+            emitEffect(notice.effect)
             followUpEffect?.let(::emitEffect)
         }
     }
 
-    private fun emitEffect(effect: FeedbackEffect) {
+    private fun emitEffect(effect: NoticeEffect) {
         uiEffects.emit(effect)
     }
 
@@ -349,7 +349,7 @@ internal class NotmidAppViewModel(
         private val authGateway: NotmidAuthGateway,
         private val actionDelegate: NotmidActionDelegate<NotmidAppAction> =
             ChannelNotmidActionDelegate(),
-        private val uiEffects: FeedbackEffectDelegate = MutableFeedbackEffectDelegate(),
+        private val uiEffects: NoticeEffectDelegate = MutableNoticeEffectDelegate(),
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {

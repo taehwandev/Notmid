@@ -7,7 +7,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":core:app"))
+    implementation(project(":core:runtime"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:model"))
     implementation(project(":feature:capture:api"))

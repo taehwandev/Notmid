@@ -7,6 +7,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":core:app"))
+    implementation(project(":core:runtime"))
     implementation(project(":feature:webview:api"))
 }

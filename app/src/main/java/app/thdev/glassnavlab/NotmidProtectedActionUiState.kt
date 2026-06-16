@@ -3,10 +3,10 @@ package app.thdev.glassnavlab
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteException
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteFailure
-import app.thdev.glassnavlab.core.feedback.api.effect.FeedbackEffect
-import app.thdev.glassnavlab.core.feedback.api.model.FeedbackPresentation
-import app.thdev.glassnavlab.core.feedback.api.model.FeedbackRequest
-import app.thdev.glassnavlab.core.feedback.api.model.FeedbackTone
+import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
+import app.thdev.glassnavlab.core.notice.api.model.NoticePresentation
+import app.thdev.glassnavlab.core.notice.api.model.NoticeRequest
+import app.thdev.glassnavlab.core.notice.api.model.NoticeTone
 import app.thdev.glassnavlab.core.model.notmid.NotmidCapturePublishRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteDecision
 import app.thdev.glassnavlab.core.model.notmid.NotmidProfileSettingsUpdateRequest
@@ -55,34 +55,34 @@ internal sealed interface PendingNotmidProtectedAction {
     }
 }
 
-internal data class NotmidProtectedActionFeedback(
+internal data class NotmidProtectedActionNotice(
     val action: NotmidProtectedWriteAction,
-    val feedback: FeedbackRequest,
+    val notice: NoticeRequest,
 ) {
     val message: String
-        get() = feedback.message
+        get() = notice.message
 
-    val effect: FeedbackEffect
-        get() = FeedbackEffect.ShowFeedback(feedback)
+    val effect: NoticeEffect
+        get() = NoticeEffect.ShowNotice(notice)
 }
 
-internal fun NotmidProtectedWriteAction.toSuccessFeedback(): NotmidProtectedActionFeedback {
-    return NotmidProtectedActionFeedback(
+internal fun NotmidProtectedWriteAction.toSuccessNotice(): NotmidProtectedActionNotice {
+    return NotmidProtectedActionNotice(
         action = this,
-        feedback = FeedbackRequest(
+        notice = NoticeRequest(
             id = "notmid-${name}-success",
             message = successMessage(),
-            presentation = FeedbackPresentation.Toast,
-            tone = FeedbackTone.Success,
+            presentation = NoticePresentation.Toast,
+            tone = NoticeTone.Success,
         ),
     )
 }
 
-internal fun NotmidProtectedWriteFailure.toFeedback(): NotmidProtectedActionFeedback {
-    return NotmidProtectedActionFeedback(
+internal fun NotmidProtectedWriteFailure.toNotice(): NotmidProtectedActionNotice {
+    return NotmidProtectedActionNotice(
         action = action,
-        feedback = FeedbackRequest(
-            id = "notmid-${action.name}-failure-${feedbackCode()}",
+        notice = NoticeRequest(
+            id = "notmid-${action.name}-failure-${noticeCode()}",
             message = toUserMessage(),
             presentation = toPresentation(),
             tone = toTone(),
@@ -90,17 +90,17 @@ internal fun NotmidProtectedWriteFailure.toFeedback(): NotmidProtectedActionFeed
     )
 }
 
-internal fun Throwable.toProtectedActionFeedback(
+internal fun Throwable.toProtectedActionNotice(
     fallbackAction: NotmidProtectedWriteAction,
-): NotmidProtectedActionFeedback {
+): NotmidProtectedActionNotice {
     val failure = (this as? NotmidProtectedWriteException)?.failure
-    return failure?.toFeedback() ?: NotmidProtectedActionFeedback(
+    return failure?.toNotice() ?: NotmidProtectedActionNotice(
         action = fallbackAction,
-        feedback = FeedbackRequest(
+        notice = NoticeRequest(
             id = "notmid-${fallbackAction.name}-failure-unexpected",
             message = "This action failed. Try again.",
-            presentation = FeedbackPresentation.Alert,
-            tone = FeedbackTone.Error,
+            presentation = NoticePresentation.Alert,
+            tone = NoticeTone.Error,
         ),
     )
 }
@@ -134,7 +134,7 @@ internal fun NotmidProtectedWriteAction.successMessage(): String {
     }
 }
 
-private fun NotmidProtectedWriteFailure.feedbackCode(): String {
+private fun NotmidProtectedWriteFailure.noticeCode(): String {
     return when (this) {
         is NotmidProtectedWriteFailure.MissingAuth -> "missing-auth"
         is NotmidProtectedWriteFailure.InvalidRequest -> code
@@ -144,26 +144,26 @@ private fun NotmidProtectedWriteFailure.feedbackCode(): String {
     }
 }
 
-private fun NotmidProtectedWriteFailure.toPresentation(): FeedbackPresentation {
+private fun NotmidProtectedWriteFailure.toPresentation(): NoticePresentation {
     return when (this) {
-        is NotmidProtectedWriteFailure.InvalidRequest -> FeedbackPresentation.Toast
+        is NotmidProtectedWriteFailure.InvalidRequest -> NoticePresentation.Toast
         is NotmidProtectedWriteFailure.MissingAuth,
         is NotmidProtectedWriteFailure.HttpStatus,
         is NotmidProtectedWriteFailure.Network,
         is NotmidProtectedWriteFailure.MalformedResponse,
-        -> FeedbackPresentation.Alert
+        -> NoticePresentation.Alert
     }
 }
 
-private fun NotmidProtectedWriteFailure.toTone(): FeedbackTone {
+private fun NotmidProtectedWriteFailure.toTone(): NoticeTone {
     return when (this) {
         is NotmidProtectedWriteFailure.InvalidRequest,
         is NotmidProtectedWriteFailure.MissingAuth,
-        -> FeedbackTone.Warning
+        -> NoticeTone.Warning
 
         is NotmidProtectedWriteFailure.HttpStatus,
         is NotmidProtectedWriteFailure.Network,
         is NotmidProtectedWriteFailure.MalformedResponse,
-        -> FeedbackTone.Error
+        -> NoticeTone.Error
     }
 }

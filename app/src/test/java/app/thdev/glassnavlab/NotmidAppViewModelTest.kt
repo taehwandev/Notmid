@@ -7,9 +7,9 @@ import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
-import app.thdev.glassnavlab.core.feedback.api.effect.FeedbackEffect
-import app.thdev.glassnavlab.core.feedback.api.effect.FeedbackEffectDelegate
-import app.thdev.glassnavlab.core.feedback.api.effect.MutableFeedbackEffectDelegate
+import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
+import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectDelegate
+import app.thdev.glassnavlab.core.notice.api.effect.MutableNoticeEffectDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthSession
@@ -84,11 +84,11 @@ class NotmidAppViewModelTest {
     }
 
     @Test
-    fun protectedWriteUpdatesInlineFeedbackAndEmitsUiEffect() = runTest(
+    fun protectedWriteUpdatesInlineNoticeAndEmitsNoticeEffect() = runTest(
         mainDispatcherRule.dispatcher,
     ) {
         val viewModel = newViewModel()
-        val effects = mutableListOf<FeedbackEffect>()
+        val effects = mutableListOf<NoticeEffect>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.effects.take(1).toList(effects)
         }
@@ -100,17 +100,17 @@ class NotmidAppViewModelTest {
             "Clip saved.",
             viewModel.state.value.messageFor(NotmidProtectedWriteAction.ClipSave),
         )
-        val effect = effects.single() as FeedbackEffect.ShowFeedback
-        assertEquals("Clip saved.", effect.feedback.message)
+        val effect = effects.single() as NoticeEffect.ShowNotice
+        assertEquals("Clip saved.", effect.notice.message)
     }
 
     @Test
     fun protectedWriteEmitsThroughInjectedUiEffectDelegate() = runTest(
         mainDispatcherRule.dispatcher,
     ) {
-        val uiEffects = MutableFeedbackEffectDelegate()
+        val uiEffects = MutableNoticeEffectDelegate()
         val viewModel = newViewModel(uiEffects = uiEffects)
-        val effects = mutableListOf<FeedbackEffect>()
+        val effects = mutableListOf<NoticeEffect>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             uiEffects.effects.take(1).toList(effects)
         }
@@ -118,8 +118,8 @@ class NotmidAppViewModelTest {
         viewModel.onAction(NotmidAppAction.SaveClip("clip-1"))
         advanceUntilIdle()
 
-        val effect = effects.single() as FeedbackEffect.ShowFeedback
-        assertEquals("Clip saved.", effect.feedback.message)
+        val effect = effects.single() as NoticeEffect.ShowNotice
+        assertEquals("Clip saved.", effect.notice.message)
     }
 
     @Test
@@ -176,7 +176,7 @@ class NotmidAppViewModelTest {
         val viewModel = newViewModel(
             contentRepository = FakeContentRepository(listOf(testDestination, testInboxDestination)),
         )
-        val effects = mutableListOf<FeedbackEffect>()
+        val effects = mutableListOf<NoticeEffect>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.effects.take(2).toList(effects)
         }
@@ -203,10 +203,10 @@ class NotmidAppViewModelTest {
             "Chat started.",
             viewModel.state.value.messageFor(NotmidProtectedWriteAction.ChatStart),
         )
-        assertEquals("Chat started.", (effects[0] as FeedbackEffect.ShowFeedback).feedback.message)
+        assertEquals("Chat started.", (effects[0] as NoticeEffect.ShowNotice).notice.message)
         assertEquals(
             "https://thdev.app/notmid/inbox/chats/thread-start",
-            (effects[1] as FeedbackEffect.NavigateDeepLink).deepLink,
+            (effects[1] as NoticeEffect.NavigateDeepLink).deepLink,
         )
     }
 
@@ -282,7 +282,7 @@ class NotmidAppViewModelTest {
         protectedWriteRepository: NotmidProtectedWriteRepository = FakeProtectedWriteRepository(),
         authGateway: NotmidAuthGateway = FakeAuthGateway(signedInAuthState),
         actionDelegate: NotmidActionDelegate<NotmidAppAction> = ChannelNotmidActionDelegate(),
-        uiEffects: FeedbackEffectDelegate = MutableFeedbackEffectDelegate(),
+        uiEffects: NoticeEffectDelegate = MutableNoticeEffectDelegate(),
     ): NotmidAppViewModel {
         return NotmidAppViewModel(
             contentSource = NotmidContentSource.Static,

@@ -11,7 +11,7 @@ internal data class NotmidAppUiState(
     val authErrorMessage: String? = null,
     val isAuthenticating: Boolean = false,
     val protectedActionInFlight: NotmidProtectedWriteAction? = null,
-    val protectedActionFeedback: NotmidProtectedActionFeedback? = null,
+    val protectedActionNotice: NotmidProtectedActionNotice? = null,
 ) {
     val isPublishingCapture: Boolean
         get() = protectedActionInFlight == NotmidProtectedWriteAction.CapturePublish
@@ -32,8 +32,8 @@ internal data class NotmidAppUiState(
         get() = protectedActionInFlight == NotmidProtectedWriteAction.ProfileSettings
 
     fun messageFor(action: NotmidProtectedWriteAction): String? {
-        return protectedActionFeedback
-            ?.takeIf { feedback -> feedback.action == action }
+        return protectedActionNotice
+            ?.takeIf { notice -> notice.action == action }
             ?.message
     }
 }

@@ -2,8 +2,8 @@ package app.thdev.glassnavlab.feature.notmid.router
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import app.thdev.glassnavlab.coreapp.router.runtime.AppRouterRuntime
-import app.thdev.glassnavlab.coreapp.router.config.AppRouterBundle
+import app.thdev.glassnavlab.core.runtime.router.runtime.AppRouterRuntime
+import app.thdev.glassnavlab.core.runtime.router.config.AppRouterBundle
 import app.thdev.glassnavlab.feature.notmid.api.route.NotmidRoute
 
 @Composable
