@@ -225,7 +225,7 @@ Deterministic fixtures belong in the lowest stable owner.
 core:model fixture -> if model is pure and reused broadly
 feature assertions fixture -> if model is feature-specific route/display contract
 core:network assertions fixture -> if it describes network envelope/request
-core-app feedback assertions fixture -> if it describes feedback contract
+:core:app feedback assertions fixture -> if it describes feedback runtime
 ```
 
 Avoid fake data that encodes production credentials, private URLs, or user-specific values.

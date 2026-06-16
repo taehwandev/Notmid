@@ -26,7 +26,7 @@ Order the work by risk:
 
 1. Add test-only assertion boundaries where production behavior does not change.
 2. Strengthen typed contracts.
-3. Move app-runtime rendering into `core-app`.
+3. Move app-runtime rendering into `:core:app`.
 4. Extract app shell/base helpers.
 5. Harden WebView.
 6. Update skills/wiki after code proves the shape.
@@ -160,38 +160,41 @@ Verification:
 ./gradlew :app:test --tests '*NotmidAppViewModelTest'
 ```
 
-## Phase 4: Core-App Feedback API And Assertions
+## Phase 4: Feedback API And Assertions
 
 Goal:
 
-Move feedback contracts into the single `:core-app` module without a broad design-system move.
+Move feedback contracts into a pure `:core:feedback:api` module without a broad design-system move.
 
 Proposed changes:
 
 ```text
-:core-app feedback API package
+:core:feedback:api
+  model/
   FeedbackRequest
   FeedbackPresentation
   FeedbackTone
   FeedbackAction
-  FeedbackSink
+  effect/
+  FeedbackEffect
+  FeedbackEffectDelegate
 
-:core-app feedback test source
-  RecordingFeedbackSink
-  FeedbackAssertions
+:core:feedback:api test source
+  FeedbackEffectDelegate tests
+  feedback contract fixtures
 ```
 
 Acceptance:
 
 - ViewModel tests can assert feedback emission without Compose renderer.
-- Existing `NotmidUiFeedback` has compatibility adapter or migration path.
+- Old `NotmidUiFeedback`/`NotmidUiEffect` duplicates are removed after callers migrate.
 - Feature/app code does not call Android Toast/Alert directly.
 - Feature-specific actions remain feature-owned.
 
 Verification:
 
 ```bash
-./gradlew :core-app:testDebugUnitTest
+./gradlew :core:feedback:api:test
 ./gradlew :app:test --tests '*NotmidAppViewModelTest'
 ```
 
@@ -199,17 +202,16 @@ Verification:
 
 Goal:
 
-Move runtime rendering out of `:core:designsystem` into `core-app`.
+Move runtime rendering out of `:core:designsystem` into `:core:app`.
 
 Proposed changes:
 
 ```text
-:core-app feedback implementation package
+:core:app feedback/host package
   FeedbackHost
-  FeedbackEffectCollector
-  ToastFeedbackRenderer
-  AlertFeedbackRenderer
-  Snackbar adapter
+  FeedbackEffectLifecycleCollector
+  FeedbackAlertDialog
+  FeedbackActionHandler
 ```
 
 Migration:
@@ -222,12 +224,12 @@ Acceptance:
 
 - `:core:designsystem` no longer owns global feedback effect lifecycle.
 - Feedback renderer depends on design-system primitives where needed.
-- App state and feature tests use feedback assertions.
+- App state and feature tests use `:core:feedback:api` contracts.
 
 Verification:
 
 ```bash
-./gradlew :core-app:compileDebugKotlin
+./gradlew :core:app:compileDebugKotlin
 ./gradlew :app:compileDebugKotlin
 ./gradlew :app:test
 ```
@@ -283,7 +285,7 @@ Keep module placement:
 :feature:webview:impl
 ```
 
-Only add a `:core-app` webview package after a second caller or reusable holder pressure appears.
+Only add a `:core:app` webview package after a second caller or reusable holder pressure appears.
 
 Acceptance:
 
@@ -318,7 +320,7 @@ Acceptance:
 
 - English canonical docs match implemented modules.
 - Korean planning docs can stay as local planning history or be translated before commit if requested.
-- Skills route agents to the new `core-app`/`assertions` specs.
+- Skills route agents to the new `:core:app`/`assertions` specs.
 
 Verification:
 

@@ -7,11 +7,13 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -28,7 +30,6 @@ import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.data.notmid.NotmidContentRepositorySelector
 import app.thdev.glassnavlab.core.data.notmid.StaticNotmidContentRepository
 import app.thdev.glassnavlab.core.data.notmid.StaticNotmidProtectedWriteRepository
-import app.thdev.glassnavlab.core.designsystem.component.NotmidFeedbackEffectHandler
 import app.thdev.glassnavlab.core.designsystem.theme.notmidTheme
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
@@ -41,13 +42,14 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidProfileSettingsUpdateReques
 import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidStartThreadRequest
 import app.thdev.glassnavlab.core.network.notmid.OkHttpNotmidNetworkClient
+import app.thdev.glassnavlab.coreapp.feedback.host.FeedbackHost
+import app.thdev.glassnavlab.coreapp.router.activity.ActivityRouteLauncherEffect
+import app.thdev.glassnavlab.coreapp.router.activity.DefaultActivityRouteLauncher
 import app.thdev.glassnavlab.feature.notmid.api.destination.NotmidDestinationIds
 import app.thdev.glassnavlab.feature.notmid.NotmidShellErrorScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellLoadingScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellScreen
 import app.thdev.glassnavlab.feature.notmid.api.event.NotmidRouteEvent
-import app.thdev.glassnavlab.coreapp.router.activity.ActivityRouteLauncherEffect
-import app.thdev.glassnavlab.coreapp.router.activity.DefaultActivityRouteLauncher
 import app.thdev.glassnavlab.feature.notmid.router.notmidRouteStack
 import app.thdev.glassnavlab.feature.notmid.router.rememberNotmidAppRouter
 import app.thdev.glassnavlab.feature.webview.WebViewActivityRouteLaunchHandler
@@ -163,137 +165,149 @@ class MainActivity : ComponentActivity() {
             )
 
             notmidTheme(darkTheme = false) {
-                NotmidFeedbackEffectHandler(
+                FeedbackHost(
                     effects = notmidAppViewModel.effects,
+                    modifier = Modifier.fillMaxSize(),
                     onActionDeepLink = appRouter::navigateDeepLink,
-                )
+                ) {
+                    when (val contentState = appState.content) {
+                        NotmidContentUiState.Loading -> {
+                            NotmidShellLoadingScreen(sourceLabel = appState.contentSource.label)
+                        }
 
-                when (val contentState = appState.content) {
-                    NotmidContentUiState.Loading -> {
-                        NotmidShellLoadingScreen(sourceLabel = appState.contentSource.label)
-                    }
+                        is NotmidContentUiState.Error -> {
+                            NotmidShellErrorScreen(
+                                title = contentState.title,
+                                message = contentState.message,
+                                onRetry = {
+                                    notmidAppViewModel.onAction(NotmidAppAction.ReloadContent)
+                                },
+                            )
+                        }
 
-                    is NotmidContentUiState.Error -> {
-                        NotmidShellErrorScreen(
-                            title = contentState.title,
-                            message = contentState.message,
-                            onRetry = {
-                                notmidAppViewModel.onAction(NotmidAppAction.ReloadContent)
-                            },
-                        )
-                    }
-
-                    is NotmidContentUiState.Ready -> {
-                        NotmidShellScreen(
-                            destinations = contentState.destinations,
-                            authState = appState.authState,
-                            authErrorMessage = appState.authErrorMessage,
-                            isAuthenticating = appState.isAuthenticating,
-                            isPublishingCapture = appState.isPublishingCapture,
-                            isSavingClip = appState.isSavingClip,
-                            isSendingMessage = appState.isSendingMessage,
-                            isStartingChat = appState.isStartingChat,
-                            isRespondingChatInvite = appState.isRespondingChatInvite,
-                            isSavingProfileSettings = appState.isSavingProfileSettings,
-                            capturePublishMessage = appState.messageFor(
-                                NotmidProtectedWriteAction.CapturePublish,
-                            ),
-                            clipSaveMessage = appState.messageFor(
-                                NotmidProtectedWriteAction.ClipSave,
-                            ),
-                            chatMessage = appState.messageFor(
-                                NotmidProtectedWriteAction.ChatMessage,
-                            ),
-                            profileSettingsMessage = appState.messageFor(
-                                NotmidProtectedWriteAction.ProfileSettings,
-                            ),
-                            navigationStack = appRouter.notmidRouteStack(),
-                            onRouteEvent = { event -> appRouter.onRouteEvent(event) },
-                            onContinueLocalAuth = {
-                                notmidAppViewModel.onAction(
-                                    NotmidAppAction.ContinueAuth(
-                                        notmidAppViewModel.primaryAuthProvider(),
-                                    ),
-                                )
-                            },
-                            onContinueGoogleAuth = {
-                                notmidAppViewModel.onAction(
-                                    NotmidAppAction.ContinueAuth(NotmidAuthProvider.Google),
-                                )
-                            },
-                            onBrowseSignedOut = {
-                                notmidAppViewModel.onAction(NotmidAppAction.BrowseSignedOut)
-                                appRouter.onRouteEvent(
-                                    NotmidRouteEvent.DestinationSelected(
-                                        NotmidDestinationIds.FEED,
-                                    ),
-                                )
-                            },
-                            onPublishCapture = { draftId, caption, placeId, moodTags, visibility ->
-                                notmidAppViewModel.onAction(
-                                    NotmidAppAction.PublishCapture(
-                                        NotmidCapturePublishRequest(
-                                            draftId = draftId,
-                                            caption = caption,
-                                            placeId = placeId,
-                                            moodTags = moodTags,
-                                            visibility = visibility.toNotmidCaptureVisibility(),
+                        is NotmidContentUiState.Ready -> {
+                            NotmidShellScreen(
+                                destinations = contentState.destinations,
+                                authState = appState.authState,
+                                authErrorMessage = appState.authErrorMessage,
+                                isAuthenticating = appState.isAuthenticating,
+                                isPublishingCapture = appState.isPublishingCapture,
+                                isSavingClip = appState.isSavingClip,
+                                isSendingMessage = appState.isSendingMessage,
+                                isStartingChat = appState.isStartingChat,
+                                isRespondingChatInvite = appState.isRespondingChatInvite,
+                                isSavingProfileSettings = appState.isSavingProfileSettings,
+                                capturePublishMessage = appState.messageFor(
+                                    NotmidProtectedWriteAction.CapturePublish,
+                                ),
+                                clipSaveMessage = appState.messageFor(
+                                    NotmidProtectedWriteAction.ClipSave,
+                                ),
+                                chatMessage = appState.messageFor(
+                                    NotmidProtectedWriteAction.ChatMessage,
+                                ),
+                                profileSettingsMessage = appState.messageFor(
+                                    NotmidProtectedWriteAction.ProfileSettings,
+                                ),
+                                navigationStack = appRouter.notmidRouteStack(),
+                                onRouteEvent = { event -> appRouter.onRouteEvent(event) },
+                                onContinueLocalAuth = {
+                                    notmidAppViewModel.onAction(
+                                        NotmidAppAction.ContinueAuth(
+                                            notmidAppViewModel.primaryAuthProvider(),
                                         ),
-                                    ),
-                                )
-                            },
-                            onSaveClip = { clipId ->
-                                notmidAppViewModel.onAction(
-                                    NotmidAppAction.SaveClip(clipId),
-                                )
-                            },
-                            onAcceptThreadInvite = { threadId ->
-                                notmidAppViewModel.onAction(
-                                    NotmidAppAction.RespondThreadInvite(
-                                        threadId = threadId,
-                                        decision = NotmidChatInviteDecision.Accept,
-                                    ),
-                                )
-                            },
-                            onRejectThreadInvite = { threadId ->
-                                notmidAppViewModel.onAction(
-                                    NotmidAppAction.RespondThreadInvite(
-                                        threadId = threadId,
-                                        decision = NotmidChatInviteDecision.Reject,
-                                    ),
-                                )
-                            },
-                            onSendThreadMessage = { threadId, body ->
-                                notmidAppViewModel.onAction(
-                                    NotmidAppAction.SendThreadMessage(
-                                        threadId = threadId,
-                                        request = NotmidSendThreadMessageRequest(body = body),
-                                    ),
-                                )
-                            },
-                            onStartThread = { participantHandle, body, attachedClipId, attachedPlaceId ->
-                                notmidAppViewModel.onAction(
-                                    NotmidAppAction.StartThread(
-                                        NotmidStartThreadRequest(
-                                            participantHandle = participantHandle,
-                                            body = body,
-                                            attachedClipId = attachedClipId,
-                                            attachedPlaceId = attachedPlaceId,
+                                    )
+                                },
+                                onContinueGoogleAuth = {
+                                    notmidAppViewModel.onAction(
+                                        NotmidAppAction.ContinueAuth(NotmidAuthProvider.Google),
+                                    )
+                                },
+                                onBrowseSignedOut = {
+                                    notmidAppViewModel.onAction(NotmidAppAction.BrowseSignedOut)
+                                    appRouter.onRouteEvent(
+                                        NotmidRouteEvent.DestinationSelected(
+                                            NotmidDestinationIds.FEED,
                                         ),
-                                    ),
-                                )
-                            },
-                            onUpdateProfileSettings = { displayName, homeNeighborhood ->
-                                notmidAppViewModel.onAction(
-                                    NotmidAppAction.UpdateProfileSettings(
-                                        NotmidProfileSettingsUpdateRequest(
-                                            displayName = displayName,
-                                            homeNeighborhood = homeNeighborhood,
+                                    )
+                                },
+                                onPublishCapture = {
+                                    draftId,
+                                    caption,
+                                    placeId,
+                                    moodTags,
+                                    visibility,
+                                    ->
+                                    notmidAppViewModel.onAction(
+                                        NotmidAppAction.PublishCapture(
+                                            NotmidCapturePublishRequest(
+                                                draftId = draftId,
+                                                caption = caption,
+                                                placeId = placeId,
+                                                moodTags = moodTags,
+                                                visibility = visibility.toNotmidCaptureVisibility(),
+                                            ),
                                         ),
-                                    ),
-                                )
-                            },
-                        )
+                                    )
+                                },
+                                onSaveClip = { clipId ->
+                                    notmidAppViewModel.onAction(
+                                        NotmidAppAction.SaveClip(clipId),
+                                    )
+                                },
+                                onAcceptThreadInvite = { threadId ->
+                                    notmidAppViewModel.onAction(
+                                        NotmidAppAction.RespondThreadInvite(
+                                            threadId = threadId,
+                                            decision = NotmidChatInviteDecision.Accept,
+                                        ),
+                                    )
+                                },
+                                onRejectThreadInvite = { threadId ->
+                                    notmidAppViewModel.onAction(
+                                        NotmidAppAction.RespondThreadInvite(
+                                            threadId = threadId,
+                                            decision = NotmidChatInviteDecision.Reject,
+                                        ),
+                                    )
+                                },
+                                onSendThreadMessage = { threadId, body ->
+                                    notmidAppViewModel.onAction(
+                                        NotmidAppAction.SendThreadMessage(
+                                            threadId = threadId,
+                                            request = NotmidSendThreadMessageRequest(body = body),
+                                        ),
+                                    )
+                                },
+                                onStartThread = {
+                                    participantHandle,
+                                    body,
+                                    attachedClipId,
+                                    attachedPlaceId,
+                                    ->
+                                    notmidAppViewModel.onAction(
+                                        NotmidAppAction.StartThread(
+                                            NotmidStartThreadRequest(
+                                                participantHandle = participantHandle,
+                                                body = body,
+                                                attachedClipId = attachedClipId,
+                                                attachedPlaceId = attachedPlaceId,
+                                            ),
+                                        ),
+                                    )
+                                },
+                                onUpdateProfileSettings = { displayName, homeNeighborhood ->
+                                    notmidAppViewModel.onAction(
+                                        NotmidAppAction.UpdateProfileSettings(
+                                            NotmidProfileSettingsUpdateRequest(
+                                                displayName = displayName,
+                                                homeNeighborhood = homeNeighborhood,
+                                            ),
+                                        ),
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
             }

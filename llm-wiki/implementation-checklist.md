@@ -20,7 +20,7 @@
 - Prefer existing module patterns.
 - Keep `api` and `impl` responsibilities separate.
 - Add `assertions` modules only for reusable test doubles, recording fakes, fixtures, and assertion helpers that compile against stable API contracts.
-- Keep `:core:*` pure or implementation-neutral; use single-module `:core-app` packages for Android/Compose app-runtime commonization such as feedback, permission, WebView, ActivityRoute launching, resources, and app-shell helpers.
+- Keep `:core:*` pure or implementation-neutral; use single-module `:core:app` packages for Android/Compose app-runtime commonization such as feedback, permission, WebView, ActivityRoute launching, resources, and app-shell helpers.
 - Avoid broad `BaseActivity` or `BaseViewModel` commonization. Prefer small Compose-first runtime contracts and injected delegates.
 - Use `Notmid*` design components in feature/app code.
 - Add route contracts in feature API, not app.
@@ -34,7 +34,7 @@
 Routing:
 
 ```text
-core-app router runtime tests
+:core:app router runtime tests
 AppRouterTest
 AppDeepLinkResolverTest
 ```

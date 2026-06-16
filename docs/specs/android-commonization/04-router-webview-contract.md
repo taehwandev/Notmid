@@ -1,7 +1,7 @@
 ---
 title: Router And WebView Contract
 audience: Android engineers and AI agents
-purpose: Notmid 라우터와 WebView ActivityRoute를 core/core-app/feature 경계로 재정의한다.
+purpose: Notmid 라우터와 WebView ActivityRoute를 `core`/`core/app`/feature 경계로 재정의한다.
 status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
@@ -44,7 +44,7 @@ Notmid already has the right foundation:
   deeplink/StaticRouteDeepLinkSpec
   deeplink/PrefixRouteDeepLinkSpec
 
-:core-app
+:core:app
   router/config/AppRouterBundleConfig
   router/config/AppDeepLinkUrlConfig
   router/config/DefaultAppRouterBundle
@@ -96,12 +96,12 @@ This is already more appropriate for Compose than the reference project's Activi
 ## Decision
 
 Keep Notmid's route contract shape. `core:router` remains pure Kotlin, while
-drop-in Android/Compose execution now lives in the `:core-app` router package.
+drop-in Android/Compose execution now lives in the `:core:app` router package.
 
 Current reusable runtime:
 
 ```text
-:core-app
+:core:app
 ```
 
 An app should be able to add this module, provide product route registrations,
@@ -237,12 +237,12 @@ simple "URL opens one destination" model. For Notmid, apply it as:
 ```text
 Activity intent data
   -> product-shell AppRouterBundleConfig
-  -> core-app DefaultAppRouterBundle
+  -> :core:app DefaultAppRouterBundle
   -> core router DefaultDeepLinkResolver
   -> product-provided host/base-path values
   -> product route registry and feature deep-link specs
   -> synthetic RoutePlan
-  -> core-app DefaultAppRouterRuntime
+  -> :core:app DefaultAppRouterRuntime
   -> base shell Compose route mapping and/or ActivityRoute launch effect
 ```
 
@@ -339,7 +339,7 @@ Add hardening before feature growth:
 Long term, if WebView becomes reusable:
 
 ```text
-:core-app
+:core:app
   webview API package:
     WebViewRequest
     WebViewMode
@@ -357,7 +357,7 @@ Long term, if WebView becomes reusable:
     WebViewSecurityPolicyAssertions
 ```
 
-Keep `:feature:webview:api` as Notmid's route target even if reusable runtime moves into the `:core-app` webview package.
+Keep `:feature:webview:api` as Notmid's route target even if reusable runtime moves into the `:core:app` webview package.
 
 ## Auth-Gated Routes
 
@@ -406,18 +406,18 @@ core router knows Notmid host
 ## Migration Steps
 
 1. Add `:core:router:assertions`.
-2. Add `:core-app` as the single Android/Compose runtime module.
+2. Add `:core:app` as the single Android/Compose runtime module.
 3. Move pure route test helpers into `:core:router:assertions`; keep app-runtime
-   fakes in `:core-app` test source until external reuse appears.
+   fakes in `:core:app` test source until external reuse appears.
 4. Add assertions for `RoutePlan.compose` and `RoutePlan.activity`; do not mix
    `ActivityRoute` into `RouteStack`.
 5. Add `RecordingRouteEventSink` and use it in feature route event tests.
 6. Move reusable app runtime state, deep-link URI normalization, and pending
-   ActivityRoute consume effect into the `:core-app` router package.
+   ActivityRoute consume effect into the `:core:app` router package.
 7. Keep Notmid graph, feature event mapping, and WebView Activity launch in
    `:app`.
 8. Harden WebView route validation without moving modules.
-9. Add a `:core-app` webview package only when a second WebView runtime surface appears or WebView state grows beyond `NotmidWebViewActivity`.
+9. Add a `:core:app` webview package only when a second WebView runtime surface appears or WebView state grows beyond `NotmidWebViewActivity`.
 
 ## Verification
 
@@ -426,7 +426,7 @@ Router:
 ```bash
 ./gradlew :core:router:api:test
 ./gradlew :core:router:impl:test
-./gradlew :core-app:testDebugUnitTest
+./gradlew :core:app:testDebugUnitTest
 ./gradlew :app:test --tests '*AppRouterTest'
 ./gradlew :app:test --tests '*AppDeepLinkResolverTest'
 ```

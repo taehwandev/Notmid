@@ -250,6 +250,7 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
+    implementation(project(":core:feedback:api"))
     implementation(project(":core:model"))
     implementation(project(":core:network:api"))
     implementation(project(":core:network:impl"))

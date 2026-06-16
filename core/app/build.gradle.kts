@@ -7,8 +7,11 @@ android {
 }
 
 dependencies {
+    api(project(":core:feedback:api"))
     api(project(":core:router:api"))
+    implementation(project(":core:designsystem"))
     implementation(project(":core:router:impl"))
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     testImplementation(project(":core:router:assertions"))
     testImplementation(libs.junit)

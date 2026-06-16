@@ -3,12 +3,12 @@ package app.thdev.glassnavlab
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteException
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteFailure
+import app.thdev.glassnavlab.core.feedback.api.effect.FeedbackEffect
+import app.thdev.glassnavlab.core.feedback.api.model.FeedbackPresentation
+import app.thdev.glassnavlab.core.feedback.api.model.FeedbackRequest
+import app.thdev.glassnavlab.core.feedback.api.model.FeedbackTone
 import app.thdev.glassnavlab.core.model.notmid.NotmidCapturePublishRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteDecision
-import app.thdev.glassnavlab.core.model.notmid.NotmidFeedbackPresentation
-import app.thdev.glassnavlab.core.model.notmid.NotmidFeedbackTone
-import app.thdev.glassnavlab.core.model.notmid.NotmidUiEffect
-import app.thdev.glassnavlab.core.model.notmid.NotmidUiFeedback
 import app.thdev.glassnavlab.core.model.notmid.NotmidProfileSettingsUpdateRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidStartThreadRequest
@@ -57,23 +57,23 @@ internal sealed interface PendingNotmidProtectedAction {
 
 internal data class NotmidProtectedActionFeedback(
     val action: NotmidProtectedWriteAction,
-    val feedback: NotmidUiFeedback,
+    val feedback: FeedbackRequest,
 ) {
     val message: String
         get() = feedback.message
 
-    val effect: NotmidUiEffect
-        get() = NotmidUiEffect.ShowFeedback(feedback)
+    val effect: FeedbackEffect
+        get() = FeedbackEffect.ShowFeedback(feedback)
 }
 
 internal fun NotmidProtectedWriteAction.toSuccessFeedback(): NotmidProtectedActionFeedback {
     return NotmidProtectedActionFeedback(
         action = this,
-        feedback = NotmidUiFeedback(
+        feedback = FeedbackRequest(
             id = "notmid-${name}-success",
             message = successMessage(),
-            presentation = NotmidFeedbackPresentation.Toast,
-            tone = NotmidFeedbackTone.Success,
+            presentation = FeedbackPresentation.Toast,
+            tone = FeedbackTone.Success,
         ),
     )
 }
@@ -81,7 +81,7 @@ internal fun NotmidProtectedWriteAction.toSuccessFeedback(): NotmidProtectedActi
 internal fun NotmidProtectedWriteFailure.toFeedback(): NotmidProtectedActionFeedback {
     return NotmidProtectedActionFeedback(
         action = action,
-        feedback = NotmidUiFeedback(
+        feedback = FeedbackRequest(
             id = "notmid-${action.name}-failure-${feedbackCode()}",
             message = toUserMessage(),
             presentation = toPresentation(),
@@ -96,11 +96,11 @@ internal fun Throwable.toProtectedActionFeedback(
     val failure = (this as? NotmidProtectedWriteException)?.failure
     return failure?.toFeedback() ?: NotmidProtectedActionFeedback(
         action = fallbackAction,
-        feedback = NotmidUiFeedback(
+        feedback = FeedbackRequest(
             id = "notmid-${fallbackAction.name}-failure-unexpected",
             message = "This action failed. Try again.",
-            presentation = NotmidFeedbackPresentation.Alert,
-            tone = NotmidFeedbackTone.Error,
+            presentation = FeedbackPresentation.Alert,
+            tone = FeedbackTone.Error,
         ),
     )
 }
@@ -144,26 +144,26 @@ private fun NotmidProtectedWriteFailure.feedbackCode(): String {
     }
 }
 
-private fun NotmidProtectedWriteFailure.toPresentation(): NotmidFeedbackPresentation {
+private fun NotmidProtectedWriteFailure.toPresentation(): FeedbackPresentation {
     return when (this) {
-        is NotmidProtectedWriteFailure.InvalidRequest -> NotmidFeedbackPresentation.Toast
+        is NotmidProtectedWriteFailure.InvalidRequest -> FeedbackPresentation.Toast
         is NotmidProtectedWriteFailure.MissingAuth,
         is NotmidProtectedWriteFailure.HttpStatus,
         is NotmidProtectedWriteFailure.Network,
         is NotmidProtectedWriteFailure.MalformedResponse,
-        -> NotmidFeedbackPresentation.Alert
+        -> FeedbackPresentation.Alert
     }
 }
 
-private fun NotmidProtectedWriteFailure.toTone(): NotmidFeedbackTone {
+private fun NotmidProtectedWriteFailure.toTone(): FeedbackTone {
     return when (this) {
         is NotmidProtectedWriteFailure.InvalidRequest,
         is NotmidProtectedWriteFailure.MissingAuth,
-        -> NotmidFeedbackTone.Warning
+        -> FeedbackTone.Warning
 
         is NotmidProtectedWriteFailure.HttpStatus,
         is NotmidProtectedWriteFailure.Network,
         is NotmidProtectedWriteFailure.MalformedResponse,
-        -> NotmidFeedbackTone.Error
+        -> FeedbackTone.Error
     }
 }

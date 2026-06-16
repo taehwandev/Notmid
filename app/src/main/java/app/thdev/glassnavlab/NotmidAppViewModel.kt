@@ -11,14 +11,14 @@ import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
+import app.thdev.glassnavlab.core.feedback.api.effect.FeedbackEffect
+import app.thdev.glassnavlab.core.feedback.api.effect.FeedbackEffectDelegate
+import app.thdev.glassnavlab.core.feedback.api.effect.FeedbackEffectViewModel
+import app.thdev.glassnavlab.core.feedback.api.effect.MutableFeedbackEffectDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.model.notmid.ChannelNotmidActionDelegate
-import app.thdev.glassnavlab.core.model.notmid.MutableNotmidUiEffectDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidActionDelegate
-import app.thdev.glassnavlab.core.model.notmid.NotmidUiEffect
-import app.thdev.glassnavlab.core.model.notmid.NotmidUiEffectDelegate
-import app.thdev.glassnavlab.core.model.notmid.NotmidUiEffectViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -39,9 +39,9 @@ internal class NotmidAppViewModel(
     private val authGateway: NotmidAuthGateway,
     private val actionDelegate: NotmidActionDelegate<NotmidAppAction> =
         ChannelNotmidActionDelegate(),
-    private val uiEffects: NotmidUiEffectDelegate = MutableNotmidUiEffectDelegate(),
+    private val uiEffects: FeedbackEffectDelegate = MutableFeedbackEffectDelegate(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-) : ViewModel(), NotmidUiEffectViewModel by uiEffects {
+) : ViewModel(), FeedbackEffectViewModel by uiEffects {
     private val getDestinations = GetNotmidDestinationsUseCase(contentRepository)
     private val mutableState = MutableStateFlow(
         NotmidAppUiState(
@@ -239,7 +239,7 @@ internal class NotmidAppViewModel(
             var contentUpdate: (NotmidContentUiState) -> NotmidContentUiState = { content ->
                 content
             }
-            var followUpEffect: NotmidUiEffect? = null
+            var followUpEffect: FeedbackEffect? = null
             val feedback = runCatching {
                 when (action) {
                     is PendingNotmidProtectedAction.PublishCapture -> {
@@ -288,7 +288,7 @@ internal class NotmidAppViewModel(
                             receipt.message?.let(contentWithThread::withThreadMessage)
                                 ?: contentWithThread
                         }
-                        followUpEffect = NotmidUiEffect.NavigateDeepLink(
+                        followUpEffect = FeedbackEffect.NavigateDeepLink(
                             notmidChatThreadDeepLink(receipt.thread.id),
                         )
                         action.writeAction.toSuccessFeedback()
@@ -338,7 +338,7 @@ internal class NotmidAppViewModel(
         }
     }
 
-    private fun emitEffect(effect: NotmidUiEffect) {
+    private fun emitEffect(effect: FeedbackEffect) {
         uiEffects.emit(effect)
     }
 
@@ -349,7 +349,7 @@ internal class NotmidAppViewModel(
         private val authGateway: NotmidAuthGateway,
         private val actionDelegate: NotmidActionDelegate<NotmidAppAction> =
             ChannelNotmidActionDelegate(),
-        private val uiEffects: NotmidUiEffectDelegate = MutableNotmidUiEffectDelegate(),
+        private val uiEffects: FeedbackEffectDelegate = MutableFeedbackEffectDelegate(),
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {

@@ -138,7 +138,7 @@ dependencies {
 
 If the API can be pure Kotlin, use `glassnavlab.kotlin.library` instead.
 
-## Package Template: Android/Compose App Runtime In `:core-app`
+## Package Template: Android/Compose App Runtime In `:core:app`
 
 Use when:
 
@@ -187,7 +187,7 @@ dependencies {
 }
 ```
 
-Android/Compose inside `:core-app`:
+Android/Compose inside `:core:app`:
 
 ```kotlin
 plugins {
@@ -220,7 +220,7 @@ include(
 )
 
 include(
-    ":core-app",
+    ":core:app",
 )
 ```
 
@@ -270,7 +270,7 @@ Do not add:
 - Is a new convention backed by at least two modules?
 - Are reference project plugin IDs absent?
 - Does `assertions` avoid production implementation dependencies?
-- Are module names and package names consistent with `core` vs `core-app`?
+- Are module names and package names consistent with `core` vs `core/app`?
 
 ## Verification
 

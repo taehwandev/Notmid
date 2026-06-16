@@ -32,6 +32,7 @@ include(
     ":core:designsystem",
     ":core:domain",
     ":core:model",
+    ":core:feedback:api",
     ":core:network:api",
     ":core:network:assertions",
     ":core:network:impl",

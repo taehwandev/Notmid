@@ -154,8 +154,8 @@ FullPage
 
 Ownership:
 
-- Contract in the `:core-app` feedback API package.
-- Rendering in the `:core-app` feedback implementation package.
+- Contract in the `:core:feedback:api` module.
+- Rendering in the `:core:app` feedback host package.
 - Feature-specific decision remains in feature/app state owner.
 
 ## Target Network API
@@ -305,7 +305,7 @@ Allowed flow:
 network throws typed failure
 repository maps to domain failure
 ViewModel/app reducer maps to FeedbackRequest or UiState
-core-app feedback renderer shows Toast/Alert/Snackbar
+:core:app FeedbackHost shows Toast/Alert/Snackbar
 ```
 
 Forbidden:
@@ -326,7 +326,7 @@ The reference project's network exception handler coupled network handling to to
 3. Add safe server error envelope parser in `:core:data` or `:core:network:api` depending on final ownership.
 4. Move duplicated protected write error parsing into a shared mapper.
 5. Add typed retryability and correlation id fields.
-6. Map common API failures to the `:core-app` feedback API package once it exists.
+6. Map common API failures to `:core:feedback:api` `FeedbackRequest` values.
 
 ## Verification
 

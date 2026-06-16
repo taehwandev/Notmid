@@ -1,7 +1,7 @@
 ---
 title: Feedback Alert Toast Contract
 audience: Android engineers and AI agents
-purpose: toast, snackbar, alert, inline, full-page feedback을 core-app 계약으로 분리한다.
+purpose: toast, snackbar, alert, inline, full-page feedback을 API 계약과 core/app 런타임으로 분리한다.
 status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
@@ -17,44 +17,55 @@ related_pages:
 
 ## Current State
 
-Notmid currently has feedback-related contracts in two places.
+Notmid feedback is split across a pure API contract, an app-runtime host, and
+design-system visual primitives.
 
 ```text
-:core:model
-  NotmidUiFeedback
-  NotmidFeedbackPresentation
-  NotmidFeedbackTone
-  NotmidFeedbackAction
-  NotmidUiEffect
-  NotmidUiEffectDelegate
+:core:feedback:api
+  model/ FeedbackRequest
+  model/ FeedbackPresentation
+  model/ FeedbackTone
+  model/ FeedbackAction
+  effect/ FeedbackEffect
+  effect/ FeedbackEffectDelegate
+
+:core:app
+  feedback/host/ FeedbackHost
+  feedback/host/ FeedbackEffectLifecycleCollector
+  feedback/host/ FeedbackAlertDialog
+  Android Toast/Snackbar/Alert dispatch
 
 :core:designsystem
-  NotmidFeedbackEffectHandler
-  NotmidUiEffectLifecycleCollector
-  NotmidSnackbarHost
-  AlertDialog/Toast rendering
+  NotmidSnackbarHost visual style
+  tokens and reusable visual primitives
 ```
 
-This works, but `core:model` now carries UI effect concepts and `core:designsystem` owns app-runtime feedback collection. In the target structure, feedback belongs to `core-app`.
+`core:model` does not own UI effect contracts. `core:designsystem` does not
+collect flows, show Toasts, or render app-runtime alerts.
 
 ## Decision
 
-Create a dedicated feedback package family inside `:core-app` before adding more feedback behavior.
+Use a dedicated `:core:feedback:api` module before adding more feedback behavior.
+Render and collect those effects from `:core:app`, not from feature screens or
+the design system.
 
 Target:
 
 ```text
-:core-app
-  feedback API package
-  feedback implementation package
-  feedback assertions in test source until external reuse proves a module boundary
+:core:feedback:api
+  model/
+  effect/
+
+:core:app
+  feedback/host/
+
+:core:designsystem
+  visual feedback primitives only
 ```
 
-Short-term compatibility:
-
-- Existing `NotmidUiFeedback` can remain in `:core:model` until the new API exists.
-- `NotmidFeedbackEffectHandler` can move later, not in the first module addition.
-- Avoid broad renames in the same change that introduces new behavior.
+Do not leave duplicate feedback contracts in `:core:model` once callers migrate.
+Do not put lifecycle collection, Toast rendering, or app effects back into
+`:core:designsystem`.
 
 ## Feedback Contract
 
@@ -63,16 +74,12 @@ The API should express a feedback request, not a concrete UI widget.
 Target concepts:
 
 ```text
-FeedbackMessage
-  message key or safe fallback text
-
 FeedbackRequest
   id
   presentation
   tone
   message
   action
-  dismiss policy
 
 FeedbackPresentation
   Toast
@@ -82,8 +89,9 @@ FeedbackPresentation
   FullPage
 
 FeedbackAction
-  label/message key
-  semantic action: Retry, Dismiss, OpenDeepLink, SignIn
+  sealed interface for closed shared UI triggers
+  current action: OpenDeepLink(label, deepLink)
+  future actions: Retry, Dismiss, SignIn after a real caller exists
 ```
 
 Do not make a reusable feedback action carry feature-specific sealed actions. Feature actions remain feature-owned.
@@ -157,17 +165,17 @@ Feature emits:
 - `FeedbackRequest` or `UiState` failure.
 - route/action event for follow-up, not direct UI code.
 
-### Core-App Feedback API
+### Core Feedback API
 
 API owns:
 
 - stable feedback value types.
 - feedback sink/source interfaces.
-- lifecycle collection contract if pure enough.
+- one-shot `FeedbackEffect` contracts and delegate interfaces.
 
-### Core-App Feedback Impl
+### Core-App Feedback Host
 
-Impl owns:
+`:core:app` owns:
 
 - Toast rendering.
 - Snackbar host adapter.
@@ -233,11 +241,11 @@ Feedback module owns runtime orchestration.
 Target split:
 
 ```text
-:core-app feedback implementation package
-  NotmidFeedbackHost
-  NotmidFeedbackEffectCollector
-  NotmidToastRenderer
-  NotmidAlertRenderer
+:core:app feedback/host package
+  FeedbackHost
+  FeedbackEffectLifecycleCollector
+  FeedbackAlertDialog
+  FeedbackActionHandler
 
 :core:designsystem
   NotmidSnackbarHost visual style
@@ -246,7 +254,7 @@ Target split:
   tokens
 ```
 
-`NotmidFeedbackEffectHandler` can be split into:
+The host split is:
 
 ```text
 FeedbackHost
@@ -286,13 +294,11 @@ The assertion helper should not require Compose runtime.
 
 ## Migration Steps
 
-1. Add a `:core-app` feedback API package with types equivalent to current `NotmidUiFeedback`.
-2. Add `:core-app` feedback assertions in test source with recording sink.
-3. Add adapters from old `NotmidUiFeedback` to new `FeedbackRequest` if needed.
-4. Move `NotmidFeedbackEffectHandler` from `:core:designsystem` to the `:core-app` feedback implementation package.
-5. Keep design-system visual components reusable and product-free.
-6. Update app to use `FeedbackHost`.
-7. Remove old duplicates from `:core:model` only after callers migrate.
+1. Keep pure value/effect contracts in `:core:feedback:api`.
+2. Keep Android/Compose collection and rendering in `:core:app` `feedback/host`.
+3. Keep design-system visual components reusable and product-free.
+4. Update Activity shells to install `FeedbackHost` once around app content.
+5. Add assertions modules only when multiple external test boundaries need the helpers.
 
 ## Stop Conditions
 
@@ -309,13 +315,13 @@ Stop and redesign if:
 Pure feedback API/assertions:
 
 ```bash
-./gradlew :core-app:testDebugUnitTest
+./gradlew :core:feedback:api:test
 ```
 
 Feedback impl:
 
 ```bash
-./gradlew :core-app:compileDebugKotlin
+./gradlew :core:app:compileDebugKotlin
 ./gradlew :app:compileDebugKotlin
 ```
 

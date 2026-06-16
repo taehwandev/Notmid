@@ -7,6 +7,9 @@ import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
+import app.thdev.glassnavlab.core.feedback.api.effect.FeedbackEffect
+import app.thdev.glassnavlab.core.feedback.api.effect.FeedbackEffectDelegate
+import app.thdev.glassnavlab.core.feedback.api.effect.MutableFeedbackEffectDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthSession
@@ -17,7 +20,6 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidCapturePublishReceipt
 import app.thdev.glassnavlab.core.model.notmid.NotmidCapturePublishRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidCaptureVisibility
 import app.thdev.glassnavlab.core.model.notmid.ChannelNotmidActionDelegate
-import app.thdev.glassnavlab.core.model.notmid.MutableNotmidUiEffectDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidActionDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidChatAccess
 import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteDecision
@@ -38,8 +40,6 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidStartThreadReceipt
 import app.thdev.glassnavlab.core.model.notmid.NotmidStartThreadRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidThread
 import app.thdev.glassnavlab.core.model.notmid.NotmidThreadMessage
-import app.thdev.glassnavlab.core.model.notmid.NotmidUiEffect
-import app.thdev.glassnavlab.core.model.notmid.NotmidUiEffectDelegate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
@@ -88,7 +88,7 @@ class NotmidAppViewModelTest {
         mainDispatcherRule.dispatcher,
     ) {
         val viewModel = newViewModel()
-        val effects = mutableListOf<NotmidUiEffect>()
+        val effects = mutableListOf<FeedbackEffect>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.effects.take(1).toList(effects)
         }
@@ -100,7 +100,7 @@ class NotmidAppViewModelTest {
             "Clip saved.",
             viewModel.state.value.messageFor(NotmidProtectedWriteAction.ClipSave),
         )
-        val effect = effects.single() as NotmidUiEffect.ShowFeedback
+        val effect = effects.single() as FeedbackEffect.ShowFeedback
         assertEquals("Clip saved.", effect.feedback.message)
     }
 
@@ -108,9 +108,9 @@ class NotmidAppViewModelTest {
     fun protectedWriteEmitsThroughInjectedUiEffectDelegate() = runTest(
         mainDispatcherRule.dispatcher,
     ) {
-        val uiEffects = MutableNotmidUiEffectDelegate()
+        val uiEffects = MutableFeedbackEffectDelegate()
         val viewModel = newViewModel(uiEffects = uiEffects)
-        val effects = mutableListOf<NotmidUiEffect>()
+        val effects = mutableListOf<FeedbackEffect>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             uiEffects.effects.take(1).toList(effects)
         }
@@ -118,7 +118,7 @@ class NotmidAppViewModelTest {
         viewModel.onAction(NotmidAppAction.SaveClip("clip-1"))
         advanceUntilIdle()
 
-        val effect = effects.single() as NotmidUiEffect.ShowFeedback
+        val effect = effects.single() as FeedbackEffect.ShowFeedback
         assertEquals("Clip saved.", effect.feedback.message)
     }
 
@@ -176,7 +176,7 @@ class NotmidAppViewModelTest {
         val viewModel = newViewModel(
             contentRepository = FakeContentRepository(listOf(testDestination, testInboxDestination)),
         )
-        val effects = mutableListOf<NotmidUiEffect>()
+        val effects = mutableListOf<FeedbackEffect>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.effects.take(2).toList(effects)
         }
@@ -203,10 +203,10 @@ class NotmidAppViewModelTest {
             "Chat started.",
             viewModel.state.value.messageFor(NotmidProtectedWriteAction.ChatStart),
         )
-        assertEquals("Chat started.", (effects[0] as NotmidUiEffect.ShowFeedback).feedback.message)
+        assertEquals("Chat started.", (effects[0] as FeedbackEffect.ShowFeedback).feedback.message)
         assertEquals(
             "https://thdev.app/notmid/inbox/chats/thread-start",
-            (effects[1] as NotmidUiEffect.NavigateDeepLink).deepLink,
+            (effects[1] as FeedbackEffect.NavigateDeepLink).deepLink,
         )
     }
 
@@ -282,7 +282,7 @@ class NotmidAppViewModelTest {
         protectedWriteRepository: NotmidProtectedWriteRepository = FakeProtectedWriteRepository(),
         authGateway: NotmidAuthGateway = FakeAuthGateway(signedInAuthState),
         actionDelegate: NotmidActionDelegate<NotmidAppAction> = ChannelNotmidActionDelegate(),
-        uiEffects: NotmidUiEffectDelegate = MutableNotmidUiEffectDelegate(),
+        uiEffects: FeedbackEffectDelegate = MutableFeedbackEffectDelegate(),
     ): NotmidAppViewModel {
         return NotmidAppViewModel(
             contentSource = NotmidContentSource.Static,

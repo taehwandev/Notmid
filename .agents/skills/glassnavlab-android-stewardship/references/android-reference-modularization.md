@@ -35,7 +35,7 @@ The reference project uses a large production shape:
 - `:app` is the root Android application and aggregates many feature/core modules.
 - `:feature:*:*` modules own user-facing screens.
 - `:feature:*:*-api` modules expose navigation or journey contracts without pulling in implementation UI.
-- The reference app-runtime module family owns app-facing shared Android/Compose infrastructure such as design-system, resources, network, lifecycle, dialog, toast, and permissions. In this repository, shrink that idea into packages inside the single `:core-app` module unless a real Gradle boundary is proven.
+- The reference app-runtime module family owns app-facing shared Android/Compose infrastructure such as design-system, resources, network, lifecycle, dialog, toast, and permissions. In this repository, shrink that idea into packages inside the single `:core:app` module unless a real Gradle boundary is proven.
 - `:core-data:domain:*` modules own use cases that compose repository contracts.
 - `:core-data:repository:*:*-api` modules expose repository interfaces and entities.
 - `:core-data:repository:*:*` modules implement repository contracts and handle API/cache/mapper details.

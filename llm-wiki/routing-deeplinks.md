@@ -45,7 +45,7 @@ launching Activity-backed destinations.
 ## Core App Runtime
 
 Pure planning and matching are reusable through `:core:router:impl`; runtime
-execution is reusable through the `:core-app` router package:
+execution is reusable through the `:core:app` router package:
 
 ```text
 AppRouterBundleConfig
@@ -62,9 +62,9 @@ pending ActivityRoute
 ```
 
 The Notmid product shell provides route registration, feature event handlers,
-and host/base-path values to the reusable `core-app` bundle. Core router impl
+and host/base-path values to the reusable `:core:app` bundle. Core router impl
 owns URI parsing, base-path stripping, deep-link matching, and route-event
-handler dispatch. The core-app runtime owns Compose state, pending request
+handler dispatch. The `:core:app` runtime owns Compose state, pending request
 queueing, lifecycle-safe consume-on-success behavior, and ActivityRoute launch
 handler composition. The app owns only the external intent handoff and concrete
 runtime binding.

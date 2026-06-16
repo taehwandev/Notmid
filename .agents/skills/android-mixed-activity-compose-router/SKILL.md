@@ -70,7 +70,7 @@ core router impl
   owns registry, path matching, route-event handler dispatch, URI parsing,
   scheme/host/base-path normalization, and deep-link resolution helpers
 
-core-app router package
+:core:app router package
   owns reusable Android/Compose app-router runtime contracts and default
   execution state: bundle/config assembly, route planner dispatch, app deep-link
   resolver adapter, pending ActivityRoute queueing, ActivityRoute launch handler
@@ -84,7 +84,7 @@ app
 
 product shell or app-base feature
   owns product route registrations, feature event handler lists, host/scheme
-  policy values, and typed stack factories, then passes them into the core-app
+  policy values, and typed stack factories, then passes them into the `:core:app`
   router bundle
 ```
 
@@ -364,7 +364,7 @@ without rewriting feature callers.
 3. Add route events or route intents for caller-facing actions.
 4. Add a central route graph or registry in the app layer.
 5. Add a route coordinator that resolves events, intents, and deep links.
-6. Move Activity launching behind the core-app launcher registry and a concrete
+6. Move Activity launching behind the `:core:app` launcher registry and a concrete
    app binding.
 7. Move host, scheme, and base path policy out of feature code.
 8. Replace feature implementation navigation calls with route events/intents.

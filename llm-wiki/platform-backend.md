@@ -155,16 +155,16 @@ packages/api-client
   decides whether two users are friends; it only renders `chatAccess` and emits
   accept/reject callbacks.
 - Android feedback presentation is a side effect, not feature-local string
-  plumbing. `:core:model` owns `NotmidUiFeedback` and `NotmidUiEffect`
-  (`Toast`, `Alert`, `Inline`, `FullPage`, optional action/deep link), plus
-  platform-independent action/effect delegate contracts for ViewModel
-  injection. `:core:designsystem` owns lifecycle-aware effect collection plus
-  `NotmidFeedbackEffectHandler` for rendering toast and alert interactions.
+  plumbing. `:core:feedback:api` owns `FeedbackRequest`, `FeedbackEffect`, and
+  the feedback delegate contract (`Toast`, `Snackbar`, `Alert`, `Inline`,
+  `FullPage`, optional shared action/deep link). `:core:app` owns
+  lifecycle-aware effect collection and rendering through `FeedbackHost`.
+  `:core:designsystem` owns visual primitives such as `NotmidSnackbarHost`.
   `NotmidAppViewModel` exposes persistent app state as
   `StateFlow<NotmidAppUiState>` and one-shot toast/alert effects as
-  `SharedFlow<NotmidUiEffect>` with `replay = 0` through the injected
-  `:core:model` `NotmidUiEffectDelegate`. `MainActivity` collects state with
-  `collectAsStateWithLifecycle`, while `:core:designsystem` collects effects
+  `SharedFlow<FeedbackEffect>` with `replay = 0` through the injected
+  `:core:feedback:api` `FeedbackEffectDelegate`. `MainActivity` collects state with
+  `collectAsStateWithLifecycle`, while `:core:app` collects effects
   with `LifecycleStartEffect`, so stopped UI does not receive stale toast/alert
   effects when it resumes. `:app` maps typed repository/auth failures into these
   effects after updating stable screen state.
@@ -227,10 +227,9 @@ API route/input/auth/rate-limit failure
   the visible app-shell error state. Android protected writes throw
   `NotmidProtectedWriteException`; `NotmidAppViewModel` catches it, updates
   inline feedback state when needed, and emits
-  `NotmidUiEffect.ShowFeedback` for toast/alert interactions. If the server
+  `FeedbackEffect.ShowFeedback` for toast/alert interactions. If the server
   later sends presentation hints, the data/app boundary should map them into
-  `NotmidUiFeedback` instead of exposing raw server envelopes to feature
-  screens.
+  `FeedbackRequest` instead of exposing raw server envelopes to feature screens.
 - Retries must be explicit. Rate-limited responses use `retry-after`; protected
   web write refresh retry is limited to one session refresh; mutating writes
   should not be retried automatically unless the API path is idempotent or the
