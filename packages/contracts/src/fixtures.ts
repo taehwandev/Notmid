@@ -4,10 +4,14 @@ import type {
   NotmidAuthSession,
   NotmidAuthStatusResponse,
   NotmidAuthUser,
+  NotmidCaptureDraftResponse,
+  NotmidChatAccess,
   NotmidFeedResponse,
   NotmidInboxResponse,
   NotmidMapResponse,
   NotmidPlace,
+  NotmidThreadDetailResponse,
+  NotmidThreadMessage,
   NotmidThread,
 } from "./models";
 
@@ -130,20 +134,83 @@ export const notmidThreads: NotmidThread[] = [
     attachedPlaceId: "neon-yard",
     attachedClipId: "latte-line-was-worth-it",
     unreadCount: 3,
+    chatAccess: acceptedFriendChatAccess(),
   },
   {
     id: "rain-route",
     title: "rain route",
-    preview: "underpass gallery first, then food nearby",
+    preview: "receipt.han wants to start a chat from the rain route",
     updatedAtLabel: "18m",
     participantHandles: ["receipt.han", "you"],
     attachedPlaceId: "underpass-gallery",
     attachedClipId: "rain-made-this-gallery-better",
     unreadCount: 0,
+    chatAccess: pendingInboundChatAccess(),
   },
 ];
 
-export const notmidFakeAccessToken = "notmid-fake-local-dev-token";
+export const notmidThreadMessages: NotmidThreadMessage[] = [
+  {
+    id: "msg-tonight-seongsu-1",
+    threadId: "tonight-seongsu",
+    senderHandle: "min.zip",
+    body: "Neon Yard looks current. Is the line still moving?",
+    createdAtLabel: "12:08",
+    mine: false,
+    attachment: {
+      type: "clip",
+      clipId: "latte-line-was-worth-it",
+    },
+  },
+  {
+    id: "msg-tonight-seongsu-2",
+    threadId: "tonight-seongsu",
+    senderHandle: "you",
+    body: "Yes. Seats opened near the window and the clip was from this hour.",
+    createdAtLabel: "12:11",
+    mine: true,
+    attachment: {
+      type: "place",
+      placeId: "neon-yard",
+    },
+  },
+  {
+    id: "msg-rain-route-1",
+    threadId: "rain-route",
+    senderHandle: "receipt.han",
+    body: "Underpass first, then food nearby if the rain keeps up.",
+    createdAtLabel: "18m",
+    mine: false,
+    attachment: {
+      type: "route",
+      title: "rain route",
+      placeIds: ["underpass-gallery", "thin-air-records"],
+    },
+  },
+];
+
+export const notmidFixtureCaptureDraft: NotmidCaptureDraftResponse = {
+  source: "fixture",
+  generatedAt,
+  draft: {
+    id: "draft-local-receipt",
+    caption: "Steam on the counter, line moving fast, seats opening near the window.",
+    placeId: "neon-yard",
+    moodTags: ["line proof", "worth it"],
+    visibility: "public",
+    mediaState: "local-preview",
+  },
+  candidatePlaces: notmidPlaces,
+};
+
+const runtimeEnv = globalThis as typeof globalThis & {
+  process?: {
+    env?: Record<string, string | undefined>;
+  };
+};
+
+export const notmidFakeAccessToken =
+  runtimeEnv.process?.env?.NOTMID_FAKE_ACCESS_TOKEN ?? "notmid-fake-local-dev-token";
 
 export const notmidFakeAuthUser: NotmidAuthUser = {
   id: "local-you",
@@ -210,4 +277,76 @@ export function findNotmidPlace(placeId: string): NotmidPlace | undefined {
 
 export function findNotmidThread(threadId: string): NotmidThread | undefined {
   return notmidThreads.find((thread) => thread.id === threadId);
+}
+
+export function getNotmidThreadDetail(threadId: string): NotmidThreadDetailResponse | undefined {
+  const thread = findNotmidThread(threadId);
+
+  if (!thread) {
+    return undefined;
+  }
+
+  return {
+    source: "fixture",
+    generatedAt,
+    thread,
+    messages: notmidThreadMessages.filter((message) => message.threadId === thread.id),
+    attachedClip: thread.attachedClipId ? findNotmidClip(thread.attachedClipId) : undefined,
+    attachedPlace: thread.attachedPlaceId ? findNotmidPlace(thread.attachedPlaceId) : undefined,
+  };
+}
+
+export function acceptedFriendChatAccess(): NotmidChatAccess {
+  return {
+    relationship: "friend",
+    inviteStatus: "accepted",
+    canSendMessage: true,
+    canAcceptInvite: false,
+    canRejectInvite: false,
+    reasonLabel: "Friends can chat immediately.",
+  };
+}
+
+export function acceptedNonFriendChatAccess(): NotmidChatAccess {
+  return {
+    relationship: "non-friend",
+    inviteStatus: "accepted",
+    canSendMessage: true,
+    canAcceptInvite: false,
+    canRejectInvite: false,
+    reasonLabel: "Chat request accepted.",
+  };
+}
+
+export function pendingInboundChatAccess(): NotmidChatAccess {
+  return {
+    relationship: "non-friend",
+    inviteStatus: "pending-inbound",
+    canSendMessage: false,
+    canAcceptInvite: true,
+    canRejectInvite: true,
+    reasonLabel: "Accept or reject this chat request before messaging.",
+  };
+}
+
+export function pendingOutboundChatAccess(): NotmidChatAccess {
+  return {
+    relationship: "non-friend",
+    inviteStatus: "pending-outbound",
+    canSendMessage: false,
+    canAcceptInvite: false,
+    canRejectInvite: false,
+    reasonLabel: "Waiting for the other person to accept this chat request.",
+  };
+}
+
+export function rejectedChatAccess(): NotmidChatAccess {
+  return {
+    relationship: "non-friend",
+    inviteStatus: "rejected",
+    canSendMessage: false,
+    canAcceptInvite: false,
+    canRejectInvite: false,
+    reasonLabel: "This chat request was rejected.",
+  };
 }

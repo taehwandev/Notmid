@@ -14,10 +14,24 @@
   "scripts": {
     "api:dev": "pnpm --filter @notmid/api dev",
     "web:dev": "pnpm --filter @notmid/web dev",
+    "migrate:api:postgres": "pnpm --filter @notmid/api migrate:postgres",
     "typecheck": "pnpm -r typecheck",
     "build:api": "pnpm --filter @notmid/api build",
     "build:web": "pnpm --filter @notmid/web build",
     "verify": "bash scripts/verify-local.sh",
+    "verify:api-audit-logs": "bash scripts/verify-api-audit-logs.sh",
+    "verify:api-postgres-migration-workflow": "bash scripts/verify-api-postgres-migration-workflow.sh",
+    "verify:android-smoke": "bash scripts/verify-android-smoke.sh",
+    "verify:release-config": "bash scripts/verify-release-config.sh",
+    "verify:release-readiness": "bash scripts/verify-release-readiness.sh",
+    "verify:secret-hygiene": "bash scripts/verify-secret-hygiene.sh",
+    "verify:web-firebase-auth-config": "bash scripts/verify-web-firebase-auth-config.sh",
+    "verify:web-write-actions": "bash scripts/verify-web-write-actions.sh",
     "verify:smoke": "bash scripts/smoke-web-api.sh"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss": "^8.5.10"
+    }
   }
 }
