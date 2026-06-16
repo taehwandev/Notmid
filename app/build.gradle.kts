@@ -253,7 +253,7 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:network:api"))
     implementation(project(":core:network:impl"))
-    implementation(project(":core-app"))
+    implementation(project(":core:app"))
     implementation(project(":feature:notmid:api"))
     implementation(project(":feature:notmid:impl"))
     implementation(project(":feature:webview:impl"))
