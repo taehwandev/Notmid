@@ -1,0 +1,55 @@
+# Copy these values into ./local.properties for local development.
+# Never commit ./local.properties with real values.
+
+# Android Studio usually writes this automatically.
+sdk.dir=/absolute/path/to/Android/sdk
+
+# Android emulator -> host machine API server.
+NOTMID_DEBUG_API_BASE_URL=http://10.0.2.2:8787
+
+# Release builds must not point at the emulator host.
+# Override this from CI/local secret storage for staging or production.
+NOTMID_RELEASE_API_BASE_URL=https://thdev.app
+
+# Debug can use deterministic fake auth. Release defaults to disabled until a
+# real Firebase provider configuration is injected.
+NOTMID_DEBUG_AUTH_MODE=fake
+NOTMID_RELEASE_AUTH_MODE=disabled
+
+# Firebase Auth REST uses a public, provider-restricted client API key. Keep
+# real project values in ignored local.properties or CI secrets.
+NOTMID_DEBUG_FIREBASE_API_KEY=
+NOTMID_RELEASE_FIREBASE_API_KEY=
+NOTMID_DEBUG_FIREBASE_AUTH_REQUEST_URI=https://thdev.app/notmid/firebase-auth/android
+NOTMID_RELEASE_FIREBASE_AUTH_REQUEST_URI=https://thdev.app/notmid/firebase-auth/android
+
+# Credential Manager Sign in with Google uses the OAuth web client ID as the
+# server client ID before Firebase exchanges the Google ID token.
+NOTMID_DEBUG_GOOGLE_SERVER_CLIENT_ID=
+NOTMID_RELEASE_GOOGLE_SERVER_CLIENT_ID=
+
+# Debug defaults to the local fixture API server. Use static only when the API
+# server is intentionally unavailable. Release must stay API-backed.
+NOTMID_DEBUG_CONTENT_SOURCE=api
+NOTMID_RELEASE_CONTENT_SOURCE=api
+
+# Supported local values today: fake, google, mapbox.
+# Keep fake until a real SDK integration is intentionally added.
+NOTMID_DEBUG_MAP_PROVIDER=fake
+NOTMID_RELEASE_MAP_PROVIDER=fake
+
+# Override per release candidate without changing source.
+NOTMID_VERSION_CODE=1
+NOTMID_VERSION_NAME=1.0
+
+# Use separate, provider-restricted keys. Do not reuse Firebase keys for Maps/Places.
+NOTMID_GOOGLE_SERVER_CLIENT_ID=
+NOTMID_GOOGLE_MAPS_API_KEY=
+NOTMID_MAPBOX_ACCESS_TOKEN=
+
+# Release signing values belong in ignored local.properties or CI secrets.
+# Never commit keystores, passwords, upload keys, or Play Console credentials.
+NOTMID_RELEASE_STORE_FILE=
+NOTMID_RELEASE_STORE_PASSWORD=
+NOTMID_RELEASE_KEY_ALIAS=
+NOTMID_RELEASE_KEY_PASSWORD=

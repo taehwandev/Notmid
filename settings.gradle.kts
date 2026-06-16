@@ -26,10 +26,14 @@ dependencyResolutionManagement {
 rootProject.name = "notmid"
 include(
     ":app",
+    ":core:auth:api",
+    ":core:auth:impl",
     ":core:data",
     ":core:designsystem",
     ":core:domain",
     ":core:model",
+    ":core:network:api",
+    ":core:network:impl",
     ":core:router:api",
     ":core:router:impl",
     ":feature:capture:api",

@@ -50,6 +50,7 @@ internal fun Project.configureComposeAndroid() {
         "implementation"(findLibrary("androidx-compose-runtime"))
         "implementation"(findLibrary("androidx-compose-ui"))
         "implementation"(findLibrary("androidx-compose-ui-graphics"))
+        "implementation"(findLibrary("androidx-compose-ui-tooling-preview"))
         "debugImplementation"(findLibrary("androidx-compose-ui-tooling"))
     }
 }
