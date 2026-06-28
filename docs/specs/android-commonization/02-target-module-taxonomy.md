@@ -5,7 +5,7 @@ purpose: Notmid의 `core`, `core/runtime`, feature, assertions 모듈 분류와 
 status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
-last_verified: 2026-06-16
+last_verified: 2026-06-28
 applies_to: settings.gradle.kts, Gradle modules, package ownership
 related_pages:
   - README.md
@@ -25,6 +25,10 @@ Notmid의 목표 구조는 다음 두 축을 분리한다.
   router runtime, ActivityRoute launcher 같은 실행 부품만 둔다.
 
 이 분리는 “모든 모듈을 쪼갠다”가 아니라 “의존성 방향을 문서화하고 테스트 가능한 계약을 만든다”가 목적이다.
+
+`core` module type 판단 기준은 AgentPlayBook
+`platforms/android/android-module-structure.md`의 `Core Is A Capability Namespace`가
+source of truth다. 이 문서는 그 기준을 Notmid module 이름으로 매핑한다.
 
 ## Target Tree
 
@@ -53,7 +57,7 @@ core/
 
 core/runtime/
   router/              active runtime contract + implementation package
-  notice/            later package inside the same module
+  notice/              active runtime host package inside the same module
   permissions/         later package inside the same module
   webview/             later package inside the same module after reusable WebView pressure appears
   src/test/...         runtime fakes, recorders, and assertions until external reuse proves a module boundary
@@ -104,6 +108,10 @@ Not allowed:
 - Compose UI components, Material3 components, `Color`, `Dp`.
 - Firebase SDK, OkHttp implementation types in API contracts.
 - feature implementation imports.
+
+Pure `core` module이 아닌 경우에는 AgentPlayBook 기준에 따라 이름이나 package에서
+Android/Compose 실행 의존성을 드러낸다. Notmid의 현재 예시는 `:core:base`,
+`:core:runtime`, `:core:designsystem`, `:core:runtime/notice/host`다.
 
 ### `core/runtime`
 
@@ -186,7 +194,7 @@ Use plural `assertions`.
 router assertions Gradle module only after external router fake reuse appears
 ```
 
-Do not use the reference project's singular `assertion` naming in new Notmid modules.
+Do not use singular `assertion` naming in new Notmid modules.
 
 Package naming:
 
@@ -270,6 +278,13 @@ PermissionHost
 `MainActivity` should remain the Android entry holder. It may delegate to
 `:core:base` Activity helpers, but those helpers should not own product feature
 behavior.
+
+Activity가 있는 host와 없는 host의 공통 기준은 AgentPlayBook
+`platforms/android/android-architecture.md`의 runtime boundary 예제를 따른다.
+Notmid 매핑은 Activity lifecycle 자체가 필요한 `Intent`, `onNewIntent`,
+`ActivityResultRegistry` 연결만 `:core:base`에 두고, `NoticeHost`, router runtime
+state, ActivityRoute pending queue/effect, permission/result adapter contract는
+`:core:runtime` 또는 pure API에 둔다.
 
 ## Transition Policy
 

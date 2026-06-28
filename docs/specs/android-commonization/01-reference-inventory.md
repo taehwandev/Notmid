@@ -1,104 +1,99 @@
 ---
-title: Reference Android Project Inventory
+title: Android Commonization Pattern Inventory
 audience: Android/product engineers and AI agents
-purpose: 참조 Android 프로젝트 구조와 Notmid 현재 구조를 대조해 무엇을 차용하고 버릴지 정한다.
+purpose: 외부 Android 코드베이스에서 얻을 수 있는 일반 구조를 Notmid에 맞는 채택/제외 기준으로 정리한다.
 status: draft
 owner: notmid Android architecture
-source_of_truth: local Android reference plus Notmid repo docs
-last_verified: 2026-06-16
+source_of_truth: Notmid repo docs and AgentPlayBook Android guidance
+last_verified: 2026-06-28
 applies_to: Android modularization planning
 related_pages:
   - README.md
   - 02-target-module-taxonomy.md
+  - 09-agent-example-packets.md
 ---
 
-# Reference Android Project Inventory
+# Android Commonization Pattern Inventory
 
-## Source Boundary
+## Privacy Boundary
 
-참조 Android 프로젝트는 로컬 참조 프로젝트로만 읽었다. Notmid 저장소 안으로 코드를 복사하거나, 새로 다운로드하거나, 벤더링하지 않는다.
+이 문서는 특정 외부 프로젝트의 이름, 로컬 경로, package id, class name,
+generated namespace, credential, signing config, domain-specific dependency를
+기록하지 않는다. 외부 Android 코드베이스에서 확인한 내용은 일반화된 모듈 경계와
+검증 기준으로만 남긴다.
 
-스펙에서 참조 프로젝트 루트가 필요하면 절대 경로를 쓰지 말고 다음 placeholder를 사용한다.
+공통 규칙은 AgentPlayBook Android 문서에 둔다. Notmid 문서는 Notmid 모듈명,
+제품 경계, 구현 순서만 가진다.
 
-```text
-${REFERENCE_ANDROID_PROJECT_ROOT}
-```
+구현 agent가 실제 파일을 만들 수 있는지 검증해야 할 때는
+[09-agent-example-packets.md](09-agent-example-packets.md)의 packet을 먼저
+채운다. 이 inventory는 채택/제외 판단만 담당하고, 복사 가능한 예제와 중단
+기준은 packet 문서가 담당한다.
 
 ## 확인한 Notmid 상태
 
-Notmid는 이미 단일 샘플 앱이 아니라 Android, Web, API, shared contracts가 있는 monorepo다.
-
-현재 Android 쪽 핵심 모듈:
+Notmid Android 쪽 핵심 모듈:
 
 ```text
 :app
 :core:auth:api
 :core:auth:impl
+:core:base
 :core:data
 :core:designsystem
 :core:domain
 :core:model
+:core:notice:api
 :core:network:api
+:core:network:assertions
 :core:network:impl
+:core:runtime
 :core:router:api
+:core:router:assertions
 :core:router:impl
-:feature:*:api
-:feature:*:impl
+:feature:capture:api
+:feature:capture:impl
+:feature:feed:api
+:feature:feed:impl
+:feature:inbox:api
+:feature:inbox:impl
+:feature:map:api
+:feature:map:impl
+:feature:notmid:api
 :feature:notmid:common
+:feature:notmid:impl
+:feature:profile:api
+:feature:profile:impl
 :feature:webview:api
 :feature:webview:impl
 ```
 
-이미 있는 좋은 경계:
+이미 좋은 경계:
 
 - feature API가 route/deep-link/event 계약을 소유한다.
-- app이 route graph, deep-link resolver, ActivityRoute launcher를 소유한다.
-- network는 `api`/`impl`로 분리되어 있고 OkHttp는 impl에 있다.
-- notice effect는 ViewModel에서 `Flow<NoticeEffect>`로 나가고 `:core:runtime` `NoticeHost`에서 렌더링한다.
+- app과 runtime이 route graph, deep-link resolver, ActivityRoute launcher를
+  실행한다.
+- network는 `api`/`impl`로 분리되어 있고 transport implementation은 impl에
+  있다.
+- notice effect는 ViewModel에서 `Flow<NoticeEffect>`로 나가고 `:core:runtime`
+  `NoticeHost`에서 렌더링한다.
 - WebView는 ActivityRoute로 분리되어 있다.
 
 현재 부족한 경계:
 
-- `core/runtime` 단일 모듈이 생겼고 router/notice 런타임 패키지가 있다. permission, WebView 런타임 패키지는 아직 없다.
-- `assertions` 모듈군은 network/router 중심으로 시작되었고 notice은 아직 `:core:notice:api` test source에 머문다.
-- `:core:designsystem`이 Android/Compose 앱 UI 런타임인데 `core` 아래 있다.
-- `:core:model`은 notice/effect 계약을 더 이상 갖지 않는다.
-- network error는 transport 수준의 `NotmidNetworkException`과 repository별 domain failure로 나뉘지만, 공통 server error envelope/presentation hint 계약은 아직 약하다.
-- notice 렌더링은 `:core:runtime` 안에 있고 toast/alert/snackbar/full-page assertion boundary는 재사용 압력이 생기면 별도 `assertions`로 분리한다.
+- `core/runtime`은 router/notice 중심으로 구현되었고 permission, WebView
+  runtime package는 아직 reusable pressure가 작다.
+- `assertions` 모듈군은 network/router 중심으로 시작되었고 runtime notice
+  assertions는 아직 module-local test source 또는 future boundary다.
+- 공통 server error envelope/presentation hint 계약은 network/data/domain/UI
+  경계별 책임이 더 명확해야 한다.
 
-## 확인한 참조 Android 프로젝트 구조
-
-참조 프로젝트는 매우 넓은 Android multi-module 구조다. Notmid가 그대로 가져오면 과하다.
-
-핵심 계층:
-
-```text
-:core:*                       저수준 계약, lifecycle, router, secure, resource-provider, collector
-:core:runtime family               Android runtime, Compose, network, dialog, toast, permission, resources
-:core-data:domain:*           domain/use case 계열
-:core-data:repository:*:*     repository api/impl 계열
-:feature:*:*                  화면/기능 구현
-:feature:*:*:*-api            feature route/contract
-:*-assertion                  테스트용 mock, recording fake, assertion helper
-```
-
-참조 프로젝트에서 확인한 대표 패턴:
-
-- `core/router/router-api`, `router`, `router-assertion`.
-- runtime network API/implementation/assertion families.
-- runtime network exception API/implementation/assertion families.
-- runtime toast API/implementation/assertion families.
-- runtime dialog API/implementation/assertion families.
-- `feature/web-view/common/web-view-api`, `web-view`, `feature/web-view/holder/web-view-holder`.
-- feature마다 `*-api`와 구현 모듈을 나누고, 앱 또는 router가 계약을 통해 이동한다.
-
-## 차용할 것
+## 채택할 일반 패턴
 
 ### API / Impl / Assertions
 
-참조 프로젝트의 가장 중요한 장점은 구현 의존성을 숨기는 것보다 테스트 경계를 같이 둔다는 점이다.
-
-Notmid 적용:
+가장 중요한 패턴은 `api`/`impl`만 나누는 것이 아니라, 테스트 재사용을 위한
+`assertions` 경계까지 함께 설계하는 것이다.
 
 ```text
 :core:router:api
@@ -110,14 +105,11 @@ Notmid 적용:
 :core:network:assertions
 
 :core:notice:api
-  notice model/effect contracts
-
 :core:runtime
   notice host package
-  notice runtime assertions in test source or a later extracted module only after reuse pressure
 ```
 
-`assertions`는 production 구현이 아니라 테스트용 관찰 지점이다. 예를 들면:
+`assertions`는 production 구현이 아니라 테스트용 관찰 지점이다.
 
 - 마지막 route plan.
 - emit된 notice 목록.
@@ -125,103 +117,74 @@ Notmid 적용:
 - fake response queue.
 - 호출 횟수와 마지막 builder state.
 
-### Core / Runtime 구분
+### Core / Runtime
 
-참조 프로젝트는 `core`와 `:core:runtime`을 분리한다. Notmid는 이 원칙을 `core`와 `:core:runtime` 경계로 채택한다.
-
-Notmid 해석:
-
-- `core`: Android/Compose가 없어도 설명되는 계약, domain, model, route, network transport contract.
-- `:core:runtime`: Android/Compose 앱에서만 의미 있는 runtime renderer, permission, WebView holder, lifecycle collector, notice host, resource resolver.
+- `core`: Android/Compose가 없어도 설명되는 계약, domain, model, route,
+  network transport contract.
+- `:core:runtime`: Android/Compose 앱에서만 의미 있는 runtime renderer,
+  permission, WebView holder, lifecycle collector, notice host, resource resolver.
 
 ### Router Contract
 
-참조 프로젝트의 `JourneyGuidance`는 Activity/Fragment/Service 시대의 계약이다. Notmid는 Compose-first이므로 그 이름과 구조를 복사하지 않는다.
+Notmid는 Compose-first이므로 외부 코드베이스의 Activity/Fragment 중심 router
+이름이나 구조를 복사하지 않는다.
 
-차용할 점:
+채택할 점:
 
 - caller-facing route contract는 feature API가 소유한다.
-- product shell route registration과 `:core:runtime` coordinator가 실제 실행을 결정한다.
-- ActivityRoute를 ComposeRoute와 같은 route plan 안에 둔다.
+- product shell route registration과 `:core:runtime` coordinator가 실제 실행을
+  결정한다.
+- ActivityRoute를 ComposeRoute와 같은 route plan 안에서 표현한다.
 - assertions 모듈에서 router 호출을 기록한다.
 
 ### Network Error Boundary
 
-참조 프로젝트는 network exception handler와 server error model을 공통화한다.
-
-Notmid 적용:
-
-- raw OkHttp/serialization exception은 impl/data boundary에 가둔다.
+- raw transport/serialization exception은 impl/data boundary에 가둔다.
 - server error envelope를 안전한 typed failure로 변환한다.
 - retryable/recoverable/presentation hint를 공통 계약으로 만든다.
 - ViewModel은 typed failure를 UI state/effect로 매핑한다.
 
-### Toast/Dialog Assertions
+### Notice Assertions
 
-참조 프로젝트의 toast/dialog assertion은 실제 Android UI를 띄우지 않고 builder 호출과 payload를 검증한다.
+- `:core:notice:api` test source에서 contract tests를 제공한다.
+- runtime assertions는 재사용 압력이 생기면 `:core:runtime` test source 또는
+  별도 assertions 모듈로 분리한다.
+- `Toast`, `Snackbar`, `Alert`, `Inline`, `FullPage`는 같은 notice contract의
+  presentation variant로 두되 렌더러는 분리한다.
+- feature 테스트는 Android `Toast`나 Compose `AlertDialog` 구현에 의존하지
+  않는다.
 
-Notmid 적용:
-
-- `:core:notice:api` test source에서 contract tests를 제공하고, runtime assertions는 재사용 압력이 생기면 `:core:runtime` test source 또는 별도 assertions 모듈로 분리한다.
-- `Toast`와 `Alert`는 같은 notice contract의 presentation variant로 두되 렌더러는 분리한다.
-- feature 테스트는 Android `Toast`나 Compose `AlertDialog` 구현에 의존하지 않는다.
-
-### WebView Holder Lessons
-
-참조 프로젝트 WebView holder는 WebView state, navigator, file chooser, SSL error, new tab, JavaScript bridge를 따로 관리한다.
-
-Notmid 적용:
+### WebView Holder
 
 - 현재 `feature:webview` ActivityRoute는 유지한다.
-- WebView가 auth, file chooser, permission, fullscreen media, JS bridge를 확장하는 순간 reusable holder contract를 검토한다.
+- WebView가 auth, file chooser, permission, fullscreen media, JavaScript bridge를
+  확장하는 순간 reusable holder contract를 검토한다.
 - URL allowlist와 JavaScript bridge policy는 API 계약보다 먼저 문서화한다.
 
-## 버릴 것
+## 제외할 것
 
 Notmid에는 다음을 들여오지 않는다.
 
-- Hilt/Dagger 모듈 생성기.
-- KSP lifecycle/router generator.
-- Firebase, FCM, Crashlytics, ads, billing, banking, secure keypad, app suit 의존성.
+- DI/KSP 생성기를 구조 참고만으로 추가하는 것.
+- Firebase, FCM, Crashlytics, ads, billing, domain-specific runtime dependency.
 - 대규모 holder/repository hierarchy.
-- Fragment/Service 중심 router API.
+- Activity/Fragment/Service 중심 router API.
 - `assertion` 단수 명명. Notmid는 `assertions`를 사용한다.
-- reference project package/id/name.
-
-## Notmid 변형 규칙
-
-참조 프로젝트 패턴을 그대로 대입하지 말고 다음 변환을 적용한다.
-
-| 참조 프로젝트 | Notmid 변형 |
-| --- | --- |
-| `JourneyGuidance` | route keys, route events, route plans |
-| `ActivityRouter` | `:core:runtime` router package runtime + app-owned `ActivityRouteLauncher` |
-| `toast-api/toast/toast-assertion` | `:core:notice:api` contracts + `:core:runtime` notice host/assertions when reused |
-| `dialog-api/dialog/dialog-assertion` | `:core:runtime` notice Alert renderer/assertions |
-| `network-exception-*` | `core:network` typed failure + app/domain mapping into `:core:notice:api` presentation values |
-| `web-view-holder` | 필요한 시점에 `:core:runtime` webview reusable holder package |
-| `feature-common/holder` | Notmid에서는 `feature:notmid:common` 또는 feature-local로 축소 |
-
-## 스킬 문서와의 차이
-
-현재 repo skill은 “특정 로컬 참조 프로젝트를 그대로 복사하지 말라”는 안전장치는 충분하다. 하지만 앞으로 구현할 `:core:runtime`과 `assertions` 목표 구조는 아직 skill에 없다.
-
-구현 후 업데이트해야 할 문서:
-
-- `llm-wiki/module-map.md`: 새 모듈 ownership 반영.
-- `llm-wiki/implementation-checklist.md`: assertions와 `:core:runtime` 체크 추가.
-- `.agents/skills/glassnavlab-android-stewardship/SKILL.md`: `:core:runtime`/`assertions` route 유지.
-- `.agents/skills/notmid-product-engineering/SKILL.md`: notice/network/WebView event 처리 기준 반영.
+- 외부 프로젝트 package/id/name.
 
 ## Decision
 
-첫 구현은 router 또는 notice 중 하나로 시작한다.
-
-추천은 router다.
+다음 구현은 이미 도입된 router/network assertions와 notice/base/runtime 분리를
+기준 패턴으로 삼는다. 새 공통화는 가장 낮은 위험의 assertions 또는 pure
+contract boundary부터 시작하되, 구현 전에는 matching example packet이 있어야
+한다.
 
 이유:
 
-- 이미 `:core:router:api`/`:core:router:impl`이 있다.
-- `assertions` 모듈을 추가해도 product behavior가 바뀌지 않는다.
-- AppRouter/AppDeepLinkResolver 테스트와 `:core:runtime` router runtime 테스트가 있어 검증 경로가 명확하다.
-- 이후 WebView, notice, protected action navigation에도 같은 테스트 패턴을 재사용할 수 있다.
+- `:core:router:api`/`:core:router:impl`/`:core:router:assertions`가 기준
+  선례다.
+- assertions 모듈은 product behavior를 바꾸지 않고 테스트 관찰 지점을 만든다.
+- AppRouter/AppDeepLinkResolver 테스트와 `:core:runtime` router runtime 테스트는
+  새 runtime boundary 검증의 기준이다.
+- 이후 WebView, notice, protected action navigation에도 같은 테스트 패턴을
+  재사용할 수 있다.

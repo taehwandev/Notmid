@@ -5,7 +5,7 @@ purpose: 새 `api`/`impl`/`assertions` 모듈을 추가할 때 Gradle convention
 status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
-last_verified: 2026-06-16
+last_verified: 2026-06-28
 applies_to: build-logic, settings.gradle.kts, module build.gradle.kts
 related_pages:
   - 02-target-module-taxonomy.md
@@ -25,7 +25,7 @@ glassnavlab.android.library.compose
 glassnavlab.kotlin.library
 ```
 
-이 상태는 작고 명확하다. 참조 프로젝트처럼 router, network, control, repository, hilt, ksp, jacoco, detekt convention을 한 번에 복사하지 않는다.
+이 상태는 작고 명확하다. 다른 Android 코드베이스에서 보이는 router, network, control, repository, hilt, ksp, jacoco, detekt convention을 한 번에 복사하지 않는다.
 
 ## Decision
 
@@ -60,7 +60,7 @@ glassnavlab.android.compose.assertions
 - 첫 모듈 하나만 필요하다.
 - dependency가 모듈마다 다르다.
 - convention이 product behavior나 DI binding을 숨긴다.
-- Hilt/KSP/Firebase/ads 같은 reference-only 의존성을 끌어오게 된다.
+- Hilt/KSP/Firebase/ads 같은 product-specific 의존성을 끌어오게 된다.
 
 ## Module Template: Pure API
 
@@ -260,9 +260,11 @@ Allowed later only with a concrete need:
 
 Do not add:
 
-- Hilt/Dagger.
-- KSP generation.
-- Retrofit only because the reference project used it.
+- Hilt/Dagger only because another Android codebase used it. Notmid now uses
+  Hilt as the Android DI baseline through `glassnavlab.android.hilt`.
+- KSP generation outside a concrete need. Current KSP usage is limited to Hilt
+  compiler wiring in the Hilt convention plugin.
+- Retrofit only because another Android codebase used it.
 - Android Navigation Compose only because router exists.
 - Firebase SDK for commonization.
 
@@ -270,7 +272,7 @@ Do not add:
 
 - Did the module use an existing convention first?
 - Is a new convention backed by at least two modules?
-- Are reference project plugin IDs absent?
+- Are copied source project plugin IDs absent?
 - Does `assertions` avoid production implementation dependencies?
 - Are module names and package names consistent with `core` vs `core/runtime`?
 

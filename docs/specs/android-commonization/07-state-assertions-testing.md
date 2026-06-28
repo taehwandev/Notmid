@@ -5,7 +5,7 @@ purpose: ViewModel/state/action/effect 테스트와 assertions 모듈 설계 기
 status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
-last_verified: 2026-06-16
+last_verified: 2026-06-28
 applies_to: ViewModel tests, fake repositories, route tests, notice tests
 related_pages:
   - 02-target-module-taxonomy.md
@@ -137,6 +137,19 @@ sealed interface FeedEffect {
 ```
 
 If the feature already emits route events through `RouteEventSink`, do not duplicate route effects unless the local state owner needs an intermediate effect for testing.
+
+## Channel / SharedFlow / StateFlow / suspend 기준
+
+공통 primitive 선택 기준은 AgentPlayBook
+`platforms/android/android-viewmodel-state.md`의 `Stream Primitive Selection`을
+따른다. Notmid tests는 그 기준을 반복하지 않고 현재 구현 매핑을 검증한다.
+
+- `NotmidActionDelegate`: Action 순서, backpressure, 중복 submit/cancellation.
+- `StateFlow<UiState>`: 초기값, loading/content/error 전이, stale result 억제.
+- `NoticeEffectDelegate`와 router/runtime effects: 한 번만 emit되고 replay되지 않는지.
+- `suspend` repository/use case 호출: 성공/실패/cancellation mapping과 dispatcher 제어.
+- router pending state: 놓치면 안 되는 route/effect를 blind replay가 아니라 id/consume
+  contract로 검증.
 
 ## Router Assertions
 

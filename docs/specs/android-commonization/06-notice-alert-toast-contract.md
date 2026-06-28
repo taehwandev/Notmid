@@ -5,7 +5,7 @@ purpose: toast, snackbar, alert, inline, full-page notice를 API 계약과 core/
 status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
-last_verified: 2026-06-16
+last_verified: 2026-06-28
 applies_to: UI effects, design system, app shell, ViewModel notice
 related_pages:
   - 05-network-error-contract.md

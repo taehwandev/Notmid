@@ -5,7 +5,7 @@ purpose: Notmid 라우터와 WebView ActivityRoute를 `core`/`core/runtime`/feat
 status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
-last_verified: 2026-06-16
+last_verified: 2026-06-28
 applies_to: core router, app router, feature route contracts, WebView
 related_pages:
   - docs/specs/notmid-router-architecture.md
@@ -80,6 +80,8 @@ Notmid already has the right foundation:
   activity/WebViewActivityKeys
 
 :feature:webview:impl
+  NotmidWebViewContent
+  NotmidWebViewRouteContent
   NotmidWebViewActivity
   WebViewActivityRouteLaunchHandler
 
@@ -88,12 +90,9 @@ Notmid already has the right foundation:
 
 :app
   MainActivity product wiring and DefaultActivityRouteLauncher binding with feature launch handlers
-
-:feature:webview:impl
-  NotmidWebViewActivity
 ```
 
-This is already more appropriate for Compose than the reference project's Activity/Fragment `JourneyGuidance` contract.
+This is already more appropriate for Compose than copying an Activity/Fragment-centered router contract from another app.
 
 ## Decision
 
@@ -131,10 +130,17 @@ Still app-owned:
 
 Excluded from this runtime:
 
-- WebView runtime and URL policy.
-- WebView Activity implementation.
+- WebView route-specific runtime and URL policy until reuse pressure is real.
+- WebView Activity implementation and Intent construction.
 - browser fallback and external URL handling.
 - WebView-specific deep-link hardening.
+
+The current WebView commonization lives one level lower, inside
+`:feature:webview:impl`: the Activity shell and any future Compose destination
+must call the same Compose WebView content. Move that content into
+`:core:runtime` only when another feature or app needs WebView lifecycle,
+security, file chooser, or fullscreen media behavior without depending on
+Notmid's WebView feature implementation.
 
 ## Contract Ownership
 
@@ -187,6 +193,36 @@ Example:
 FeedRouteEvent.ClipRequested(clipId)
   -> app maps to [FeedRoute, ClipDetailRoute(clipId)]
 ```
+
+### ActivityRoute Extension
+
+Adding another Activity-backed destination should not require a new router
+branch. The extension points are:
+
+```text
+feature:<name>:api
+  <Name>ActivityRoute : ActivityRoute
+  <Name>ActivityKeys
+
+feature:<name>:impl
+  <Name>Activity
+  <Name>ActivityRouteLaunchHandler
+
+app or DI registration
+  DefaultActivityRouteLauncher(handlers = listOf(...))
+```
+
+Rules:
+
+- `ActivityRoute.activityKey` selects a launch handler. The pure route API does
+  not import `Activity`, `Context`, or `Intent`.
+- `ActivityRouteLaunchHandler` owns concrete `Intent` construction for its
+  feature implementation.
+- `DefaultActivityRouteLauncher` can dispatch any registered handler. If a new
+  Activity is added, the missing work is registration, not a router rewrite.
+- Activity launch is fire-and-forget today. Result delivery needs a separate
+  runtime result contract before ViewModel code can await a typed result.
+- Activity routes are pending execution requests, not Compose stack entries.
 
 ### Core Router
 
@@ -315,6 +351,24 @@ Reasons:
 - fullscreen media is easier at Activity boundary.
 - external auth pages may have lifecycle behavior that should not live inside a Compose destination.
 
+Activity-backed does not mean Activity-only implementation. The reusable WebView
+body is Compose:
+
+```text
+WebViewRoute
+  -> ActivityRoute launch path:
+     WebViewActivityRouteLaunchHandler
+     -> NotmidWebViewActivity
+     -> NotmidWebViewRouteContent(route)
+
+  -> future Compose mapping path:
+     product/feature route content mapper
+     -> NotmidWebViewRouteContent(route)
+```
+
+This keeps WebView lifecycle policy close to the WebView feature while avoiding
+two separate WebView implementations.
+
 ## WebView Next Contract
 
 Short term:
@@ -325,8 +379,11 @@ Short term:
   WebViewDeepLinkSpec
 
 :feature:webview:impl
+  NotmidWebViewContent(url, mode, javaScriptEnabled)
+  NotmidWebViewRouteContent(route)
   NotmidWebViewActivity
   Intent factory
+  WebViewActivityRouteLaunchHandler
 ```
 
 Add hardening before feature growth:
@@ -337,6 +394,17 @@ Add hardening before feature growth:
 - no arbitrary JavaScript interface until a bridge contract exists.
 - file chooser callback lifecycle cleanup.
 - WebView destroy path stays explicit.
+
+Reuse rules:
+
+- Activity shell parses `Intent` extras into `WebViewRoute`, sets Activity title,
+  and delegates rendering to `NotmidWebViewRouteContent`.
+- Compose navigation may embed the same route content only when the product
+  explicitly wants inline WebView. The default route contract remains
+  `ActivityRoute`.
+- The Compose content owns WebView settings, internal history back handling when
+  a back dispatcher exists, and explicit `destroy()` cleanup.
+- Do not create a second WebView implementation for Compose navigation.
 
 Long term, if WebView becomes reusable:
 
@@ -416,10 +484,14 @@ core router knows Notmid host
 5. Add `RecordingRouteEventSink` and use it in feature route event tests.
 6. Move reusable runtime state, deep-link URI normalization, and pending
    ActivityRoute consume effect into the `:core:runtime` router package.
-7. Keep Notmid graph, feature event mapping, and WebView Activity launch in
-   `:app`.
-8. Harden WebView route validation without moving modules.
-9. Add a `:core:runtime` webview package only when a second WebView runtime surface appears or WebView state grows beyond `NotmidWebViewActivity`.
+7. Keep Notmid graph and feature event mapping in product shell; keep WebView
+   Activity launch in `:feature:webview:impl` and register its handler from the
+   app or future DI set.
+8. Keep WebView Activity and future Compose mapping on the same
+   `NotmidWebViewRouteContent` body.
+9. Harden WebView route validation without moving modules.
+10. Add a `:core:runtime` webview package only when a second WebView runtime
+    surface appears or WebView state grows beyond `:feature:webview:impl`.
 
 ## Verification
 

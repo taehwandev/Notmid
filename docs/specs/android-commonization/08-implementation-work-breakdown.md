@@ -5,7 +5,7 @@ purpose: 분리 스펙을 실제 구현 작업 단위, 순서, acceptance, 검�
 status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
-last_verified: 2026-06-16
+last_verified: 2026-06-28
 applies_to: future Android implementation tasks
 related_pages:
   - README.md
@@ -14,6 +14,7 @@ related_pages:
   - 05-network-error-contract.md
   - 06-notice-alert-toast-contract.md
   - 07-state-assertions-testing.md
+  - 09-agent-example-packets.md
 ---
 
 # Implementation Work Breakdown
@@ -29,7 +30,7 @@ Order the work by risk:
 3. Move runtime rendering into `:core:runtime`.
 4. Extract app shell/base helpers.
 5. Harden WebView.
-6. Update skills/wiki after code proves the shape.
+6. Update AgentPlayBook/wiki docs after code proves the shape.
 
 ## Phase 0: Planning Docs
 
@@ -42,9 +43,12 @@ Scope:
 Acceptance:
 
 - Spec files are split by implementation boundary.
-- Reference project borrow/reject rules are explicit.
-- Current skill doc gap is recorded.
+- External Android codebase borrow/reject rules are explicit.
+- Current skill/doc follow-up is recorded.
 - Future implementation order is clear.
+- Any future code phase has a matching example packet with module/file sketch,
+  allowed imports, forbidden imports, first caller/test, verification, and
+  collapse rule.
 
 Verification:
 
@@ -324,7 +328,7 @@ Verification:
 ./gradlew :app:compileDebugKotlin
 ```
 
-## Phase 8: Skill/Wiki Update
+## Phase 8: AgentPlayBook/Wiki Update
 
 Goal:
 
@@ -334,17 +338,24 @@ Proposed docs:
 
 ```text
 llm-wiki/module-map.md
-llm-wiki/implementation-checklist.md
 llm-wiki/routing-deeplinks.md
-.agents/skills/glassnavlab-android-stewardship/SKILL.md
-.agents/skills/notmid-product-engineering/SKILL.md
+docs/specs/android-commonization/09-agent-example-packets.md
+AgentPlayBook/platforms/android/android-architecture.md
+AgentPlayBook/platforms/android/android-module-structure.md
+AgentPlayBook/platforms/android/android-viewmodel-state.md
+AgentPlayBook/platforms/android/android-state-data.md
+AgentPlayBook/platforms/android/android-security.md
+AgentPlayBook/platforms/android/android-review.md
 ```
 
 Acceptance:
 
 - English canonical docs match implemented modules.
 - Korean planning docs can stay as local planning history or be translated before commit if requested.
-- Skills route agents to the new `:core:runtime`/`assertions` specs.
+- AgentPlayBook routes agents to the shared Android guidance; Notmid repo docs
+  keep only local module inventory, route facts, and implementation plans.
+- Example packets are removed or updated when implementation proves a different
+  module boundary.
 
 Verification:
 

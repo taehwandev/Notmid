@@ -5,7 +5,7 @@ purpose: Notmid network boundary, typed errors, server presentation hints, retry
 status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
-last_verified: 2026-06-16
+last_verified: 2026-06-28
 applies_to: core network, core data, domain failures, notice mapping
 related_pages:
   - 06-notice-alert-toast-contract.md
@@ -317,7 +317,7 @@ network exception handler depends on Router
 server error envelope directly launches a route
 ```
 
-The reference project's network exception handler coupled network handling to toast/dialog/router. Notmid should split this: network produces typed metadata, app/feature state owner decides UI and route effects.
+Do not couple network handling directly to toast/dialog/router execution. Notmid should split this: network produces typed metadata, app/feature state owner decides UI and route effects.
 
 ## Migration Steps
 
