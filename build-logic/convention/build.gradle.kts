@@ -19,6 +19,8 @@ kotlin {
 
 dependencies {
     compileOnly(libs.plugin.android.gradle)
+    implementation(libs.plugin.hilt.gradle)
+    implementation(libs.plugin.ksp.gradle)
     compileOnly(libs.plugin.kotlin.gradle)
 }
 
@@ -35,6 +37,10 @@ gradlePlugin {
         register("androidLibraryCompose") {
             id = "glassnavlab.android.library.compose"
             implementationClass = "app.thdev.glassnavlab.gradle.AndroidLibraryComposeConventionPlugin"
+        }
+        register("androidHilt") {
+            id = "glassnavlab.android.hilt"
+            implementationClass = "app.thdev.glassnavlab.gradle.AndroidHiltConventionPlugin"
         }
         register("kotlinLibrary") {
             id = "glassnavlab.kotlin.library"

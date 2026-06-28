@@ -13,6 +13,7 @@ import app.thdev.glassnavlab.core.auth.notmid.FirebaseAuthRestIdTokenProvider
 import app.thdev.glassnavlab.core.auth.notmid.FirebaseIdTokenProvider
 import app.thdev.glassnavlab.core.auth.notmid.LocalNotmidAuthGateway
 import app.thdev.glassnavlab.core.auth.notmid.UnavailableFirebaseIdTokenProvider
+import app.thdev.glassnavlab.core.base.activity.BaseActivity
 import app.thdev.glassnavlab.core.data.notmid.ApiNotmidContentRepository
 import app.thdev.glassnavlab.core.data.notmid.ApiNotmidProtectedWriteRepository
 import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
@@ -22,7 +23,6 @@ import app.thdev.glassnavlab.core.data.notmid.StaticNotmidProtectedWriteReposito
 import app.thdev.glassnavlab.core.designsystem.theme.notmidTheme
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
-import app.thdev.glassnavlab.core.base.activity.BaseActivity
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.model.notmid.NotmidCapturePublishRequest
@@ -32,17 +32,22 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidProfileSettingsUpdateReques
 import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidStartThreadRequest
 import app.thdev.glassnavlab.core.network.notmid.OkHttpNotmidNetworkClient
-import app.thdev.glassnavlab.core.runtime.router.activity.DefaultActivityRouteLauncher
-import app.thdev.glassnavlab.feature.notmid.api.destination.NotmidDestinationIds
+import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLauncher
 import app.thdev.glassnavlab.feature.notmid.NotmidShellErrorScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellLoadingScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellScreen
+import app.thdev.glassnavlab.feature.notmid.api.destination.NotmidDestinationIds
 import app.thdev.glassnavlab.feature.notmid.api.event.NotmidRouteEvent
 import app.thdev.glassnavlab.feature.notmid.router.notmidRouteStack
 import app.thdev.glassnavlab.feature.notmid.router.rememberNotmidAppRouter
-import app.thdev.glassnavlab.feature.webview.WebViewActivityRouteLaunchHandler
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : BaseActivity() {
+    @Inject
+    lateinit var activityRouteLauncher: ActivityRouteLauncher
+
     @Composable
     override fun Content() {
         val notmidContentSource = NotmidRuntimeConfig.contentSource
@@ -126,12 +131,6 @@ class MainActivity : BaseActivity() {
         )
         val appState by notmidAppViewModel.state.collectAsStateWithLifecycle()
         val appRouter = rememberNotmidAppRouter()
-        val activityRouteLauncher = remember(context) {
-            DefaultActivityRouteLauncher(
-                context = context,
-                handlers = listOf(WebViewActivityRouteLaunchHandler()),
-            )
-        }
 
         BaseAppRoot(
             router = appRouter,

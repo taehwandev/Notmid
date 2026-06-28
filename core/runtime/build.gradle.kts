@@ -1,5 +1,6 @@
 plugins {
     id("glassnavlab.android.library.compose")
+    id("glassnavlab.android.hilt")
 }
 
 android {

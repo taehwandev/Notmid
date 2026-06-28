@@ -7,8 +7,9 @@ import app.thdev.glassnavlab.core.router.route.ActivityRoute
 import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLaunchHandler
 import app.thdev.glassnavlab.feature.webview.api.activity.WebViewActivityKeys
 import app.thdev.glassnavlab.feature.webview.api.route.WebViewRoute
+import javax.inject.Inject
 
-class WebViewActivityRouteLaunchHandler : ActivityRouteLaunchHandler {
+class WebViewActivityRouteLaunchHandler @Inject constructor() : ActivityRouteLaunchHandler {
     override fun launch(
         context: Context,
         route: ActivityRoute,

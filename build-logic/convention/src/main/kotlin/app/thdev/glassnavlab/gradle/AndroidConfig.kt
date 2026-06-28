@@ -55,6 +55,16 @@ internal fun Project.configureComposeAndroid() {
     }
 }
 
+internal fun Project.configureHiltAndroid() {
+    pluginManager.apply("com.google.dagger.hilt.android")
+    pluginManager.apply("com.google.devtools.ksp")
+
+    dependencies {
+        "implementation"(findLibrary("hilt-android"))
+        "ksp"(findLibrary("hilt-android-compiler"))
+    }
+}
+
 internal fun Project.configureKotlinAndroid() {
     extensions.configure<KotlinAndroidProjectExtension> {
         compilerOptions {

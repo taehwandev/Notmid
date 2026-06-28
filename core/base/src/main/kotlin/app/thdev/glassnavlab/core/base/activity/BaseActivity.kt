@@ -29,7 +29,7 @@ abstract class BaseActivity : ComponentActivity() {
     protected val pendingDeepLink: PendingDeepLink?
         get() = currentPendingDeepLink
 
-    final override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applyEdgeToEdge(edgeToEdgeConfig)
         updatePendingDeepLink(intent)

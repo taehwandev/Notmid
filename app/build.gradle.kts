@@ -2,6 +2,7 @@ import java.util.Properties
 
 plugins {
     id("glassnavlab.android.application")
+    id("glassnavlab.android.hilt")
 }
 
 val localProperties = Properties().apply {
