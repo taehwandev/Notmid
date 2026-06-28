@@ -16,7 +16,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class NotmidDeepLinkResolverTest {
-    private val resolver = NotmidRouteGraph.deepLinkResolver
+    private val resolver = NotmidRouteGraph().deepLinkResolver
 
     @Test
     fun feedDeepLinkResolvesFeedStack() {

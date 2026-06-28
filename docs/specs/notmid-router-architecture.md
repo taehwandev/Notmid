@@ -83,8 +83,9 @@ The implementation is adapted for notmid's current shape:
 :feature:notmid:impl
   router/NotmidAppRouter binding
   router/NotmidRouteGraph
-  router/NotmidRouteEventMapper
-  product shell route registrations and event handlers
+  router/*RouteEventHandler
+  di/NotmidRouteEventHandlerModule
+  product shell route registrations and event-family handler bindings
 
 :feature:webview:impl
   WebViewActivity
@@ -95,7 +96,7 @@ The implementation is adapted for notmid's current shape:
   BaseActivity external intent and pending deep-link handoff
 
 :app
-  MainActivity product wiring, auth gate, and concrete ActivityRoute launcher binding
+  MainActivity product wiring, auth gate, injected ActivityRouteLauncher, and injected NotmidAppRouterFactory
 ```
 
 ## Rule
@@ -255,6 +256,35 @@ With a registry:
 - tests assert stack output
 - feature implementation stays independent
 
+## Current Route Event Wiring
+
+Shared guidance for scalable route/event registration lives in AgentPlayBook
+Android architecture and module-structure cards. Notmid's current wiring follows
+that shared rule:
+
+```text
+:feature:notmid:impl
+  FeedRouteEventHandler
+  MapRouteEventHandler
+  InboxRouteEventHandler
+  NotmidRouteEventHandler
+  NotmidRouteEventHandlerModule @IntoSet
+  NotmidRouteGraph @Inject
+  NotmidAppRouterFactory @Inject
+
+:app
+  MainActivity injects NotmidAppRouterFactory
+  rememberNotmidAppRouter(factory)
+```
+
+Each handler owns one route event family and returns `null` for events it does
+not handle. `NotmidRouteGraph` owns the product stack shape, host/base path,
+top-level routes, and deep-link specs. `NotmidAppRouterFactory` receives the
+injected `Set<RouteEventHandler>` and creates the runtime. `MainActivity` never
+imports every feature event type or the handler set just to assemble routing.
+
+Manual handler lists are test fixtures only in this repo.
+
 ## Why Core Router Impl And Core App Router Package
 
 `DefaultRouteRegistry`, `DefaultDeepLinkResolver`, and
@@ -273,7 +303,8 @@ app provides:
 
 product shell provides:
   AppRouterBundleConfig
-  RouteEventHandler list
+  event-family RouteEventHandler multibinding set
+  NotmidRouteGraph and NotmidAppRouterFactory DI bindings
   host/scheme/base-path values
   feature route and deep-link registrations
 
@@ -320,6 +351,13 @@ RouteCommand.LaunchActivity(WebViewRoute)
 ```
 
 The feature API remains stable either way.
+
+Activity-backed destinations follow the same scalable registration rule as
+route events. The feature implementation contributes its
+`ActivityRouteLaunchHandler` with Hilt `@IntoSet`; the runtime
+`DefaultActivityRouteLauncher` receives the injected handler set. Do not add a
+new app-local `when` or `listOf(WebViewHandler(), NextFeatureHandler(), ...)`
+for every Activity.
 
 ## Testing Strategy
 

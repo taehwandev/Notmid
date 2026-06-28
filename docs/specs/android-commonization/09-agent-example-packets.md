@@ -116,23 +116,31 @@ lowest acceptable ownership level: current :core:runtime test source until a sec
 minimal file/module sketch:
   core/router/api/.../ActivityRoute.kt
   core/router/api/.../RoutePlan.kt
+  core/router/api/.../RouteEventHandler.kt
   core/runtime/.../router/activity/ActivityRouteLaunchHandler.kt
   core/runtime/.../router/activity/DefaultActivityRouteLauncher.kt
   core/runtime/.../router/activity/ActivityRouteLauncherEffect.kt
+  feature/notmid/impl/.../NotmidRouteGraph.kt
+  feature/notmid/impl/.../NotmidAppRouterFactory.kt
+  feature/<name>/impl/.../<Name>RouteEventHandler.kt
+  feature/<name>/impl/.../di/<Name>RouteEventModule.kt
 allowed imports:
   router api -> Kotlin contracts only
   runtime activity -> Android Context/Intent/Activity result APIs only where execution happens
+  feature route handler -> own feature API events plus product shell route graph
 forbidden imports:
   router api -> Context, Intent, Activity, NavController, Compose runtime
   runtime activity -> feature impl screens, repositories, auth policy
+  app shell -> one cast/list entry per feature route event family
 first caller or test:
-  WebViewRoute launch handler and AppRouterRuntime pending ActivityRoute test
+  WebViewRoute launch handler, feature RouteEventHandler binding, and AppRouterRuntime pending ActivityRoute test
 nearest verification:
   ./gradlew :core:router:api:test
   ./gradlew :core:runtime:test
+  ./gradlew :feature:notmid:impl:testDebugUnitTest
   ./gradlew :feature:webview:impl:compileDebugKotlin
 collapse rule:
-  if only one feature starts one Activity and no RoutePlan test needs it, keep launch local to that feature
+  if only one feature starts one Activity and no RoutePlan test needs it, keep launch local to that feature; if route event handlers grow past a tiny test fixture, use DI multibinding instead of a central list
 ```
 
 Minimal API shape:
@@ -151,6 +159,12 @@ data class RoutePlan(
 Runtime 실행은 `ActivityRouteLaunchHandler`가 `Intent` 생성을 알고,
 `DefaultActivityRouteLauncher`가 처리 가능한 handler를 찾아 실행한다. route
 API는 어떤 Activity가 열리는지 모른다.
+
+Route event 실행도 AgentPlayBook Android 카드의 shared DI 규칙을 따른다.
+feature/product-slice impl은 자기 `RouteEventHandler`를 `@IntoSet`으로
+제공하고, product router factory가 `Set<RouteEventHandler>`와 주입된 route
+graph를 조합한다. Activity/root는 factory만 받는다. 이 packet은 Notmid의
+현재 파일 위치와 검증 명령만 고정한다.
 
 ## Packet 3: Notice Contract / Runtime Host / Recording Fake
 

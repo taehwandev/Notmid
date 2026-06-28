@@ -71,7 +71,9 @@ Notmid already has the right foundation:
 
 :feature:notmid:impl
   NotmidRouteGraph
-  NotmidRouteEventMapper
+  NotmidAppRouterFactory
+  *RouteEventHandler
+  NotmidRouteEventHandlerModule
   rememberNotmidAppRouter
 
 :feature:webview:api
@@ -89,7 +91,7 @@ Notmid already has the right foundation:
   BaseActivity pending deep-link handoff
 
 :app
-  MainActivity product wiring and DefaultActivityRouteLauncher binding with feature launch handlers
+  MainActivity product wiring, injected NotmidAppRouterFactory, and DefaultActivityRouteLauncher binding with feature launch handlers
 ```
 
 This is already more appropriate for Compose than copying an Activity/Fragment-centered router contract from another app.
@@ -119,7 +121,8 @@ the standard runtime behavior:
 Still product-shell owned:
 
 - Notmid route registrations.
-- Notmid event-to-stack mapping.
+- Notmid event-to-stack mapping, implemented by event-family
+  `RouteEventHandler` bindings instead of an app-local cast list.
 - app host/scheme/base path values passed into `AppRouterBundleConfig`.
 - auth-gated route deferral policy when added.
 
@@ -179,12 +182,13 @@ Product shell owns:
 - route registrations through `AppRouterBundleConfig`.
 - app host/scheme/base path values.
 - top-level default route.
-- cross-feature route event mapping.
+- cross-feature route event mapping through injected `RouteEventHandler` sets.
 
 App owns:
 
 - external intent/deep-link handoff.
 - concrete ActivityRoute launcher binding.
+- injecting `NotmidAppRouterFactory` and passing it to the app root.
 - auth-gated route deferral.
 
 Example:
@@ -209,7 +213,8 @@ feature:<name>:impl
   <Name>ActivityRouteLaunchHandler
 
 app or DI registration
-  DefaultActivityRouteLauncher(handlers = listOf(...))
+  <Name>ActivityRouteLaunchHandler @IntoSet
+  DefaultActivityRouteLauncher(handlers = injectedSet)
 ```
 
 Rules:
@@ -266,6 +271,13 @@ Core runtime router does not own:
 - WebView `Intent` construction.
 - auth/session/deferred-route product policy.
 - DI container bindings.
+
+Core runtime allows a deep-link-only bundle with no route event handlers.
+Notmid's product router must still fail fast when creating an app runtime
+without injected handlers, because feature UI depends on route event dispatch.
+The shared reason for using Hilt multibindings instead of central handler lists
+lives in AgentPlayBook Android cards; this page records only the Notmid
+implementation boundary.
 
 ## Nav3 Advanced Deep-Link Application
 
@@ -484,9 +496,10 @@ core router knows Notmid host
 5. Add `RecordingRouteEventSink` and use it in feature route event tests.
 6. Move reusable runtime state, deep-link URI normalization, and pending
    ActivityRoute consume effect into the `:core:runtime` router package.
-7. Keep Notmid graph and feature event mapping in product shell; keep WebView
-   Activity launch in `:feature:webview:impl` and register its handler from the
-   app or future DI set.
+7. Keep Notmid graph and stack policy in product shell; contribute event-family
+   mappings as Hilt `@IntoSet RouteEventHandler` bindings. Keep WebView
+   Activity launch in `:feature:webview:impl` and register its launch handler
+   with the same multibinding pattern.
 8. Keep WebView Activity and future Compose mapping on the same
    `NotmidWebViewRouteContent` body.
 9. Harden WebView route validation without moving modules.

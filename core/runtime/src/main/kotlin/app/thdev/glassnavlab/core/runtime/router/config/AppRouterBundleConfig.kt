@@ -16,8 +16,5 @@ data class AppRouterBundleConfig(
         require(defaultRoute in topLevelRoutes) {
             "The default route must also be registered as a top-level route."
         }
-        require(routeEventHandlers.isNotEmpty()) {
-            "At least one route event handler is required."
-        }
     }
 }

@@ -11,9 +11,14 @@ ViewModel event flow live in AgentPlayBook.
 :core:router:impl     reusable registry, event planner, URL parsing, deep-link matching
 :core:runtime         Compose route runtime and ActivityRoute launch runtime
 :feature:*:api        feature route data, deep-link specs, public route events
-:feature:notmid:impl  Notmid route registrations, event handlers, shell rendering
-:app                  Android entrypoint and concrete platform launch binding
+:feature:notmid:impl  injected Notmid route graph/factory, Hilt route-event handler bindings, shell rendering
+:app                  Android entrypoint, injected router factory, concrete platform launch binding
 ```
+
+Production route-event registration uses Hilt multibinding. Add a new
+`RouteEventHandler` in the owning feature/product-slice implementation and bind
+it with `@IntoSet`; do not add another cast entry to a central app-shell list or
+hide the product route graph in an `object`.
 
 ## Route Targets
 

@@ -49,7 +49,29 @@ class DefaultAppRouterBundleTest {
         )
     }
 
-    private fun createBundle(): DefaultAppRouterBundle {
+    @Test
+    fun supportsDeepLinksWithoutRouteEventHandlers() {
+        val runtime = createBundle(routeEventHandlers = emptyList()).createRuntime()
+
+        runtime.navigateDeepLink("https://example.test/app/detail")
+
+        assertEquals(
+            listOf(detailRoute),
+            runtime.backStack.entries,
+        )
+    }
+
+    private fun createBundle(
+        routeEventHandlers: List<RouteEventHandler> = listOf(
+            RouteEventHandler { event ->
+                if (event == TestRouteEvent("open-detail")) {
+                    RoutePlan.compose(RouteStack.single(detailRoute))
+                } else {
+                    null
+                }
+            },
+        ),
+    ): DefaultAppRouterBundle {
         return DefaultAppRouterBundle(
             config = AppRouterBundleConfig(
                 defaultRoute = homeRoute,
@@ -67,17 +89,8 @@ class DefaultAppRouterBundleTest {
                     host = "example.test",
                     basePath = "app",
                 ),
-                routeEventHandlers = listOf(
-                    RouteEventHandler { event ->
-                        if (event == TestRouteEvent("open-detail")) {
-                            RoutePlan.compose(RouteStack.single(detailRoute))
-                        } else {
-                            null
-                        }
-                    },
-                ),
+                routeEventHandlers = routeEventHandlers,
             ),
         )
     }
-
 }

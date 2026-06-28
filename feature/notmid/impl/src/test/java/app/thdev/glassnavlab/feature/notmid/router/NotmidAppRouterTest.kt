@@ -1,6 +1,7 @@
 package app.thdev.glassnavlab.feature.notmid.router
 
 import app.thdev.glassnavlab.core.router.runtime.RouteCommand
+import app.thdev.glassnavlab.core.router.runtime.RouteEventHandler
 import app.thdev.glassnavlab.core.router.runtime.RoutePlan
 import app.thdev.glassnavlab.core.router.runtime.RouteStack
 import app.thdev.glassnavlab.core.router.assertions.TestActivityRoute
@@ -23,9 +24,11 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class NotmidAppRouterTest {
+    private val routeGraph = NotmidRouteGraph()
+
     @Test
     fun startsWithDefaultFeedRoute() {
-        val router = createNotmidAppRouter()
+        val router = createRouter()
 
         assertEquals(
             listOf(FeedRoute),
@@ -35,7 +38,7 @@ class NotmidAppRouterTest {
 
     @Test
     fun destinationSelectedNavigatesThroughRouteRegistry() {
-        val router = createNotmidAppRouter()
+        val router = createRouter()
 
         router.onRouteEvent(
             NotmidRouteEvent.DestinationSelected(NotmidDestinationIds.MAP),
@@ -49,7 +52,7 @@ class NotmidAppRouterTest {
 
     @Test
     fun settingsEventBuildsOrderedProfileStack() {
-        val router = createNotmidAppRouter()
+        val router = createRouter()
 
         router.onRouteEvent(NotmidRouteEvent.SettingsRequested)
 
@@ -61,7 +64,7 @@ class NotmidAppRouterTest {
 
     @Test
     fun feedClipEventBuildsOrderedClipStack() {
-        val router = createNotmidAppRouter()
+        val router = createRouter()
 
         router.onRouteEvent(FeedRouteEvent.ClipRequested("cafe-queue-check"))
 
@@ -73,7 +76,7 @@ class NotmidAppRouterTest {
 
     @Test
     fun mapPlaceEventBuildsOrderedPlaceStack() {
-        val router = createNotmidAppRouter()
+        val router = createRouter()
 
         router.onRouteEvent(MapRouteEvent.PlaceRequested("millo-roasters"))
 
@@ -85,7 +88,7 @@ class NotmidAppRouterTest {
 
     @Test
     fun inboxChatEventBuildsOrderedChatStack() {
-        val router = createNotmidAppRouter()
+        val router = createRouter()
 
         router.onRouteEvent(InboxRouteEvent.ChatThreadRequested("clip-thread"))
 
@@ -97,7 +100,7 @@ class NotmidAppRouterTest {
 
     @Test
     fun directRouteCommandReplacesStack() {
-        val router = createNotmidAppRouter()
+        val router = createRouter()
 
         router.navigate(RouteCommand(RouteStack.single(ProfileRoute)))
 
@@ -109,7 +112,7 @@ class NotmidAppRouterTest {
 
     @Test
     fun activityRouteCommandQueuesActivityLaunchWithoutReplacingComposeStack() {
-        val router = createNotmidAppRouter()
+        val router = createRouter()
         val activityRoute = TestActivityRoute(
             route = "settings-activity",
             activityKey = "settings",
@@ -126,7 +129,7 @@ class NotmidAppRouterTest {
 
     @Test
     fun routePlanCanUpdateComposeStackAndQueueActivityLaunchTogether() {
-        val router = createNotmidAppRouter()
+        val router = createRouter()
         val activityRoute = TestActivityRoute(
             route = "settings-activity",
             activityKey = "settings",
@@ -148,7 +151,7 @@ class NotmidAppRouterTest {
 
     @Test
     fun deepLinkNavigationUsesRoutePlanExecution() {
-        val router = createNotmidAppRouter()
+        val router = createRouter()
 
         router.navigateDeepLink("https://thdev.app/notmid/profile/settings")
 
@@ -160,7 +163,7 @@ class NotmidAppRouterTest {
 
     @Test
     fun consumedActivityRouteClearsPendingRequest() {
-        val router = createNotmidAppRouter()
+        val router = createRouter()
         val activityRoute = TestActivityRoute(
             route = "settings-activity",
             activityKey = "settings",
@@ -172,5 +175,19 @@ class NotmidAppRouterTest {
         router.consumeActivityRouteRequest(requestId)
 
         assertNull(router.pendingActivityRouteRequest)
+    }
+
+    private fun createRouter() = createNotmidAppRouter(
+        routeGraph = routeGraph,
+        routeEventHandlers = testRouteEventHandlers(),
+    )
+
+    private fun testRouteEventHandlers(): List<RouteEventHandler> {
+        return listOf(
+            NotmidRouteEventHandler(routeGraph),
+            FeedRouteEventHandler(routeGraph),
+            MapRouteEventHandler(routeGraph),
+            InboxRouteEventHandler(routeGraph),
+        )
     }
 }

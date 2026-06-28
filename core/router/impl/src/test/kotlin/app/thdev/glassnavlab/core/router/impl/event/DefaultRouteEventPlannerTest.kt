@@ -47,4 +47,13 @@ class DefaultRouteEventPlannerTest {
 
         assertNull(plan)
     }
+
+    @Test
+    fun returnsNullWhenNoHandlersAreRegistered() {
+        val planner = DefaultRouteEventPlanner(handlers = emptyList())
+
+        val plan = planner.planFor(TestRouteEvent("unknown"))
+
+        assertNull(plan)
+    }
 }
