@@ -99,7 +99,7 @@ Notmid에는 외부 Android 코드베이스 구조를 그대로 적용하지 않
 :feature:*:impl     Compose screen, ViewModel/state owner, feature-local UI
 :feature:*:assertions
                     feature 계약을 여러 테스트가 공유할 때만 추가
-:app                MainActivity, runtime config injection, product content wiring, concrete platform launch binding
+:app                MainActivity screen host, Hilt runtime config/repository/auth wiring, product content binding, concrete platform launch binding
 ```
 
 ## 적용 순서 요약

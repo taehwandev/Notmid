@@ -126,8 +126,9 @@ packages/api-client
   `/v1/inbox/threads/{threadId}/detail` JSON into `NotmidDestination` models
   behind `NotmidNetworkClient`. Inbox detail hydration maps thread messages and
   clip/place attachments into internal models before feature UI sees them.
-  `MainActivity` now selects static or API-backed content through
-  `NOTMID_CONTENT_SOURCE` and loads content through an explicit
+  App Hilt modules now select static or API-backed content through
+  `NOTMID_CONTENT_SOURCE`, provide the selected repository to
+  `NotmidAppViewModel`, and the ViewModel loads content through an explicit
   loading/error/ready state before rendering the app shell. Debug defaults to
   the deterministic fixture API at the Android emulator host URL, static
   remains an opt-in fallback, and release gates reject static content.
@@ -158,7 +159,10 @@ packages/api-client
   Android session is anonymous, the Google exchange includes that Firebase ID
   token so Firebase links the account. The app-layer Android Credential Manager
   provider obtains the Google ID token with the injected OAuth web client id.
-  Debug fake auth remains deterministic; release fake auth stays blocked.
+  App Hilt modules own the runtime auth-mode switch between local and
+  API-verified gateways; `MainActivity` does not construct auth gateways,
+  Firebase token providers, or network clients directly. Debug fake auth remains
+  deterministic; release fake auth stays blocked.
 - Web fake auth is local-only; production must explicitly choose firebase or
   disabled with `NEXT_PUBLIC_NOTMID_AUTH_PROVIDER`.
 - Production API config must use `NOTMID_DATA_BACKEND=postgres` with

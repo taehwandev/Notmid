@@ -150,6 +150,19 @@ Current web auth boundary:
   wiring for capture publish, chat send, typed API errors, and action-level
   refresh retry wiring without requiring real Firebase credentials.
 
+Current Android DI boundary:
+
+- App Hilt modules provide BuildConfig-backed runtime config, the product API
+  network client, the Firebase Identity Toolkit network client, repository
+  selection, Firebase token providers, and the `NotmidAuthGateway`.
+- `NotmidAppViewModel` is a Hilt ViewModel and receives repository/auth
+  contracts from DI. `MainActivity` must not manually construct
+  `OkHttpNotmidNetworkClient`, repositories, Firebase token providers, auth
+  gateways, or a `ViewModelProvider.Factory`.
+- The Android Credential Manager Google ID-token provider remains app-layer
+  because it needs Android context and public client id config; feature modules
+  consume only auth state/actions.
+
 ## Module Shape
 
 Use `api` and `impl` only where it creates a useful boundary:

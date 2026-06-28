@@ -35,10 +35,14 @@ TypeScript source.
 :app
   Android entry point, NotmidApplication, MainActivity, manifest/theme selection
   Hilt root with @HiltAndroidApp and @AndroidEntryPoint activity injection
-  runtime config injection and top-level product composition
-  top-level injected ActivityRouteLauncher
-  NotmidAppViewModel for top-level state, auth/write orchestration, and effects
-  Android Credential Manager Google ID-token provider for Firebase REST exchange
+  Hilt runtime modules for BuildConfig-backed config, network clients,
+  static/API repository selection, auth gateway selection, and dispatcher
+  bindings
+  top-level injected ActivityRouteLauncher and NotmidAppRouterFactory
+  @HiltViewModel NotmidAppViewModel for top-level state, auth/write
+  orchestration, and effects
+  Android Credential Manager Google ID-token provider for Firebase REST
+  exchange, provided through app DI
 
 :core:designsystem
   NotmidTheme, semantic color/type/spacing/shape/elevation tokens

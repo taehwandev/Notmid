@@ -279,7 +279,7 @@ First slice:
 Acceptance:
 
 - `MainActivity` is thinner and implements `Content()` instead of repeating Activity lifecycle plumbing.
-- `MainActivity` keeps runtime config, ViewModel creation, product screen mapping, and Activity launch handler selection.
+- Hilt modules keep runtime config, repository/auth/network selection, ViewModel creation, and Activity launch handler selection; `MainActivity` keeps product screen mapping and injected runtime coordinators.
 - `:core:base` helpers do not depend on feature impl modules, repositories, auth policy, runtime config, or feature Activity subclasses.
 - Product state remains in `NotmidAppViewModel` or explicit app coordinator, not in design-system/core helpers.
 - No broad behavior change is mixed with the extraction.

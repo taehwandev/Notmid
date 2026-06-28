@@ -2,28 +2,11 @@ package app.thdev.glassnavlab
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import app.thdev.glassnavlab.auth.AndroidCredentialManagerGoogleIdTokenProvider
-import app.thdev.glassnavlab.config.NotmidRuntimeConfig
-import app.thdev.glassnavlab.core.auth.notmid.ApiVerifiedNotmidAuthGateway
-import app.thdev.glassnavlab.core.auth.notmid.FirebaseAuthRestIdTokenProvider
-import app.thdev.glassnavlab.core.auth.notmid.FirebaseIdTokenProvider
-import app.thdev.glassnavlab.core.auth.notmid.LocalNotmidAuthGateway
-import app.thdev.glassnavlab.core.auth.notmid.UnavailableFirebaseIdTokenProvider
 import app.thdev.glassnavlab.core.base.activity.BaseActivity
-import app.thdev.glassnavlab.core.data.notmid.ApiNotmidContentRepository
-import app.thdev.glassnavlab.core.data.notmid.ApiNotmidProtectedWriteRepository
-import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
-import app.thdev.glassnavlab.core.data.notmid.NotmidContentRepositorySelector
-import app.thdev.glassnavlab.core.data.notmid.StaticNotmidContentRepository
-import app.thdev.glassnavlab.core.data.notmid.StaticNotmidProtectedWriteRepository
 import app.thdev.glassnavlab.core.designsystem.theme.notmidTheme
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
-import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
-import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.model.notmid.NotmidCapturePublishRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidCaptureVisibility
@@ -31,13 +14,13 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteDecision
 import app.thdev.glassnavlab.core.model.notmid.NotmidProfileSettingsUpdateRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidStartThreadRequest
-import app.thdev.glassnavlab.core.network.notmid.OkHttpNotmidNetworkClient
 import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLauncher
 import app.thdev.glassnavlab.feature.notmid.NotmidShellErrorScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellLoadingScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellScreen
 import app.thdev.glassnavlab.feature.notmid.api.destination.NotmidDestinationIds
 import app.thdev.glassnavlab.feature.notmid.api.event.NotmidRouteEvent
+import app.thdev.glassnavlab.feature.notmid.router.NotmidAppRouterFactory
 import app.thdev.glassnavlab.feature.notmid.router.notmidRouteStack
 import app.thdev.glassnavlab.feature.notmid.router.rememberNotmidAppRouter
 import dagger.hilt.android.AndroidEntryPoint
@@ -48,89 +31,14 @@ class MainActivity : BaseActivity() {
     @Inject
     lateinit var activityRouteLauncher: ActivityRouteLauncher
 
+    @Inject
+    lateinit var notmidAppRouterFactory: NotmidAppRouterFactory
+
     @Composable
     override fun Content() {
-        val notmidContentSource = NotmidRuntimeConfig.contentSource
-        val context = LocalContext.current
-        val applicationContext = context.applicationContext
-        val notmidNetworkClient = remember {
-            OkHttpNotmidNetworkClient(NotmidRuntimeConfig.apiConfig)
-        }
-        val notmidContentRepositorySelector = remember {
-            NotmidContentRepositorySelector(
-                staticRepositoryFactory = { StaticNotmidContentRepository() },
-                apiRepositoryFactory = {
-                    ApiNotmidContentRepository(notmidNetworkClient)
-                },
-            )
-        }
-        val notmidContentRepository = remember(
-            notmidContentSource,
-            notmidContentRepositorySelector,
-        ) {
-            notmidContentRepositorySelector.select(notmidContentSource)
-        }
-        val notmidProtectedWriteRepository = remember(
-            notmidContentSource,
-            notmidNetworkClient,
-        ) {
-            notmidProtectedWriteRepository(
-                source = notmidContentSource,
-                networkClient = notmidNetworkClient,
-            )
-        }
-        val firebaseIdTokenProvider = remember(applicationContext) {
-            val provider: FirebaseIdTokenProvider = if (
-                NotmidRuntimeConfig.firebaseAuthConfig.isConfigured
-            ) {
-                FirebaseAuthRestIdTokenProvider(
-                    client = OkHttpNotmidNetworkClient(
-                        NotmidRuntimeConfig.firebaseIdentityToolkitApiConfig,
-                    ),
-                    config = NotmidRuntimeConfig.firebaseAuthConfig,
-                    googleIdTokenProvider = AndroidCredentialManagerGoogleIdTokenProvider(
-                        context = applicationContext,
-                        serverClientId = NotmidRuntimeConfig.googleServerClientId,
-                    ),
-                )
-            } else {
-                UnavailableFirebaseIdTokenProvider()
-            }
-            provider
-        }
-        val notmidAuthGateway = remember(
-            notmidNetworkClient,
-            firebaseIdTokenProvider,
-        ) {
-            when (NotmidRuntimeConfig.authMode) {
-                NotmidAuthMode.Firebase -> ApiVerifiedNotmidAuthGateway(
-                    client = notmidNetworkClient,
-                    idTokenProvider = firebaseIdTokenProvider,
-                )
-
-                NotmidAuthMode.Fake,
-                NotmidAuthMode.Disabled,
-                -> LocalNotmidAuthGateway(mode = NotmidRuntimeConfig.authMode)
-            }
-        }
-        val notmidAppViewModelFactory = remember(
-            notmidContentSource,
-            notmidContentRepository,
-            notmidProtectedWriteRepository,
-            notmidAuthGateway,
-        ) {
-            NotmidAppViewModel.Factory(
-                contentSource = notmidContentSource,
-                contentRepository = notmidContentRepository,
-                protectedWriteRepository = notmidProtectedWriteRepository,
-                authGateway = notmidAuthGateway,
-            )
-        }
-        val notmidAppViewModel: NotmidAppViewModel = viewModel(
-            factory = notmidAppViewModelFactory,
-        )
+        val notmidAppViewModel: NotmidAppViewModel = viewModel()
         val appState by notmidAppViewModel.state.collectAsStateWithLifecycle()
-        val appRouter = rememberNotmidAppRouter()
+        val appRouter = rememberNotmidAppRouter(notmidAppRouterFactory)
 
         BaseAppRoot(
             router = appRouter,
@@ -282,16 +190,6 @@ class MainActivity : BaseActivity() {
                 }
             }
         }
-    }
-}
-
-private fun notmidProtectedWriteRepository(
-    source: NotmidContentSource,
-    networkClient: OkHttpNotmidNetworkClient,
-): NotmidProtectedWriteRepository {
-    return when (source) {
-        NotmidContentSource.Static -> StaticNotmidProtectedWriteRepository()
-        NotmidContentSource.Api -> ApiNotmidProtectedWriteRepository(networkClient)
     }
 }
 

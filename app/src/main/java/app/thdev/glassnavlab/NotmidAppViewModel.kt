@@ -1,15 +1,14 @@
 package app.thdev.glassnavlab
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import app.thdev.glassnavlab.di.IoDispatcher
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthGateway
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthIntent
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthResult
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthSignInRequest
 import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
-import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectDelegate
@@ -19,9 +18,9 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.model.notmid.ChannelNotmidActionDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidActionDelegate
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,18 +31,36 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URLEncoder
+import javax.inject.Inject
 
-internal class NotmidAppViewModel(
+@HiltViewModel
+internal class NotmidAppViewModel internal constructor(
     private val contentSource: NotmidContentSource,
-    contentRepository: NotmidContentRepository,
+    private val getDestinations: GetNotmidDestinationsUseCase,
     private val protectedWriteRepository: NotmidProtectedWriteRepository,
     private val authGateway: NotmidAuthGateway,
-    private val actionDelegate: NotmidActionDelegate<NotmidAppAction> =
-        ChannelNotmidActionDelegate(),
-    private val uiEffects: NoticeEffectDelegate = MutableNoticeEffectDelegate(),
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val actionDelegate: NotmidActionDelegate<NotmidAppAction>,
+    private val uiEffects: NoticeEffectDelegate,
+    @param:IoDispatcher
+    private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel(), NoticeEffectViewModel by uiEffects {
-    private val getDestinations = GetNotmidDestinationsUseCase(contentRepository)
+    @Inject
+    constructor(
+        contentSource: NotmidContentSource,
+        getDestinations: GetNotmidDestinationsUseCase,
+        protectedWriteRepository: NotmidProtectedWriteRepository,
+        authGateway: NotmidAuthGateway,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher,
+    ) : this(
+        contentSource = contentSource,
+        getDestinations = getDestinations,
+        protectedWriteRepository = protectedWriteRepository,
+        authGateway = authGateway,
+        actionDelegate = ChannelNotmidActionDelegate(),
+        uiEffects = MutableNoticeEffectDelegate(),
+        ioDispatcher = ioDispatcher,
+    )
+
     private val mutableState = MutableStateFlow(
         NotmidAppUiState(
             contentSource = contentSource,
@@ -341,31 +358,6 @@ internal class NotmidAppViewModel(
 
     private fun emitEffect(effect: NoticeEffect) {
         uiEffects.emit(effect)
-    }
-
-    class Factory(
-        private val contentSource: NotmidContentSource,
-        private val contentRepository: NotmidContentRepository,
-        private val protectedWriteRepository: NotmidProtectedWriteRepository,
-        private val authGateway: NotmidAuthGateway,
-        private val actionDelegate: NotmidActionDelegate<NotmidAppAction> =
-            ChannelNotmidActionDelegate(),
-        private val uiEffects: NoticeEffectDelegate = MutableNoticeEffectDelegate(),
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(NotmidAppViewModel::class.java)) {
-                return NotmidAppViewModel(
-                    contentSource = contentSource,
-                    contentRepository = contentRepository,
-                    protectedWriteRepository = protectedWriteRepository,
-                    authGateway = authGateway,
-                    actionDelegate = actionDelegate,
-                    uiEffects = uiEffects,
-                ) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
-        }
     }
 
     override fun onCleared() {

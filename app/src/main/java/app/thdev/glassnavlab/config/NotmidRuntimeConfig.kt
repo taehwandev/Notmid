@@ -6,18 +6,15 @@ import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.network.notmid.NotmidApiConfig
 
-object NotmidRuntimeConfig {
-    val apiBaseUrl: String = BuildConfig.NOTMID_API_BASE_URL
-    val authMode: NotmidAuthMode = BuildConfig.NOTMID_AUTH_MODE.toNotmidAuthMode()
-    val contentSource: NotmidContentSource =
-        NotmidContentSource.from(BuildConfig.NOTMID_CONTENT_SOURCE)
-    val mapProvider: String = BuildConfig.NOTMID_MAP_PROVIDER
+data class NotmidRuntimeConfig(
+    val apiBaseUrl: String,
+    val authMode: NotmidAuthMode,
+    val contentSource: NotmidContentSource,
+    val mapProvider: String,
+    val firebaseAuthConfig: FirebaseAuthRestConfig,
+    val googleServerClientId: String,
+) {
     val apiConfig: NotmidApiConfig = NotmidApiConfig(apiBaseUrl)
-    val firebaseAuthConfig: FirebaseAuthRestConfig = FirebaseAuthRestConfig(
-        apiKey = BuildConfig.NOTMID_FIREBASE_API_KEY,
-        requestUri = BuildConfig.NOTMID_FIREBASE_AUTH_REQUEST_URI,
-    )
-    val googleServerClientId: String = BuildConfig.NOTMID_GOOGLE_SERVER_CLIENT_ID
     val firebaseIdentityToolkitApiConfig: NotmidApiConfig =
         NotmidApiConfig("https://identitytoolkit.googleapis.com")
 
@@ -29,6 +26,20 @@ object NotmidRuntimeConfig {
 
     val hasGoogleServerClientId: Boolean
         get() = googleServerClientId.isNotBlank()
+}
+
+fun notmidRuntimeConfigFromBuildConfig(): NotmidRuntimeConfig {
+    return NotmidRuntimeConfig(
+        apiBaseUrl = BuildConfig.NOTMID_API_BASE_URL,
+        authMode = BuildConfig.NOTMID_AUTH_MODE.toNotmidAuthMode(),
+        contentSource = NotmidContentSource.from(BuildConfig.NOTMID_CONTENT_SOURCE),
+        mapProvider = BuildConfig.NOTMID_MAP_PROVIDER,
+        firebaseAuthConfig = FirebaseAuthRestConfig(
+            apiKey = BuildConfig.NOTMID_FIREBASE_API_KEY,
+            requestUri = BuildConfig.NOTMID_FIREBASE_AUTH_REQUEST_URI,
+        ),
+        googleServerClientId = BuildConfig.NOTMID_GOOGLE_SERVER_CLIENT_ID,
+    )
 }
 
 private fun String.toNotmidAuthMode(): NotmidAuthMode {

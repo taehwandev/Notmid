@@ -3,6 +3,7 @@ package app.thdev.glassnavlab
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthGateway
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthResult
 import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
+import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
@@ -294,6 +295,7 @@ class NotmidAppViewModelTest {
 
     private fun newViewModel(
         contentRepository: NotmidContentRepository = FakeContentRepository(listOf(viewModelTestDestination)),
+        getDestinations: GetNotmidDestinationsUseCase = GetNotmidDestinationsUseCase(contentRepository),
         protectedWriteRepository: NotmidProtectedWriteRepository = FakeProtectedWriteRepository(),
         authGateway: NotmidAuthGateway = FakeAuthGateway(signedInAuthState),
         actionDelegate: NotmidActionDelegate<NotmidAppAction> = ChannelNotmidActionDelegate(),
@@ -301,7 +303,7 @@ class NotmidAppViewModelTest {
     ): NotmidAppViewModel {
         return NotmidAppViewModel(
             contentSource = NotmidContentSource.Static,
-            contentRepository = contentRepository,
+            getDestinations = getDestinations,
             protectedWriteRepository = protectedWriteRepository,
             authGateway = authGateway,
             actionDelegate = actionDelegate,
