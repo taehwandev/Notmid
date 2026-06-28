@@ -10,12 +10,16 @@ import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectDelegate
 import app.thdev.glassnavlab.core.notice.api.effect.MutableNoticeEffectDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
+import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
 import app.thdev.glassnavlab.core.model.notmid.ChannelNotmidActionDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidActionDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteDecision
 import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteStatus
+import app.thdev.glassnavlab.core.model.notmid.NotmidClipSaveReceipt
+import app.thdev.glassnavlab.core.model.notmid.NotmidDestination
 import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidStartThreadRequest
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
@@ -221,6 +225,47 @@ class NotmidAppViewModelTest {
         }
 
         assertNull(replayedEffect)
+    }
+
+    @Test
+    fun contentCancellationIsNotMappedToErrorState() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = newViewModel(
+            contentRepository = object : NotmidContentRepository {
+                override suspend fun destinations(): List<NotmidDestination> {
+                    throw CancellationException("content load cancelled")
+                }
+            },
+        )
+
+        advanceUntilIdle()
+
+        assertEquals(NotmidContentUiState.Loading, viewModel.state.value.content)
+    }
+
+    @Test
+    fun protectedWriteCancellationIsNotMappedToNotice() = runTest(
+        mainDispatcherRule.dispatcher,
+    ) {
+        val fallbackRepository = FakeProtectedWriteRepository()
+        val protectedWriteRepository = object : NotmidProtectedWriteRepository by fallbackRepository {
+            override suspend fun saveClip(
+                authState: NotmidAuthState,
+                clipId: String,
+            ): NotmidClipSaveReceipt {
+                throw CancellationException("save clip cancelled")
+            }
+        }
+        val viewModel = newViewModel(protectedWriteRepository = protectedWriteRepository)
+        val effects = mutableListOf<NoticeEffect>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.take(1).toList(effects)
+        }
+
+        viewModel.onAction(NotmidAppAction.SaveClip("clip-1"))
+        advanceUntilIdle()
+
+        assertNull(viewModel.state.value.protectedActionNotice)
+        assertEquals(emptyList<NoticeEffect>(), effects)
     }
 
     @Test

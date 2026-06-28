@@ -20,6 +20,7 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.model.notmid.ChannelNotmidActionDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidActionDelegate
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,7 +70,7 @@ internal class NotmidAppViewModel(
         }
 
         viewModelScope.launch {
-            runCatching {
+            runCatchingPreservingCancellation {
                 actionDelegate.dispatch(action)
             }
         }
@@ -130,7 +131,7 @@ internal class NotmidAppViewModel(
             }
 
             val contentState = withContext(ioDispatcher) {
-                runCatching {
+                runCatchingPreservingCancellation {
                     getDestinations()
                 }.fold(
                     onSuccess = { destinations ->
@@ -168,7 +169,7 @@ internal class NotmidAppViewModel(
             }
 
             val signInResult = withContext(ioDispatcher) {
-                runCatching {
+                runCatchingPreservingCancellation {
                     authGateway.signIn(
                         NotmidAuthSignInRequest(
                             provider = provider,
@@ -240,7 +241,7 @@ internal class NotmidAppViewModel(
                 content
             }
             var followUpEffect: NoticeEffect? = null
-            val notice = runCatching {
+            val notice = runCatchingPreservingCancellation {
                 when (action) {
                     is PendingNotmidProtectedAction.PublishCapture -> {
                         withContext(ioDispatcher) {
@@ -379,4 +380,16 @@ private fun notmidChatThreadDeepLink(threadId: String): String {
 
 private fun String.urlPathSegment(): String {
     return URLEncoder.encode(this, Charsets.UTF_8.name()).replace("+", "%20")
+}
+
+private suspend fun <T> runCatchingPreservingCancellation(
+    block: suspend () -> T,
+): Result<T> {
+    return try {
+        Result.success(block())
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (throwable: Throwable) {
+        Result.failure(throwable)
+    }
 }
