@@ -4,9 +4,9 @@
 
 notmid should use a production-shaped router, not ad-hoc string navigation.
 
-The design follows the useful part of a reference Android router idea:
+The design follows a generalized Android router boundary:
 
-- feature API modules own their journey/route contracts
+- feature API modules own their route contracts
 - app-level router gathers those contracts
 - deep links resolve through registered specs
 - navigation is testable without feature implementation modules

@@ -1,5 +1,9 @@
 # Design System
 
+This page records Notmid design tokens and exported component names. Reusable
+Compose UI architecture and general frontend rules live in AgentPlayBook and
+project skills.
+
 ## Core Rule
 
 Feature and app modules should use `Notmid*` components, not raw Material3 components.

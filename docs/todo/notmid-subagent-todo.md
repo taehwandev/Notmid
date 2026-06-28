@@ -29,7 +29,7 @@ Reads:
 
 - `llm-wiki/notmid-overview.md`
 - `llm-wiki/module-map.md`
-- `llm-wiki/implementation-checklist.md`
+- AgentPlayBook Android/product guidance selected by the route manifest
 - `docs/specs/notmid-screen-detail-plan.md`
 - Current `git status --short`
 

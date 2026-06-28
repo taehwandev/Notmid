@@ -38,7 +38,6 @@ packages/
 
 docs/
 llm-wiki/
-.agents/skills/
 ```
 
 ## Ownership

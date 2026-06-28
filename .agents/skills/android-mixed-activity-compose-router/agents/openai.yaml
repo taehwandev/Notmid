@@ -1,4 +1,0 @@
-interface:
-  display_name: "Android Mixed Router"
-  short_description: "Unify Compose, Activity, deep link routing"
-  default_prompt: "Use $android-mixed-activity-compose-router to design or review a route contract that hides whether destinations are Compose-backed, Activity-backed, deep-linked, or Nav3-ready."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "notmid Android Stewardship"
-  short_description: "Guide Android modules, build logic, and product UI layers"
-  default_prompt: "Use $glassnavlab-android-stewardship to plan and verify a notmid modularization or design-system change."

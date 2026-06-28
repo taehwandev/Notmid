@@ -1,5 +1,9 @@
 # Platform Backend
 
+This page records Notmid backend, web, API, auth, and Android integration facts.
+Reusable module-structure, ViewModel, data-flow, notice, and delegate rules live
+in AgentPlayBook.
+
 ## Direction
 
 notmid is a server-first product with Firebase as auxiliary infrastructure.
@@ -66,15 +70,6 @@ packages/api-client
 - Do not make Android depend on TypeScript packages directly.
 - Keep shared behavior as URL/API docs and generated contracts later.
 - Web and Android should use the same canonical URL shapes.
-- Split TypeScript contract packages by caller-facing role as they grow:
-  route/path helpers, DTO or schema shapes, fixture data, parity resolvers, and
-  API-client transport helpers should not be hidden behind one broad barrel.
-- Keep `apps/api` route handlers, request validation, product policy,
-  repository ports, repository adapters, and error mapping in separate owners
-  when callers or tests need them independently.
-- Keep `apps/web` route rendering, server actions, auth/session cookie handling,
-  API-client calls, and feature UI contracts separate. Client-visible code must
-  not import server-only runtime helpers through a broad shared export.
 - API owns product write policy and token verification.
 - API mutating routes must reject malformed JSON and non-object bodies with a
   stable `NotmidErrorResponse`; invalid bodies should not be treated as empty
@@ -123,9 +118,8 @@ packages/api-client
 - Android `:core:network:api` owns API paths/request/response contracts. The
   suspend `NotmidNetworkClient.execute` returns `NotmidNetworkResponse` for
   successful client execution and throws `NotmidNetworkException` only for
-  transport, timeout, or invalid-request failures. Do not wrap normal suspend
-  network calls in a shared success/failure sealed response. `:core:network:impl`
-  uses OkHttp and covers GET/POST/PATCH, headers, response bodies, and invalid
+  transport, timeout, or invalid-request failures. `:core:network:impl` uses
+  OkHttp and covers GET/POST/PATCH, headers, response bodies, and invalid
   request exceptions with JVM tests.
 - Android `:core:data` has `ApiNotmidContentRepository`, which maps `/v1/feed`,
   `/v1/map`, `/v1/capture/draft`, `/v1/inbox/threads`, and
@@ -154,28 +148,6 @@ packages/api-client
   composer disabled from `thread.chatAccess.canSendMessage`. Feature UI never
   decides whether two users are friends; it only renders `chatAccess` and emits
   accept/reject callbacks.
-- Android notice presentation is a side effect, not feature-local string
-  plumbing. `:core:notice:api` owns `NoticeRequest`, `NoticeEffect`, and
-  the notice delegate contract (`Toast`, `Snackbar`, `Alert`, `Inline`,
-  `FullPage`, optional shared action/deep link). `:core:runtime` owns
-  lifecycle-aware effect collection and rendering through `NoticeHost`.
-  `:core:designsystem` owns visual primitives such as `NotmidSnackbarHost`.
-  `NotmidAppViewModel` exposes persistent app state as
-  `StateFlow<NotmidAppUiState>` and one-shot toast/alert effects as
-  `SharedFlow<NoticeEffect>` with `replay = 0` through the injected
-  `:core:notice:api` `NoticeEffectDelegate`. `MainActivity` collects state with
-  `collectAsStateWithLifecycle`, while `:core:runtime` collects effects
-  with `LifecycleStartEffect`, so stopped UI does not receive stale toast/alert
-  effects when it resumes. `:app` maps typed repository/auth failures into these
-  effects after updating stable screen state.
-- Android ViewModels should keep reusable capabilities compositional. AndroidX
-  still requires `ViewModel` inheritance, but UI effect emission should be an
-  injected delegate rather than direct implementation inheritance. Apply the
-  same rule to action processing: app-level UI events enter through
-  `onAction(action)`, and the injected `:core:model` `NotmidActionDelegate`
-  owns the channel-backed `Flow<NotmidAppAction>` when an ordered reducer
-  boundary is useful. Keep feature UI unaware of the action stream
-  implementation.
 - Android `:core:auth:impl` has an API-verified Firebase auth gateway. It asks a
   Firebase ID-token provider for anonymous or Google tokens, calls
   `GET /v1/auth/status` with `Authorization: Bearer <id-token>`, and opens an
@@ -225,11 +197,8 @@ API route/input/auth/rate-limit failure
   messages are normal content-read data, not write effects; a failed detail
   read raises the same typed content exception path and the ViewModel decides
   the visible app-shell error state. Android protected writes throw
-  `NotmidProtectedWriteException`; `NotmidAppViewModel` catches it, updates
-  inline notice state when needed, and emits
-  `NoticeEffect.ShowNotice` for toast/alert interactions. If the server
-  later sends presentation hints, the data/app boundary should map them into
-  `NoticeRequest` instead of exposing raw server envelopes to feature screens.
+  `NotmidProtectedWriteException`; `NotmidAppViewModel` catches it and keeps
+  feature screens from seeing raw API errors or envelopes.
 - Retries must be explicit. Rate-limited responses use `retry-after`; protected
   web write refresh retry is limited to one session refresh; mutating writes
   should not be retried automatically unless the API path is idempotent or the

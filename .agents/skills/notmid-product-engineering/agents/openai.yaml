@@ -1,4 +1,0 @@
-interface:
-  display_name: "notmid Product Engineering"
-  short_description: "Build notmid features, routes, and design-system UI"
-  default_prompt: "Use $notmid-product-engineering to implement a notmid feature, route, deep link, or design-system change."

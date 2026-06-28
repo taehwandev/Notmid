@@ -3,12 +3,95 @@ project: notmid
 status: active
 ---
 
+<!-- BEGIN MANAGED AGENTPLAYBOOK ROUTING -->
+## AgentPlaybook Active Routing
+
+This managed block is the active shared AgentPlaybook workflow link for this
+repository. Keep repo-local instructions in this file as the source of truth for
+project paths, commands, domain rules, and product policy. If an older
+AgentPlaybook section appears elsewhere in this file, this managed block wins
+for shared workflow routing while repo-specific rules still win for local facts.
+
+Resolve the shared root before running shared scripts:
+
+```bash
+AGENTPLAYBOOK_ROOT="${AGENTPLAYBOOK_HOME:-$HOME/Documents/KeyFlowVault/AgentPlaybook}"
+```
+
+Shared entrypoints:
+
+```text
+${AGENTPLAYBOOK_ROOT}/AGENTS.md
+${AGENTPLAYBOOK_ROOT}/index.md
+${AGENTPLAYBOOK_ROOT}/scripts/agent-entry.py
+${AGENTPLAYBOOK_ROOT}/scripts/project-discover.py
+${AGENTPLAYBOOK_ROOT}/scripts/agent-hook.py
+${AGENTPLAYBOOK_ROOT}/scripts/workflow.py
+${AGENTPLAYBOOK_ROOT}/scripts/agent-preflight.py
+${AGENTPLAYBOOK_ROOT}/scripts/agent-finish-check.py
+```
+
+Before project work, read repo-local guidance first, then use AgentPlaybook only
+to select the smallest relevant shared cards. Keep shared workflow and skill
+guidance in AgentPlaybook; do not create repo-local skill documents merely to
+mirror shared behavior. Keep repo-local skills, workflows, wiki pages, or
+runbooks only when they contain product-specific facts, commands, domain
+policy, or verification that cannot be shared safely. Do not copy, vendor, or download a
+second AgentPlaybook root unless the user explicitly approves after seeing the
+existing root path. Do not commit personal absolute AgentPlaybook paths; use
+`${AGENTPLAYBOOK_HOME}` for shared local installs or a repo-pinned root only
+when the repo intentionally owns one.
+
+For every multi-step task, run the start hook before selecting shared docs,
+editing, reviewing, committing, or reporting completion:
+
+```bash
+python3 "${AGENTPLAYBOOK_ROOT}/scripts/agent-hook.py" start --project "$(pwd)" --rules "${AGENTPLAYBOOK_ROOT}" --command <command> --request "<USER_REQUEST>"
+```
+
+Use the returned route manifest as the task checklist. Run the review hook after
+the scoped diff is ready, and run the finish hook before final report, commit,
+release, or handoff. Pass evidence for every required route gate. Missing route,
+preflight, review, finish, or gate evidence is non-compliant even when the final
+files look correct.
+
+Request intake is mandatory for requirement analysis and modifications, even
+when the task does not create a PRD. Before editing, present a short alignment
+checkpoint to the user when assumptions affect behavior, scope, safety, cost,
+data, or external state: what is clear, what is uncertain or different between
+user intent and agent interpretation, whether PRD/ARD is being created or
+skipped, and the exact question or assumption that unblocks work. Skipping a PRD
+is not permission to skip this checkpoint.
+
+If the route, repo workflow, or user asks for Grill-Me, use the actual Grill-Me
+skill/service/session as the question drill. Do not replace Grill-Me with ad hoc
+internal questions. Record the Grill-Me or alignment evidence in the finish
+check when the route requires it.
+
+For code work, decide whether to use subagents only after the target project,
+owned files, boundaries, forbidden files, and verification commands are clear.
+Use subagents for separable research, review, or implementation streams; keep
+small single-boundary changes in the main agent. Record the split decision in
+the route gates when requested.
+
+If a required gate or hook fails, do not finalize. Return to the first missed
+gate only and retry that same scope once. If it fails again, run the shared
+retrospective-learning workflow and record the durable lesson before handoff or
+another attempt.
+
+VibeGuard is required before documentation, code, configuration, dependency,
+data, deployment, or credential changes and again before finishing. Run it with
+the selected AgentPlaybook root as the rule source. Do not run VibeGuard `setup`
+or `update` blindly; preserve existing guardrails unless the user explicitly
+chooses a refresh/setup mode. Human-visible gate status must use only
+`🐱🟢 SUCCESS` or `🐱🔴 FAIL`.
+<!-- END MANAGED AGENTPLAYBOOK ROUTING -->
+
 # notmid Agent Instructions
 
 This file is the thin repo-local entrypoint for agents. Keep common operating,
 security, architecture, UI, and verification rules in AgentPlaybook,
-`VIBEGUARD.md`, repo skills, `llm-wiki`, or `docs/specs` instead of duplicating
-them here.
+`VIBEGUARD.md`, `llm-wiki`, or `docs/specs` instead of duplicating them here.
 
 Shared AgentPlaybook root:
 
@@ -21,8 +104,7 @@ ${AGENTPLAYBOOK_HOME:-$HOME/Documents/KeyFlowVault/AgentPlaybook}
 1. System and developer instructions from the active agent runtime.
 2. The user's current request.
 3. This repo-local `AGENTS.md`.
-4. Repo-local skills and memory in `.agents/skills`, `llm-wiki`, and
-   `docs/specs`.
+4. Repo-local memory in `llm-wiki` and `docs/specs`.
 5. Shared AgentPlaybook documents selected by the workflow router.
 
 If rules conflict, use the more specific repo-local rule unless it weakens
@@ -31,56 +113,45 @@ security, data handling, or verification.
 ## Required Start
 
 1. Run `git status --short`.
-2. For documentation, code, configuration, dependency, data, deployment, or
+2. For multi-step work, follow the active AgentPlaybook routing block above:
+   run `agent-hook.py start`, read the routed docs, then run the review and
+   finish hooks with gate evidence.
+3. For documentation, code, configuration, dependency, data, deployment, or
    credential changes, follow `VIBEGUARD.md` before editing and again before
    finishing.
-3. For multi-step work, generate a route manifest:
+4. Use the route manifest to select the smallest relevant shared AgentPlaybook
+   cards. Keep Notmid-specific facts in `llm-wiki` or `docs/specs`.
+5. Do not load the whole shared library by default.
 
-   ```bash
-   AGENTPLAYBOOK_ROOT="${AGENTPLAYBOOK_HOME:-$HOME/Documents/KeyFlowVault/AgentPlaybook}"
-   python3 "$AGENTPLAYBOOK_ROOT/scripts/workflow.py" route <command> --request "<user request>" [--platform <platform>] [--concern <concern>]
-   python3 "$AGENTPLAYBOOK_ROOT/scripts/workflow.py" validate
-   ```
+## Shared Skill Guidance
 
-4. When the wrappers exist, run preflight before editing:
+Notmid does not keep repository-local skill documents. Shared agent skill and
+architecture guidance lives in AgentPlaybook. Use the route manifest to select
+the smallest relevant shared cards, especially:
 
-   ```bash
-   AGENTPLAYBOOK_ROOT="${AGENTPLAYBOOK_HOME:-$HOME/Documents/KeyFlowVault/AgentPlaybook}"
-   python3 "$AGENTPLAYBOOK_ROOT/scripts/agent-preflight.py" --project "$(pwd)" --rules "$AGENTPLAYBOOK_ROOT" --command <command> --request "<user request>" [--platform <platform>] [--concern <concern>]
-   ```
+```text
+common/agent-operating-skill.md
+common/agent-skill-card-anatomy.md
+platforms/android/android-architecture.md
+platforms/android/android-module-structure.md
+platforms/android/android-viewmodel-state.md
+platforms/android/android-state-data.md
+platforms/android/android-compose-ui.md
+platforms/android/android-security.md
+platforms/android/android-review.md
+platforms/android/android-external-skill-source-coverage.md
+```
 
-5. Read the route's documents in order, follow its gates, and stop if `missing`
-   is not empty.
-6. Before final reports, commits, releases, or handoffs, run
-   `agent-finish-check.py` with evidence for every required route gate. Missing
-   route, preflight, finish-check, or gate evidence is non-compliant.
-7. In human-visible reports, use only two gate signals:
-   `🐱🟢 SUCCESS` and `🐱🔴 FAIL`. Do not report a third state.
-
-Do not load the whole shared library by default.
-
-## Local Skill Routing
-
-Use the matching internal skill for project-specific rules:
-
-- Product features, Compose UI, design-system components, feature `api` /
-  `impl`, routes, deep links, fake data, web/API contracts, Firebase-safe
-  open-source setup: `.agents/skills/notmid-product-engineering/SKILL.md`
-- Android architecture, Gradle/build-logic, module boundaries, shared UI
-  placement, data/domain layers, fake services, verification strategy:
-  `.agents/skills/glassnavlab-android-stewardship/SKILL.md`
-- Liquid Glass navigation, AGSL, backdrop capture, gestures, screenshots,
-  release polish: `.agents/skills/android-liquid-glass-compose/SKILL.md`
-
-The skill owns its detailed rules. Add or update skill guidance there, not in
-this file.
+Keep Notmid-specific product facts, module inventory, route behavior, backend
+facts, Firebase/open-source policy, and implementation plans in `llm-wiki` or
+`docs/specs`. Do not recreate `.agents/skills` in this repository unless the
+user explicitly asks to reintroduce repo-local skill discovery.
 
 ## Repo Knowledge Pointers
 
 Use these repo-local documents only when relevant to the task:
 
 ```text
-llm-wiki/implementation-checklist.md
 llm-wiki/notmid-overview.md
 llm-wiki/module-map.md
 llm-wiki/design-system.md

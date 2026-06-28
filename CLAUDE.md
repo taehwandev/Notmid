@@ -3,6 +3,16 @@ project: notmid
 status: active
 ---
 
+<!-- BEGIN MANAGED AGENTPLAYBOOK POINTER -->
+## AgentPlaybook Pointer
+
+Read this repository's `AGENTS.md` first. It contains the active shared
+AgentPlaybook routing block and repo-local priority rules. Keep this file thin:
+only runtime-specific notes should live here, and shared workflow or skill
+guidance must route through `AGENTS.md`.
+
+<!-- END MANAGED AGENTPLAYBOOK POINTER -->
+
 # Claude Instructions
 
 Claude should treat `AGENTS.md` as the repo-local source of truth.
