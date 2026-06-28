@@ -1,5 +1,5 @@
 plugins {
-    id("glassnavlab.android.library")
+    id("glassnavlab.android.library.compose")
 }
 
 android {
@@ -9,4 +9,6 @@ android {
 dependencies {
     implementation(project(":core:runtime"))
     implementation(project(":feature:webview:api"))
+
+    implementation(libs.androidx.activity.compose)
 }

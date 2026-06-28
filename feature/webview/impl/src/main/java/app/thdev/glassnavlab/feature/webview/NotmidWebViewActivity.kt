@@ -1,22 +1,14 @@
 package app.thdev.glassnavlab.feature.webview
 
-import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
-import android.view.ViewGroup
-import android.webkit.WebChromeClient
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import app.thdev.glassnavlab.feature.webview.api.route.WebViewMode
 import app.thdev.glassnavlab.feature.webview.api.route.WebViewRoute
 
-class NotmidWebViewActivity : Activity() {
-    private var webView: WebView? = null
-
-    @SuppressLint("SetJavaScriptEnabled")
+class NotmidWebViewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -26,42 +18,9 @@ class NotmidWebViewActivity : Activity() {
         }
 
         title = route.title.orEmpty()
-        webView = WebView(this).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-            )
-            setBackgroundColor(Color.WHITE)
-            settings.javaScriptEnabled = route.javaScriptEnabled
-            settings.domStorageEnabled = true
-            settings.mediaPlaybackRequiresUserGesture = route.mode != WebViewMode.Auth
-            webViewClient = WebViewClient()
-            webChromeClient = WebChromeClient()
-            loadUrl(route.url)
+        setContent {
+            NotmidWebViewRouteContent(route = route)
         }
-        setContentView(webView)
-    }
-
-    @Suppress("DEPRECATION")
-    @Deprecated("Deprecated in Android framework; still needed for Activity WebView history.")
-    override fun onBackPressed() {
-        val currentWebView = webView
-        if (currentWebView?.canGoBack() == true) {
-            currentWebView.goBack()
-        } else {
-            super.onBackPressed()
-        }
-    }
-
-    override fun onDestroy() {
-        webView?.run {
-            stopLoading()
-            webChromeClient = null
-            webViewClient = WebViewClient()
-            destroy()
-        }
-        webView = null
-        super.onDestroy()
     }
 
     companion object {
