@@ -8,5 +8,8 @@
   },
   "update": {
     "checkIntervalDays": 7
+  },
+  "cost": {
+    "acknowledgedPaidDependencies": []
   }
 }
