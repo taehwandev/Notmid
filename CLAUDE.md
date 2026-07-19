@@ -3,15 +3,15 @@ project: notmid
 status: active
 ---
 
-<!-- BEGIN MANAGED AGENTPLAYBOOK POINTER -->
-## AgentPlaybook Pointer
+<!-- BEGIN MANAGED TAO AGENT OS POINTER -->
+## Tao Agent OS Pointer
 
 Read this repository's `AGENTS.md` first. It contains the active shared
-AgentPlaybook routing block and repo-local priority rules. Keep this file thin:
+Tao Agent OS routing block and repo-local priority rules. Keep this file thin:
 only runtime-specific notes should live here, and shared workflow or skill
 guidance must route through `AGENTS.md`.
 
-<!-- END MANAGED AGENTPLAYBOOK POINTER -->
+<!-- END MANAGED TAO AGENT OS POINTER -->
 
 # Claude Instructions
 
@@ -22,7 +22,7 @@ Read in order:
 ```text
 AGENTS.md
 VIBEGUARD.md
-${AGENTPLAYBOOK_HOME:-$HOME/Documents/KeyFlowVault/AgentPlaybook}/AGENTS.md
+${TAO_HOME:-$HOME/git/tao-agent-os}/AGENTS.md
 ```
 
 Do not duplicate routing, VibeGuard, security, architecture, or verification

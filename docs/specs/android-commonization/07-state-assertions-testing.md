@@ -140,7 +140,7 @@ If the feature already emits route events through `RouteEventSink`, do not dupli
 
 ## Channel / SharedFlow / StateFlow / suspend 기준
 
-공통 primitive 선택 기준은 AgentPlayBook
+공통 primitive 선택 기준은 Tao Agent OS
 `platforms/android/android-viewmodel-state.md`의 `Stream Primitive Selection`을
 따른다. Notmid tests는 그 기준을 반복하지 않고 현재 구현 매핑을 검증한다.
 

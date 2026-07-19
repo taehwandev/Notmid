@@ -258,7 +258,7 @@ With a registry:
 
 ## Current Route Event Wiring
 
-Shared guidance for scalable route/event registration lives in AgentPlayBook
+Shared guidance for scalable route/event registration lives in Tao Agent OS
 Android architecture and module-structure cards. Notmid's current wiring follows
 that shared rule:
 

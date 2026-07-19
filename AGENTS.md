@@ -3,50 +3,50 @@ project: notmid
 status: active
 ---
 
-<!-- BEGIN MANAGED AGENTPLAYBOOK ROUTING -->
-## AgentPlaybook Active Routing
+<!-- BEGIN MANAGED TAO AGENT OS ROUTING -->
+## Tao Agent OS Active Routing
 
-This managed block is the active shared AgentPlaybook workflow link for this
+This managed block is the active shared Tao Agent OS workflow link for this
 repository. Keep repo-local instructions in this file as the source of truth for
 project paths, commands, domain rules, and product policy. If another
-AgentPlaybook section appears elsewhere, this managed block wins for shared
+Tao Agent OS section appears elsewhere, this managed block wins for shared
 workflow routing while repo-specific rules still win for local facts.
 
-Use the existing shared AgentPlaybook root. In committed repo-local files, keep
-the reference portable: set `AGENTPLAYBOOK_HOME` in the local shell/runtime, or
-use a repo-pinned `.agents/AgentPlaybook` only when this repo intentionally owns
-one. Do not clone, vendor, download, or commit a second AgentPlaybook root unless
+Use the existing shared Tao Agent OS root. In committed repo-local files, keep
+the reference portable: set `TAO_HOME` in the local shell/runtime, or
+use a repo-pinned `.agents/tao-agent-os` only when this repo intentionally owns
+one. Do not clone, vendor, download, or commit a second Tao Agent OS root unless
 the user explicitly approves after seeing the existing root path.
 
 Shared entrypoints:
 
 ```text
-${AGENTPLAYBOOK_HOME}/AGENTS.md
-${AGENTPLAYBOOK_HOME}/index.md
-${AGENTPLAYBOOK_HOME}/scripts/agent-entry.py
-${AGENTPLAYBOOK_HOME}/scripts/project-discover.py
-${AGENTPLAYBOOK_HOME}/scripts/agent-hook.py
-${AGENTPLAYBOOK_HOME}/scripts/workflow.py
-${AGENTPLAYBOOK_HOME}/scripts/agent-preflight.py
-${AGENTPLAYBOOK_HOME}/scripts/agent-finish-check.py
+${TAO_HOME}/AGENTS.md
+${TAO_HOME}/index.md
+${TAO_HOME}/scripts/agent-entry.py
+${TAO_HOME}/scripts/project-discover.py
+${TAO_HOME}/scripts/agent-hook.py
+${TAO_HOME}/scripts/workflow.py
+${TAO_HOME}/scripts/agent-preflight.py
+${TAO_HOME}/scripts/agent-finish-check.py
 ```
 
-Before project work, read repo-local guidance first, then use AgentPlaybook only
+Before project work, read repo-local guidance first, then use Tao Agent OS only
 to select the smallest relevant shared cards. Keep shared workflow and skill
-guidance in AgentPlaybook; do not create repo-local skill documents merely to
+guidance in Tao Agent OS; do not create repo-local skill documents merely to
 mirror shared behavior. Keep repo-local skills, workflows, wiki pages, or
 runbooks only when they contain product-specific facts, commands, domain policy,
 or verification that cannot be shared safely.
 
 For every multi-step task, run the start hook before selecting shared docs,
 editing, reviewing, committing, or reporting completion. When executing wrapper
-commands from an agent runtime, resolve `AGENTPLAYBOOK_HOME` to an absolute path
+commands from an agent runtime, resolve `TAO_HOME` to an absolute path
 first and use that absolute script path in the command. Do not leave `$HOME`,
-`${HOME}`, `~`, `$(pwd)`-based script paths, or relative AgentPlaybook paths in
+`${HOME}`, `~`, `$(pwd)`-based script paths, or relative Tao Agent OS paths in
 commands that may be persisted as permission rules.
 
 ```bash
-python3 /absolute/path/to/AgentPlaybook/scripts/agent-hook.py start --project "$(pwd)" --rules /absolute/path/to/AgentPlaybook --command <command> --request "<USER_REQUEST>"
+python3 /absolute/path/to/tao-agent-os/scripts/agent-hook.py start --project "$(pwd)" --rules /absolute/path/to/tao-agent-os --command <command> --request "<USER_REQUEST>"
 ```
 
 Use the returned route manifest as the task checklist. If the route includes
@@ -95,21 +95,21 @@ another attempt.
 
 VibeGuard is required before documentation, code, configuration, dependency,
 data, deployment, or credential changes and again before finishing. Run it with
-the selected AgentPlaybook root as the rule source. Do not run VibeGuard `setup`
+the selected Tao Agent OS root as the rule source. Do not run VibeGuard `setup`
 or `update` blindly; preserve existing guardrails unless the user explicitly
 chooses a refresh/setup mode. Human-visible gate status must use only
 `🐱🟢 SUCCESS` or `🐱🔴 FAIL`.
-<!-- END MANAGED AGENTPLAYBOOK ROUTING -->
+<!-- END MANAGED TAO AGENT OS ROUTING -->
 # notmid Agent Instructions
 
 This file is the thin repo-local entrypoint for agents. Keep common operating,
-security, architecture, UI, and verification rules in AgentPlaybook,
+security, architecture, UI, and verification rules in Tao Agent OS,
 `VIBEGUARD.md`, `llm-wiki`, or `docs/specs` instead of duplicating them here.
 
-Shared AgentPlaybook root:
+Shared Tao Agent OS root:
 
 ```text
-${AGENTPLAYBOOK_HOME:-$HOME/Documents/KeyFlowVault/AgentPlaybook}
+${TAO_HOME:-$HOME/git/tao-agent-os}
 ```
 
 ## Priority
@@ -118,7 +118,7 @@ ${AGENTPLAYBOOK_HOME:-$HOME/Documents/KeyFlowVault/AgentPlaybook}
 2. The user's current request.
 3. This repo-local `AGENTS.md`.
 4. Repo-local memory in `llm-wiki` and `docs/specs`.
-5. Shared AgentPlaybook documents selected by the workflow router.
+5. Shared Tao Agent OS documents selected by the workflow router.
 
 If rules conflict, use the more specific repo-local rule unless it weakens
 security, data handling, or verification.
@@ -126,20 +126,20 @@ security, data handling, or verification.
 ## Required Start
 
 1. Run `git status --short`.
-2. For multi-step work, follow the active AgentPlaybook routing block above:
+2. For multi-step work, follow the active Tao Agent OS routing block above:
    run `agent-hook.py start`, read the routed docs, then run the review and
    finish hooks with gate evidence.
 3. For documentation, code, configuration, dependency, data, deployment, or
    credential changes, follow `VIBEGUARD.md` before editing and again before
    finishing.
-4. Use the route manifest to select the smallest relevant shared AgentPlaybook
+4. Use the route manifest to select the smallest relevant shared Tao Agent OS
    cards. Keep Notmid-specific facts in `llm-wiki` or `docs/specs`.
 5. Do not load the whole shared library by default.
 
 ## Shared Skill Guidance
 
 Notmid does not keep repository-local skill documents. Shared agent skill and
-architecture guidance lives in AgentPlaybook. Use the route manifest to select
+architecture guidance lives in Tao Agent OS. Use the route manifest to select
 the smallest relevant shared cards, especially:
 
 ```text

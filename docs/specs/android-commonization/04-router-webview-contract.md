@@ -276,7 +276,7 @@ Core runtime allows a deep-link-only bundle with no route event handlers.
 Notmid's product router must still fail fast when creating an app runtime
 without injected handlers, because feature UI depends on route event dispatch.
 The shared reason for using Hilt multibindings instead of central handler lists
-lives in AgentPlayBook Android cards; this page records only the Notmid
+lives in Tao Agent OS Android cards; this page records only the Notmid
 implementation boundary.
 
 ## Nav3 Advanced Deep-Link Application

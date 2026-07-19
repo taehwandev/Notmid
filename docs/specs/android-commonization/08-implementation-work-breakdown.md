@@ -30,7 +30,7 @@ Order the work by risk:
 3. Move runtime rendering into `:core:runtime`.
 4. Extract app shell/base helpers.
 5. Harden WebView.
-6. Update AgentPlayBook/wiki docs after code proves the shape.
+6. Update Tao Agent OS/wiki docs after code proves the shape.
 
 ## Phase 0: Planning Docs
 
@@ -328,7 +328,7 @@ Verification:
 ./gradlew :app:compileDebugKotlin
 ```
 
-## Phase 8: AgentPlayBook/Wiki Update
+## Phase 8: Tao Agent OS/Wiki Update
 
 Goal:
 
@@ -340,19 +340,19 @@ Proposed docs:
 llm-wiki/module-map.md
 llm-wiki/routing-deeplinks.md
 docs/specs/android-commonization/09-agent-example-packets.md
-AgentPlayBook/platforms/android/android-architecture.md
-AgentPlayBook/platforms/android/android-module-structure.md
-AgentPlayBook/platforms/android/android-viewmodel-state.md
-AgentPlayBook/platforms/android/android-state-data.md
-AgentPlayBook/platforms/android/android-security.md
-AgentPlayBook/platforms/android/android-review.md
+tao-agent-os/platforms/android/android-architecture.md
+tao-agent-os/platforms/android/android-module-structure.md
+tao-agent-os/platforms/android/android-viewmodel-state.md
+tao-agent-os/platforms/android/android-state-data.md
+tao-agent-os/platforms/android/android-security.md
+tao-agent-os/platforms/android/android-review.md
 ```
 
 Acceptance:
 
 - English canonical docs match implemented modules.
 - Korean planning docs can stay as local planning history or be translated before commit if requested.
-- AgentPlayBook routes agents to the shared Android guidance; Notmid repo docs
+- Tao Agent OS routes agents to the shared Android guidance; Notmid repo docs
   keep only local module inventory, route facts, and implementation plans.
 - Example packets are removed or updated when implementation proves a different
   module boundary.

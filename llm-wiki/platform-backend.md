@@ -2,7 +2,7 @@
 
 This page records Notmid backend, web, API, auth, and Android integration facts.
 Reusable module-structure, ViewModel, data-flow, notice, and delegate rules live
-in AgentPlayBook.
+in Tao Agent OS.
 
 ## Direction
 

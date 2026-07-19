@@ -1,7 +1,7 @@
 # Design System
 
 This page records Notmid design tokens and exported component names. Reusable
-Compose UI architecture and general frontend rules live in AgentPlayBook and
+Compose UI architecture and general frontend rules live in Tao Agent OS and
 project skills.
 
 ## Core Rule

@@ -5,7 +5,7 @@ This folder is the short, task-oriented memory surface for LLM agents working on
 Keep this folder for Notmid product facts, module inventory, route URLs, backend
 contracts, and Firebase/open-source policy. Reusable Android architecture,
 verification, ViewModel, data-flow, module-boundary, and agent workflow rules
-belong in AgentPlayBook, not in `llm-wiki`.
+belong in Tao Agent OS, not in `llm-wiki`.
 
 Read only what is relevant:
 

@@ -24,7 +24,7 @@ related_pages:
 이 문서는 외부 Android 코드베이스에서 확인한 구조를 Notmid에 적용할 때,
 다음 agent가 실제 파일을 만들 수 있는 수준의 예제 packet만 남긴다.
 
-공통 원칙은 AgentPlayBook Android 문서가 가진다. 이 문서는 Notmid module,
+공통 원칙은 Tao Agent OS Android 문서가 가진다. 이 문서는 Notmid module,
 file sketch, import boundary, first caller/test, verification만 가진다. 외부
 프로젝트 이름, 로컬 경로, package id, class name, signing/config/credential,
 도메인 의존성은 기록하지 않는다.
@@ -52,7 +52,7 @@ collapse rule:
 
 Notmid 문서에 같은 규칙이 반복되면 다음 기준으로 정리한다.
 
-- AgentPlayBook에 있는 공통 기준: 삭제하거나 링크만 남긴다.
+- Tao Agent OS에 있는 공통 기준: 삭제하거나 링크만 남긴다.
 - Notmid module/file 이름이 있는 기준: Notmid 문서에 남긴다.
 - 구현 예제가 없는 기준: 이 문서의 packet으로 보강한다.
 - 특정 외부 앱의 module tree를 설명하는 기준: 제거하고 transferable lesson만
@@ -160,7 +160,7 @@ Runtime 실행은 `ActivityRouteLaunchHandler`가 `Intent` 생성을 알고,
 `DefaultActivityRouteLauncher`가 처리 가능한 handler를 찾아 실행한다. route
 API는 어떤 Activity가 열리는지 모른다.
 
-Route event 실행도 AgentPlayBook Android 카드의 shared DI 규칙을 따른다.
+Route event 실행도 Tao Agent OS Android 카드의 shared DI 규칙을 따른다.
 feature/product-slice impl은 자기 `RouteEventHandler`를 `@IntoSet`으로
 제공하고, product router factory가 `Set<RouteEventHandler>`와 주입된 route
 graph를 조합한다. Activity/root는 factory만 받는다. 이 packet은 Notmid의
@@ -408,7 +408,7 @@ collapse rule:
   if a screen has only two simple callbacks and no queue/backpressure need, keep explicit methods or direct onAction without adding a Channel delegate
 ```
 
-Primitive 선택 기준은 AgentPlayBook
+Primitive 선택 기준은 Tao Agent OS
 `platforms/android/android-viewmodel-state.md`의 `Stream Primitive Selection`을
 따른다. 이 packet은 Notmid의 현재 매핑만 고정한다:
 `NotmidActionDelegate`는 Action queue, `NoticeEffectDelegate`는 one-shot notice
@@ -442,7 +442,7 @@ collapse rule:
   if the helper has one caller, a vague name, or mixed Android/Compose/Kotlin imports, keep it local or move it under a named capability package
 ```
 
-`core` module type 판단 기준은 AgentPlayBook
+`core` module type 판단 기준은 Tao Agent OS
 `platforms/android/android-module-structure.md`의 `Core Is A Capability Namespace`를
 따른다. 이 packet은 Notmid에 새 extension module을 만들 때 필요한 target boundary,
 first caller/test, collapse rule만 고정한다.

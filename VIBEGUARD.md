@@ -16,11 +16,11 @@ https://vibeguard.thdev.app/
 
 ## Command
 
-Use the local AgentPlaybook rule source:
+Use the local Tao Agent OS rule source:
 
 ```bash
-AGENTPLAYBOOK_ROOT="${AGENTPLAYBOOK_HOME:-$HOME/Documents/KeyFlowVault/AgentPlaybook}"
-npm exec --cache /private/tmp/notmid-npm-cache --no-update-notifier --yes --package @taehwandev/vibeguard -- vibeguard audit . --rules "$AGENTPLAYBOOK_ROOT"
+TAO_ROOT="${TAO_HOME:-$HOME/git/tao-agent-os}"
+npm exec --cache /private/tmp/notmid-npm-cache --no-update-notifier --yes --package @taehwandev/vibeguard -- vibeguard audit . --rules "$TAO_ROOT"
 ```
 
 Run the command before editing and again before finishing.
@@ -29,10 +29,10 @@ When the user explicitly approves refreshing an existing managed VibeGuard
 block, use the same rule source:
 
 ```bash
-AGENTPLAYBOOK_ROOT="${AGENTPLAYBOOK_HOME:-$HOME/Documents/KeyFlowVault/AgentPlaybook}"
-npm exec --cache /private/tmp/notmid-npm-cache --no-update-notifier --yes --package @taehwandev/vibeguard -- vibeguard update . --rules "$AGENTPLAYBOOK_ROOT"
-npm exec --cache /private/tmp/notmid-npm-cache --no-update-notifier --yes --package @taehwandev/vibeguard -- vibeguard audit . --fix --rules "$AGENTPLAYBOOK_ROOT"
-npm exec --cache /private/tmp/notmid-npm-cache --no-update-notifier --yes --package @taehwandev/vibeguard -- vibeguard audit . --rules "$AGENTPLAYBOOK_ROOT"
+TAO_ROOT="${TAO_HOME:-$HOME/git/tao-agent-os}"
+npm exec --cache /private/tmp/notmid-npm-cache --no-update-notifier --yes --package @taehwandev/vibeguard -- vibeguard update . --rules "$TAO_ROOT"
+npm exec --cache /private/tmp/notmid-npm-cache --no-update-notifier --yes --package @taehwandev/vibeguard -- vibeguard audit . --fix --rules "$TAO_ROOT"
+npm exec --cache /private/tmp/notmid-npm-cache --no-update-notifier --yes --package @taehwandev/vibeguard -- vibeguard audit . --rules "$TAO_ROOT"
 ```
 
 ## Safety Gates
@@ -62,5 +62,5 @@ behavior.
 ## Local Shared Rules
 
 ```text
-${AGENTPLAYBOOK_HOME:-$HOME/Documents/KeyFlowVault/AgentPlaybook}
+${TAO_HOME:-$HOME/git/tao-agent-os}
 ```

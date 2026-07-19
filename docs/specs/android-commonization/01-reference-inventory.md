@@ -4,7 +4,7 @@ audience: Android/product engineers and AI agents
 purpose: 외부 Android 코드베이스에서 얻을 수 있는 일반 구조를 Notmid에 맞는 채택/제외 기준으로 정리한다.
 status: draft
 owner: notmid Android architecture
-source_of_truth: Notmid repo docs and AgentPlayBook Android guidance
+source_of_truth: Notmid repo docs and Tao Agent OS Android guidance
 last_verified: 2026-06-28
 applies_to: Android modularization planning
 related_pages:
@@ -22,7 +22,7 @@ generated namespace, credential, signing config, domain-specific dependency를
 기록하지 않는다. 외부 Android 코드베이스에서 확인한 내용은 일반화된 모듈 경계와
 검증 기준으로만 남긴다.
 
-공통 규칙은 AgentPlayBook Android 문서에 둔다. Notmid 문서는 Notmid 모듈명,
+공통 규칙은 Tao Agent OS Android 문서에 둔다. Notmid 문서는 Notmid 모듈명,
 제품 경계, 구현 순서만 가진다.
 
 구현 agent가 실제 파일을 만들 수 있는지 검증해야 할 때는

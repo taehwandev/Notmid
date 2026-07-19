@@ -1,5 +1,5 @@
 {
-  "rulesPath": "${AGENTPLAYBOOK_HOME:-$HOME/Documents/KeyFlowVault/AgentPlaybook}",
+  "rulesPath": "${TAO_HOME:-$HOME/git/tao-agent-os}",
   "maxFileLines": 500,
   "autoFix": {
     "envGitignore": true,

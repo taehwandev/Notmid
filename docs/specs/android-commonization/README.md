@@ -41,7 +41,7 @@ Notmid에는 외부 Android 코드베이스 구조를 그대로 적용하지 않
 
 | 문서 | 역할 | 다음 구현 단위 |
 | --- | --- | --- |
-| [01-reference-inventory.md](01-reference-inventory.md) | Notmid/AgentPlayBook 기준으로 정리한 Android 공통화 패턴과 제외 기준 | 적용 대상과 제외 대상 확정 |
+| [01-reference-inventory.md](01-reference-inventory.md) | Notmid/Tao Agent OS 기준으로 정리한 Android 공통화 패턴과 제외 기준 | 적용 대상과 제외 대상 확정 |
 | [02-target-module-taxonomy.md](02-target-module-taxonomy.md) | `core`, `core/runtime`, feature, data, assertions 모듈 분류 | `settings.gradle.kts` 목표 모듈 목록 설계 |
 | [03-build-logic-module-templates.md](03-build-logic-module-templates.md) | Gradle convention과 모듈 템플릿 | `assertions` convention 추가 여부 결정 |
 | [04-router-webview-contract.md](04-router-webview-contract.md) | 라우터, 딥링크, ActivityRoute, WebView 계약 | 라우터 assertions와 WebView hardening |
@@ -53,7 +53,7 @@ Notmid에는 외부 Android 코드베이스 구조를 그대로 적용하지 않
 
 ## 문서 중복 관리
 
-공통 Android 원칙은 AgentPlayBook Android 문서가 가진다. Notmid 문서는 그
+공통 Android 원칙은 Tao Agent OS Android 문서가 가진다. Notmid 문서는 그
 원칙을 다시 길게 복사하지 않고, Notmid에만 필요한 다음 정보를 남긴다.
 
 - 실제 Notmid Gradle module 이름.
@@ -64,30 +64,30 @@ Notmid에는 외부 Android 코드베이스 구조를 그대로 적용하지 않
 - 구현하지 말고 접어야 하는 collapse rule.
 
 어떤 문단이 Notmid module, file sketch, acceptance, verification 중 하나도
-말하지 못하면 AgentPlayBook 공통 규칙으로 옮기거나 삭제한다. 반대로 AI agent가
+말하지 못하면 Tao Agent OS 공통 규칙으로 옮기거나 삭제한다. 반대로 AI agent가
 문단만 읽고 파일을 만들 수 없다면 [09-agent-example-packets.md](09-agent-example-packets.md)에
 예제 packet을 먼저 추가한다.
 
-## 현재 AgentPlayBook/문서 반영 상태
+## 현재 Tao Agent OS/문서 반영 상태
 
 이미 반영된 내용:
 
-- AgentPlayBook Android cards hold shared module, ViewModel, router/runtime,
+- Tao Agent OS Android cards hold shared module, ViewModel, router/runtime,
   WebView, security, and testing guidance.
 - `llm-wiki/module-map.md`는 현재 구현된 `:core:base`, `:core:runtime`, `:core:notice:api`, router/network `assertions` 모듈을 repo inventory로 기록한다.
 - Notmid는 repo-local skill docs를 두지 않는다. Notmid-specific facts are kept
-  in `llm-wiki` and `docs/specs`; reusable rules stay in AgentPlayBook.
+  in `llm-wiki` and `docs/specs`; reusable rules stay in Tao Agent OS.
 
 아직 부족한 내용:
 
 - permission runtime과 WebView holder는 reusable pressure가 생기는 시점에 더 구체적인 runtime package 계약이 필요하다.
 - server error envelope/presentation hint는 network/data/domain/UI 경계별 책임을 더 구현으로 검증해야 한다.
 - 한국어 planning spec은 로컬 planning history로 유지할 수 있다. 외부 공유가
-  필요하면 AgentPlayBook 또는 공개 문서 기준으로 영어 canonical 문서를 만든다.
+  필요하면 Tao Agent OS 또는 공개 문서 기준으로 영어 canonical 문서를 만든다.
 
 따라서 이 스펙은 구현과 문서화를 맞추는 작업 기준이다. 구현이 바뀌면
 `llm-wiki/module-map.md`와 관련 `docs/specs`를 갱신하고, reusable guidance가
-바뀐 경우 AgentPlayBook shared cards도 함께 갱신한다.
+바뀐 경우 Tao Agent OS shared cards도 함께 갱신한다.
 
 ## 대상 구조 원칙
 

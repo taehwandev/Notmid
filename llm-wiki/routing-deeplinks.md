@@ -2,7 +2,7 @@
 
 This page records Notmid route targets and canonical deep-link behavior. General
 router architecture, feature API/impl split rules, ActivityRoute handling, and
-ViewModel event flow live in AgentPlayBook.
+ViewModel event flow live in Tao Agent OS.
 
 ## Current Owners
 
