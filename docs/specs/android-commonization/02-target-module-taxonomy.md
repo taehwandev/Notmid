@@ -5,7 +5,7 @@ purpose: Notmid의 `core`, `core/runtime`, feature, assertions 모듈 분류와 
 status: draft
 owner: notmid Android architecture
 source_of_truth: docs/specs/android-commonization
-last_verified: 2026-06-28
+last_verified: 2026-07-12
 applies_to: settings.gradle.kts, Gradle modules, package ownership
 related_pages:
   - README.md
@@ -26,7 +26,7 @@ Notmid의 목표 구조는 다음 두 축을 분리한다.
 
 이 분리는 “모든 모듈을 쪼갠다”가 아니라 “의존성 방향을 문서화하고 테스트 가능한 계약을 만든다”가 목적이다.
 
-`core` module type 판단 기준은 AgentPlayBook
+`core` module type 판단 기준은 Tao Agent OS
 `platforms/android/android-module-structure.md`의 `Core Is A Capability Namespace`가
 source of truth다. 이 문서는 그 기준을 Notmid module 이름으로 매핑한다.
 
@@ -70,6 +70,59 @@ feature/
     common/            only for product UI shared by several feature impls
 ```
 
+## Owner-First `api` / `impl` Family Grammar
+
+`api`, `impl`, `assertions`는 최상위 분류가 아니라 같은 capability owner 아래의
+역할 leaf다. Notmid의 Gradle path와 물리 폴더는 다음 문법을 따른다.
+
+```text
+:<family>:<owner>:<role>
+
+family = core | feature
+owner  = auth | network | router | feed | map | ...
+role   = api | impl | assertions
+```
+
+예를 들어 `:core:auth:api`와 `:core:auth:impl`은 `auth`가 소유자이고,
+`api`와 `impl`은 그 소유자 안의 공개 계약과 실행 역할이다. 물리 경로도
+`core/auth/api`, `core/auth/impl`로 맞춘다. `core/api/auth`처럼 역할을 먼저
+두면 한 capability의 계약, 구현, 테스트 지원이 떨어지고 소유권·리뷰 범위를
+경로만으로 판단하기 어려우므로 사용하지 않는다.
+
+역할별 책임:
+
+- `api`: 다른 모듈이 구현 의존성 없이 컴파일해야 하는 route/event/value,
+  repository port, provider contract 같은 caller-facing 계약만 소유한다.
+- `impl`: 같은 owner의 `api`를 구현하며 screen, ViewModel, state, mapper,
+  adapter, DI binding, SDK/platform 실행 세부사항을 소유한다.
+- `assertions`: 같은 owner의 `api`에만 의존하는 reusable fixture, recording
+  fake, builder, subject, matcher, contract test helper를 소유한다.
+
+쌍 또는 trio는 대칭 모양을 맞추기 위해 만들지 않는다. 다음 중 하나라도
+실제 압력이 있을 때만 `api` / `impl`을 분리한다.
+
+- 다른 caller가 구현 의존성 없이 안정 계약만 import해야 한다.
+- navigation, deep link, DI registration, replaceable implementation이 경계를 넘는다.
+- 무거운 Android/Compose/SDK 의존성, 순환 의존성, build coupling을 격리한다.
+- 계약과 구현을 서로 다른 테스트 또는 변경 소유권으로 검증해야 한다.
+
+`assertions`는 두 개 이상의 테스트 경계가 helper를 공유하거나 contract
+conformance를 재사용할 때만 추가한다. 한 구현 모듈의 테스트에서만 쓰는
+helper는 그 `impl/src/test`에 둔다. 빈 `impl`, 빈 `assertions`, 사용자가 없는
+`api`를 만들어 family 모양을 억지로 완성하지 않는다.
+
+의도적으로 접힌 현재 예외도 불완전한 family로 보지 않는다.
+
+- `:core:notice:api`는 순수 notice 계약만 소유한다. Android/Compose renderer는
+  notice owner의 빈 `impl`이 아니라 실행 owner인 `:core:runtime`에 둔다.
+- `:core:data`는 당분간 단일 구현 모듈이다. repository port는 이미
+  `:core:domain`이 소유하므로 중복 `:core:data:api`를 만들지 않는다.
+- `:core:runtime`, `:core:base`, `:core:designsystem`은 각각 runtime, app-shell
+  template, visual system이라는 단일 owner다. 반복 caller/import/test 압력이
+  생기기 전에는 package 경계로 유지한다.
+- `:feature:notmid:common`은 Notmid product shell이 여러 feature impl 사이에서
+  공유하는 product UI 경계다. 일반적인 cross-feature dependency bucket이 아니다.
+
 ## Current-To-Target Mapping
 
 | Current | Target | Migration |
@@ -109,7 +162,7 @@ Not allowed:
 - Firebase SDK, OkHttp implementation types in API contracts.
 - feature implementation imports.
 
-Pure `core` module이 아닌 경우에는 AgentPlayBook 기준에 따라 이름이나 package에서
+Pure `core` module이 아닌 경우에는 Tao Agent OS 기준에 따라 이름이나 package에서
 Android/Compose 실행 의존성을 드러낸다. Notmid의 현재 예시는 `:core:base`,
 `:core:runtime`, `:core:designsystem`, `:core:runtime/notice/host`다.
 
@@ -215,6 +268,10 @@ ownership.
 Allowed:
 
 ```text
+:<family>:<owner>:impl -> :<family>:<owner>:api
+:<family>:<owner>:assertions -> :<family>:<owner>:api
+test source -> :<family>:<owner>:assertions
+
 app -> feature:*:api
 app -> feature:*:impl
 app -> core:*:api/impl selected by app graph
@@ -232,9 +289,13 @@ core:runtime implementation package -> core:*:api where needed
 core:base -> core:runtime contracts
 core:base -> core:notice:api
 
-assertions -> matching api
-test source -> assertions
+:feature:notmid:impl -> selected feature:*:impl for product-shell composition
 ```
+
+일반 consumer는 `api`에만 의존한다. `app`과 `:feature:notmid:impl`은 선택한
+구현을 runtime graph에 조립하는 composition owner이므로 필요한 `impl`에
+의존할 수 있다. 이 예외는 일반 feature impl 사이의 peer dependency를 허용하지
+않는다.
 
 Forbidden:
 
@@ -245,6 +306,7 @@ core -> feature:*:impl
 feature:*:api -> feature:*:impl
 feature:*:api -> app
 feature:*:api -> core:runtime implementation package
+feature:*:impl -> another feature:*:impl except :feature:notmid:impl composition
 assertions -> production impl by default
 core:runtime notice package -> feature route decisions
 ```
@@ -279,7 +341,7 @@ PermissionHost
 `:core:base` Activity helpers, but those helpers should not own product feature
 behavior.
 
-Activity가 있는 host와 없는 host의 공통 기준은 AgentPlayBook
+Activity가 있는 host와 없는 host의 공통 기준은 Tao Agent OS
 `platforms/android/android-architecture.md`의 runtime boundary 예제를 따른다.
 Notmid 매핑은 Activity lifecycle 자체가 필요한 `Intent`, `onNewIntent`,
 `ActivityResultRegistry` 연결만 `:core:base`에 두고, `NoticeHost`, router runtime
@@ -301,6 +363,8 @@ Order:
 ## Review Checklist
 
 - Does the new module protect a caller-facing boundary?
+- Does the path place the named capability owner before `api`, `impl`, or `assertions`?
+- Does every role leaf have a real caller, implementation, or reusable test boundary instead of completing an empty family shape?
 - Can tests use the API without depending on implementation?
 - Does `assertions` depend only on stable contracts?
 - Does `core` stay Android/Compose-free except for already accepted transitional modules?

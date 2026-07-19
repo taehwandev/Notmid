@@ -6,7 +6,7 @@ workspace owns today.
 Reusable Android architecture rules live outside this wiki:
 
 - `docs/specs/android-commonization/README.md`
-- AgentPlayBook Android cards for module structure, ViewModel state, and data flow.
+- Tao Agent OS Android cards for module structure, ViewModel state, and data flow.
 
 ## Monorepo Shape
 
@@ -28,6 +28,41 @@ packages/
 Android and TypeScript builds are intentionally separate. Share product
 contracts through URL/API schema and docs, not by making Android consume
 TypeScript source.
+
+## Android Module Family Grammar
+
+Android module family policy의 source of truth는
+[`docs/specs/android-commonization/02-target-module-taxonomy.md`](../docs/specs/android-commonization/02-target-module-taxonomy.md)다.
+현재 모듈도 다음 owner-first path를 사용한다.
+
+```text
+:<family>:<owner>:<role>
+
+:core:auth:api
+:core:auth:impl
+
+:core:network:api
+:core:network:impl
+:core:network:assertions
+
+:feature:feed:api
+:feature:feed:impl
+```
+
+`owner`는 `auth`, `network`, `router`, `feed`처럼 함께 변경·리뷰되는 capability이고,
+`api`, `impl`, `assertions`는 그 아래의 역할이다. 따라서 `:core:api:auth`처럼
+역할을 owner보다 앞에 두지 않는다.
+
+일반 consumer는 owner의 `api`에만 의존하고, 같은 owner의 `impl`은 `api`를
+구현한다. `assertions`는 `api`에만 의존하며 production `impl`을 기본 의존성으로
+끌어오지 않는다. `:app`과 product-shell composer인 `:feature:notmid:impl`만
+선택한 feature/core 구현을 runtime graph에 조립한다.
+
+모든 owner가 완성된 쌍이나 trio를 가져야 하는 것은 아니다. `:core:notice:api`,
+`:core:data`, `:core:runtime`, `:core:base`, `:core:designsystem`,
+`:feature:notmid:common`은 현재 소유권과 caller 압력에 맞춘 의도적인 단일 역할
+또는 collapsed 경계다. 빈 `impl`이나 한 테스트만 쓰는 `assertions`를 추가해
+모양만 맞추지 않는다.
 
 ## Android Modules
 
@@ -116,6 +151,11 @@ TypeScript source.
   deeplink/ DefaultDeepLinkResolver, DeepLinkUrlPolicy, UriDeepLinkRequestParser
   deeplink/ StaticRouteDeepLinkSpec, PrefixRouteDeepLinkSpec
 
+:core:router:assertions
+  RouteFixtures, RecordingRouter, RecordingRouteEventSink
+  FakeRouteEventPlanner, RoutePlanSubject, RouteStackSubject
+  reusable router test support that depends on :core:router:api, not impl
+
 :feature:notmid:api
   route/ shared notmid route markers
   deeplink/ notmid static deep-link helper
@@ -124,6 +164,11 @@ TypeScript source.
 
 :feature:notmid:common
   product-shaped UI adapters and shared screen sections
+
+:feature:webview:api
+  route/ WebViewRoute and WebViewMode
+  deeplink/ WebViewDeepLinkSpec
+  activity/ WebViewActivityKeys
 
 :feature:webview:impl
   WebView Activity wrapper and reusable Compose WebView content/controller
