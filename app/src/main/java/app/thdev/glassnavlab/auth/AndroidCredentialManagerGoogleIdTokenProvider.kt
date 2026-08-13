@@ -70,23 +70,6 @@ class AndroidCredentialManagerGoogleIdTokenProvider : GoogleIdTokenProvider {
     }
 }
 
-internal interface GoogleCredentialReader {
-    suspend fun idToken(serverClientId: String): GoogleCredentialReaderResult
-}
-
-internal sealed interface GoogleCredentialReaderResult {
-    data class Success(
-        val idToken: String,
-    ) : GoogleCredentialReaderResult
-
-    data class Failure(
-        val code: String,
-        val message: String,
-    ) : GoogleCredentialReaderResult
-
-    data object Cancelled : GoogleCredentialReaderResult
-}
-
 private class CredentialManagerGoogleCredentialReader(
     context: Context,
 ) : GoogleCredentialReader {
