@@ -1,7 +1,7 @@
 package app.thdev.glassnavlab.config
 
 import app.thdev.glassnavlab.BuildConfig
-import app.thdev.glassnavlab.core.auth.notmid.FirebaseAuthRestConfig
+import app.thdev.glassnavlab.core.auth.impl.FirebaseAuthRestConfig
 import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.network.notmid.NotmidApiConfig

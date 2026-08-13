@@ -7,8 +7,8 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
-import app.thdev.glassnavlab.core.auth.notmid.GoogleIdTokenProvider
-import app.thdev.glassnavlab.core.auth.notmid.GoogleIdTokenResult
+import app.thdev.glassnavlab.core.auth.impl.GoogleIdTokenProvider
+import app.thdev.glassnavlab.core.auth.impl.GoogleIdTokenResult
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException

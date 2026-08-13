@@ -1,5 +1,8 @@
-package app.thdev.glassnavlab.core.auth.notmid
+package app.thdev.glassnavlab.core.auth.impl
 
+import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthIntent
+import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthResult
+import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthSignInRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import org.junit.Assert.assertEquals

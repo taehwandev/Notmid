@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.auth.notmid
+package app.thdev.glassnavlab.core.auth.impl
 
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.EmptyCoroutineContext

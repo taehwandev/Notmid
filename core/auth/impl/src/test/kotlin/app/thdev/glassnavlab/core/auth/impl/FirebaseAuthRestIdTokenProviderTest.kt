@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.auth.notmid
+package app.thdev.glassnavlab.core.auth.impl
 
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.network.assertions.QueuedNetworkFailure

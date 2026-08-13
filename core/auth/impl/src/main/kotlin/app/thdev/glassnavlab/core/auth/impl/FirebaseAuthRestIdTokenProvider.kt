@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.auth.notmid
+package app.thdev.glassnavlab.core.auth.impl
 
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.network.notmid.NotmidHttpMethod
@@ -12,40 +12,6 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
-
-data class FirebaseAuthRestConfig(
-    val apiKey: String,
-    val requestUri: String = DefaultFirebaseAuthRequestUri,
-) {
-    val isConfigured: Boolean
-        get() = apiKey.isNotBlank()
-}
-
-interface GoogleIdTokenProvider {
-    suspend fun idToken(): GoogleIdTokenResult
-}
-
-sealed interface GoogleIdTokenResult {
-    data class Success(
-        val token: String,
-    ) : GoogleIdTokenResult
-
-    data class Rejected(
-        val code: String,
-        val message: String,
-    ) : GoogleIdTokenResult
-}
-
-class UnavailableGoogleIdTokenProvider(
-    private val message: String = "Google sign-in is not configured for this Android build.",
-) : GoogleIdTokenProvider {
-    override suspend fun idToken(): GoogleIdTokenResult {
-        return GoogleIdTokenResult.Rejected(
-            code = "google_id_token_provider_unavailable",
-            message = message,
-        )
-    }
-}
 
 class FirebaseAuthRestIdTokenProvider(
     private val client: NotmidNetworkClient,
@@ -206,5 +172,3 @@ private fun String.toFirebaseIdTokenResult(malformedCode: String): FirebaseIdTok
 private fun String.urlEncoded(): String = URLEncoder.encode(this, Charsets.UTF_8.name())
 
 private fun String.looksLikeJwt(): Boolean = split(".").size == 3
-
-private const val DefaultFirebaseAuthRequestUri = "https://thdev.app/notmid/firebase-auth/android"
