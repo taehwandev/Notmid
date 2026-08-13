@@ -60,15 +60,6 @@ internal fun rememberLiquidGlassResolvedColors(
     )
 }
 
-internal data class LiquidGlassResolvedColors(
-    val containerSurfaceColor: Color,
-    val selectedSurfaceColor: Color,
-    val actionSurfaceColor: Color,
-    val selectedContentColor: Color,
-    val unselectedContentColor: Color,
-    val actionContentColor: Color,
-)
-
 @Composable
 private fun rememberLiquidGlassTone(adaptiveBackgroundColor: Color): LiquidGlassTone? {
     if (adaptiveBackgroundColor == Color.Unspecified) return null

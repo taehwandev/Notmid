@@ -5,8 +5,9 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
 @Immutable
-data class LiquidGlassNavigationItem(
-    val id: String,
-    val label: String,
-    val icon: @Composable (selected: Boolean, contentColor: Color) -> Unit,
+data class LiquidGlassNavigationAction(
+    val contentDescription: String,
+    val icon: @Composable (contentColor: Color) -> Unit,
+    val selected: Boolean = false,
+    val onClick: () -> Unit,
 )
