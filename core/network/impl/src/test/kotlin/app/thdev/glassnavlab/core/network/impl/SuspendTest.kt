@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.network.notmid
+package app.thdev.glassnavlab.core.network.impl
 
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.EmptyCoroutineContext

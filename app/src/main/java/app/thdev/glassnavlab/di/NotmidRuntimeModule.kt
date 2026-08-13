@@ -22,7 +22,7 @@ import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.network.notmid.NotmidApiConfig
 import app.thdev.glassnavlab.core.network.notmid.NotmidNetworkClient
-import app.thdev.glassnavlab.core.network.notmid.OkHttpNotmidNetworkClient
+import app.thdev.glassnavlab.core.network.impl.OkHttpNotmidNetworkClient
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
