@@ -1,46 +1,9 @@
 package app.thdev.glassnavlab.feature.feed
 
-import androidx.compose.ui.graphics.Color
-import app.thdev.glassnavlab.feature.notmid.common.model.NotmidBadge
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidClip
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidPlace
-
-internal data class FeedUiState(
-    val title: String,
-    val subtitle: String,
-    val heroClip: FeedClipUi?,
-    val queue: List<FeedClipUi>,
-    val places: List<FeedPlaceUi>,
-) {
-    val isEmpty: Boolean
-        get() = heroClip == null && queue.isEmpty()
-}
-
-internal data class FeedClipUi(
-    val id: String,
-    val title: String,
-    val caption: String,
-    val creatorHandle: String,
-    val badgeLabel: String,
-    val capturedAtLabel: String,
-    val qualityLabel: String,
-    val progress: Float,
-    val palette: List<Color>,
-    val moodTags: List<String>,
-    val placeId: String?,
-    val likeCountLabel: String,
-    val saveCountLabel: String,
-    val chatCountLabel: String,
-)
-
-internal data class FeedPlaceUi(
-    val id: String,
-    val title: String,
-    val subtitle: String,
-    val metric: String,
-    val palette: List<Color>,
-)
+import app.thdev.glassnavlab.feature.notmid.common.model.labelText
 
 internal fun NotmidDestination.toFeedUiState(): FeedUiState {
     val feedPlaces = places.map(NotmidPlace::toFeedPlaceUi)
@@ -95,14 +58,6 @@ private fun NotmidPlace.toFeedPlaceUi(): FeedPlaceUi {
         metric = metric,
         palette = palette,
     )
-}
-
-private fun NotmidBadge.labelText(): String {
-    return when (this) {
-        is NotmidBadge.Label -> text
-        NotmidBadge.LiveNow -> "LIVE"
-        NotmidBadge.None -> ""
-    }
 }
 
 private fun compactCount(value: Int): String {

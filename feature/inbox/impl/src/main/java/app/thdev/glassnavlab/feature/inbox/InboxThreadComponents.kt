@@ -24,6 +24,7 @@ import app.thdev.glassnavlab.core.designsystem.component.NotmidText
 import app.thdev.glassnavlab.core.designsystem.component.NotmidTextVariant
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidColorTokens
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
+import app.thdev.glassnavlab.feature.notmid.common.model.labelText
 
 @Composable
 internal fun InboxSummary(

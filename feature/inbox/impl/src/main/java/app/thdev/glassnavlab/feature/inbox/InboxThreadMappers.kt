@@ -1,61 +1,12 @@
 package app.thdev.glassnavlab.feature.inbox
 
-import androidx.compose.ui.graphics.Color
-import app.thdev.glassnavlab.core.designsystem.theme.NotmidColorTokens
-import app.thdev.glassnavlab.feature.notmid.common.model.NotmidBadge
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidChatAccess
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidClip
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidPlace
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidThreadMessage
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidThreadMessageAttachment
-
-internal data class InboxThreadUi(
-    val id: String,
-    val title: String,
-    val subtitle: String,
-    val preview: String,
-    val participants: String,
-    val updatedLabel: String,
-    val unreadCount: Int,
-    val chatAccess: NotmidChatAccess,
-    val clip: NotmidClip?,
-    val place: NotmidPlace?,
-    val routePlan: String,
-    val messages: List<ChatMessageUi> = emptyList(),
-)
-
-internal data class ChatMessageUi(
-    val id: String,
-    val sender: String,
-    val body: String,
-    val timestamp: String,
-    val mine: Boolean = false,
-    val attachment: ChatAttachmentUi? = null,
-)
-
-internal sealed interface ChatAttachmentUi {
-    data class Clip(val clip: NotmidClip) : ChatAttachmentUi
-    data class Place(val place: NotmidPlace) : ChatAttachmentUi
-    data class RoutePlan(val title: String, val description: String) : ChatAttachmentUi
-}
-
-internal fun List<InboxThreadUi>.filterFor(filter: String): List<InboxThreadUi> {
-    return when (filter) {
-        "Unread" -> filter { it.unreadCount > 0 }
-        "Clips" -> filter { it.clip != null }
-        "Places" -> filter { it.place != null }
-        else -> this
-    }
-}
-
-internal fun List<InboxThreadUi>.findMatchingThread(threadId: String): InboxThreadUi? {
-    return firstOrNull { thread ->
-        thread.id == threadId ||
-            thread.clip?.id == threadId ||
-            thread.place?.id == threadId
-    }
-}
+import app.thdev.glassnavlab.feature.notmid.common.model.labelText
 
 internal fun NotmidDestination.toInboxThreads(): List<InboxThreadUi> {
     val clipById = clips.associateBy(NotmidClip::id)
@@ -217,20 +168,6 @@ private fun NotmidThreadMessageAttachment.toChatAttachment(
                 },
             )
         }
-    }
-}
-
-internal fun InboxThreadUi.palette(): List<Color> {
-    return clip?.palette?.takeIf { it.isNotEmpty() }
-        ?: place?.palette?.takeIf { it.isNotEmpty() }
-        ?: listOf(NotmidColorTokens.Ink, NotmidColorTokens.RouteBlue)
-}
-
-internal fun NotmidBadge.labelText(): String {
-    return when (this) {
-        is NotmidBadge.Label -> text
-        NotmidBadge.LiveNow -> "LIVE"
-        NotmidBadge.None -> ""
     }
 }
 

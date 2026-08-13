@@ -47,6 +47,7 @@ import app.thdev.glassnavlab.core.designsystem.component.notmidTextStyle
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidBadge
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidClip
+import app.thdev.glassnavlab.feature.notmid.common.model.labelText
 
 @Composable
 fun NotmidClipCard(
