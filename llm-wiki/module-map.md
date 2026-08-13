@@ -103,6 +103,9 @@ Android module family policy의 source of truth는
   thread detail/message hydration for inbox chat screens
   static/API protected-write repositories for capture, save, chat, and profile
   content repository selector for static vs API-backed runtime sources
+  one shared notmid API JSON layer used by both API-backed repositories:
+  field accessors, enum codec, model decoders, request encoders, and the
+  id-derived palette/progress values the API does not send
 
 :core:auth:api
   Firebase-free notmid auth gateway, sign-in request/result, and intent contracts
