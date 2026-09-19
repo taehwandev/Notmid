@@ -6,6 +6,7 @@ import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
+import app.thdev.glassnavlab.core.data.notmid.RepositoryNotmidProtectedWriteExecutor
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectDelegate
@@ -304,7 +305,7 @@ class NotmidAppViewModelTest {
         return NotmidAppViewModel(
             contentSource = NotmidContentSource.Static,
             getDestinations = getDestinations,
-            protectedWriteRepository = protectedWriteRepository,
+            protectedWriteExecutor = RepositoryNotmidProtectedWriteExecutor(protectedWriteRepository),
             authGateway = authGateway,
             actionDelegate = actionDelegate,
             uiEffects = uiEffects,

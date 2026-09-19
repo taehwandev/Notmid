@@ -2,6 +2,9 @@ package app.thdev.glassnavlab.di
 
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteExecutor
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
+import app.thdev.glassnavlab.core.data.notmid.RepositoryNotmidProtectedWriteExecutor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -12,6 +15,11 @@ import kotlinx.coroutines.Dispatchers
 @Module
 @InstallIn(ViewModelComponent::class)
 object NotmidViewModelModule {
+    @Provides
+    fun provideProtectedWriteExecutor(
+        repository: NotmidProtectedWriteRepository,
+    ): NotmidProtectedWriteExecutor = RepositoryNotmidProtectedWriteExecutor(repository)
+
     @Provides
     fun provideGetNotmidDestinationsUseCase(
         repository: NotmidContentRepository,

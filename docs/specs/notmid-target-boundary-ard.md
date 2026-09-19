@@ -328,6 +328,19 @@ CI를 두었다. Android에는 OpenAPI 고정 JSON 사본과 Kotlin 어댑터를
 분리 대상과 완료 조건은 [서비스 추출 기록](notmid-service-extraction.md),
 고정 계약의 출처와 한계는 [계약 기록](../contracts/README.md)을 따른다.
 
+### 단계 4 선행 경계
+
+보호된 쓰기 요청과 실행 포트는 `core:domain`의
+`NotmidProtectedWriteRequest`, `NotmidProtectedWriteExecutor`가 소유한다.
+`core:data`의 `RepositoryNotmidProtectedWriteExecutor`는 기존 저장소에 요청을
+전달하고 화면이 반영할 도메인 결과를 반환한다. 앱 DI가 구현을 연결하며,
+앱 ViewModel은 저장소별 쓰기 메서드를 직접 호출하지 않는다.
+실행 포트는 Android, Compose, 앱 상태, 알림과 라우터를 참조하지 않는다.
+코루틴 수명·중복 제출 방지와 결과의 화면 상태·알림 변환은 현재 ViewModel이
+계속 소유한다. 예외와 취소는 포트 경계에서 변환하지 않는다.
+기존 앱 ViewModel 테스트와 실행기 단위 테스트가 이 경계를 검증한다.
+이것은 feature별 ViewModel 분해의 선행 작업이며 단계 4 전체 완료는 아니다.
+
 ### 단계 3 실행 기록 (2026-09-12)
 
 착수 전에 12쌍이라 적어둔 중복을 내용까지 대조했고, 그 결과 E5와 Decision 5를

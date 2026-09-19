@@ -9,7 +9,9 @@ import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthResult
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthSignInRequest
 import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
-import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteExecutor
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRequest
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteResult
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectDelegate
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectViewModel
@@ -37,7 +39,7 @@ import javax.inject.Inject
 internal class NotmidAppViewModel internal constructor(
     private val contentSource: NotmidContentSource,
     private val getDestinations: GetNotmidDestinationsUseCase,
-    private val protectedWriteRepository: NotmidProtectedWriteRepository,
+    private val protectedWriteExecutor: NotmidProtectedWriteExecutor,
     private val authGateway: NotmidAuthGateway,
     private val actionDelegate: NotmidActionDelegate<NotmidAppAction>,
     private val uiEffects: NoticeEffectDelegate,
@@ -48,13 +50,13 @@ internal class NotmidAppViewModel internal constructor(
     constructor(
         contentSource: NotmidContentSource,
         getDestinations: GetNotmidDestinationsUseCase,
-        protectedWriteRepository: NotmidProtectedWriteRepository,
+        protectedWriteExecutor: NotmidProtectedWriteExecutor,
         authGateway: NotmidAuthGateway,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
     ) : this(
         contentSource = contentSource,
         getDestinations = getDestinations,
-        protectedWriteRepository = protectedWriteRepository,
+        protectedWriteExecutor = protectedWriteExecutor,
         authGateway = authGateway,
         actionDelegate = ChannelNotmidActionDelegate(),
         uiEffects = MutableNoticeEffectDelegate(),
@@ -99,33 +101,33 @@ internal class NotmidAppViewModel internal constructor(
             is NotmidAppAction.ContinueAuth -> continueAuth(action.provider)
             NotmidAppAction.BrowseSignedOut -> clearAuthError()
             is NotmidAppAction.PublishCapture -> enqueueProtectedAction(
-                PendingNotmidProtectedAction.PublishCapture(action.request),
+                NotmidProtectedWriteRequest.PublishCapture(action.request),
             )
 
             is NotmidAppAction.SaveClip -> enqueueProtectedAction(
-                PendingNotmidProtectedAction.SaveClip(action.clipId),
+                NotmidProtectedWriteRequest.SaveClip(action.clipId),
             )
 
             is NotmidAppAction.SendThreadMessage -> enqueueProtectedAction(
-                PendingNotmidProtectedAction.SendThreadMessage(
+                NotmidProtectedWriteRequest.SendThreadMessage(
                     threadId = action.threadId,
                     request = action.request,
                 ),
             )
 
             is NotmidAppAction.StartThread -> enqueueProtectedAction(
-                PendingNotmidProtectedAction.StartThread(action.request),
+                NotmidProtectedWriteRequest.StartThread(action.request),
             )
 
             is NotmidAppAction.RespondThreadInvite -> enqueueProtectedAction(
-                PendingNotmidProtectedAction.RespondThreadInvite(
+                NotmidProtectedWriteRequest.RespondThreadInvite(
                     threadId = action.threadId,
                     decision = action.decision,
                 ),
             )
 
             is NotmidAppAction.UpdateProfileSettings -> enqueueProtectedAction(
-                PendingNotmidProtectedAction.UpdateProfileSettings(action.request),
+                NotmidProtectedWriteRequest.UpdateProfileSettings(action.request),
             )
         }
     }
@@ -237,7 +239,7 @@ internal class NotmidAppViewModel internal constructor(
         }
     }
 
-    private fun enqueueProtectedAction(action: PendingNotmidProtectedAction) {
+    private fun enqueueProtectedAction(action: NotmidProtectedWriteRequest) {
         if (
             protectedActionJob?.isActive == true ||
             mutableState.value.protectedActionInFlight != null
@@ -259,86 +261,34 @@ internal class NotmidAppViewModel internal constructor(
             }
             var followUpEffect: NoticeEffect? = null
             val notice = runCatchingPreservingCancellation {
-                when (action) {
-                    is PendingNotmidProtectedAction.PublishCapture -> {
-                        withContext(ioDispatcher) {
-                            protectedWriteRepository.publishCapture(
-                                authState = updatedAuthState,
-                                request = action.request,
-                            )
-                        }
-                        action.writeAction.toSuccessNotice()
+                val result = withContext(ioDispatcher) {
+                    protectedWriteExecutor.execute(updatedAuthState, action)
+                }
+                when (result) {
+                    NotmidProtectedWriteResult.Completed -> Unit
+                    is NotmidProtectedWriteResult.MessageSent -> {
+                        contentUpdate = { it.withThreadMessage(result.message) }
                     }
-
-                    is PendingNotmidProtectedAction.SaveClip -> {
-                        withContext(ioDispatcher) {
-                            protectedWriteRepository.saveClip(
-                                authState = updatedAuthState,
-                                clipId = action.clipId,
-                            )
-                        }
-                        action.writeAction.toSuccessNotice()
-                    }
-
-                    is PendingNotmidProtectedAction.SendThreadMessage -> {
-                        val receipt = withContext(ioDispatcher) {
-                            protectedWriteRepository.sendThreadMessage(
-                                authState = updatedAuthState,
-                                threadId = action.threadId,
-                                request = action.request,
-                            )
-                        }
+                    is NotmidProtectedWriteResult.ThreadStarted -> {
                         contentUpdate = { content ->
-                            content.withThreadMessage(receipt.message)
-                        }
-                        action.writeAction.toSuccessNotice()
-                    }
-
-                    is PendingNotmidProtectedAction.StartThread -> {
-                        val receipt = withContext(ioDispatcher) {
-                            protectedWriteRepository.startThread(
-                                authState = updatedAuthState,
-                                request = action.request,
-                            )
-                        }
-                        contentUpdate = { content ->
-                            val contentWithThread = content.withThread(receipt.thread)
-                            receipt.message?.let(contentWithThread::withThreadMessage)
+                            val contentWithThread = content.withThread(result.thread)
+                            result.message?.let(contentWithThread::withThreadMessage)
                                 ?: contentWithThread
                         }
                         followUpEffect = NoticeEffect.NavigateDeepLink(
-                            notmidChatThreadDeepLink(receipt.thread.id),
+                            notmidChatThreadDeepLink(result.thread.id),
                         )
-                        action.writeAction.toSuccessNotice()
                     }
-
-                    is PendingNotmidProtectedAction.RespondThreadInvite -> {
-                        val receipt = withContext(ioDispatcher) {
-                            protectedWriteRepository.respondThreadInvite(
-                                authState = updatedAuthState,
-                                threadId = action.threadId,
-                                decision = action.decision,
-                            )
-                        }
-                        contentUpdate = { content ->
-                            content.withThread(receipt.thread)
-                        }
-                        action.writeAction.toSuccessNotice()
+                    is NotmidProtectedWriteResult.ThreadUpdated -> {
+                        contentUpdate = { it.withThread(result.thread) }
                     }
-
-                    is PendingNotmidProtectedAction.UpdateProfileSettings -> {
-                        val receipt = withContext(ioDispatcher) {
-                            protectedWriteRepository.updateProfileSettings(
-                                authState = updatedAuthState,
-                                request = action.request,
-                            )
-                        }
+                    is NotmidProtectedWriteResult.ProfileUpdated -> {
                         updatedAuthState = updatedAuthState.copy(
-                            session = updatedAuthState.session?.copy(user = receipt.settings.user),
+                            session = updatedAuthState.session?.copy(user = result.user),
                         )
-                        action.writeAction.toSuccessNotice()
                     }
                 }
+                action.writeAction.toSuccessNotice()
             }.getOrElse { throwable ->
                 throwable.toProtectedActionNotice(action.writeAction)
             }
