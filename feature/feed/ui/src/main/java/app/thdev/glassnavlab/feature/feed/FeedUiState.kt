@@ -1,5 +1,8 @@
 package app.thdev.glassnavlab.feature.feed
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 internal data class FeedUiState(
     val title: String,
     val subtitle: String,

@@ -1,0 +1,5 @@
+<resources>
+    <string name="feed_loading">Loading receipts…</string>
+    <string name="feed_unavailable">Receipts could not be loaded.</string>
+    <string name="feed_retry">Retry</string>
+</resources>

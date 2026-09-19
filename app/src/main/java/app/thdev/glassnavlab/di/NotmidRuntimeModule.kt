@@ -18,6 +18,8 @@ import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.data.notmid.StaticNotmidContentRepository
 import app.thdev.glassnavlab.core.data.notmid.StaticNotmidProtectedWriteRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
+import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
+import app.thdev.glassnavlab.core.data.notmid.ObservableNotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.network.impl.OkHttpNotmidNetworkClient
@@ -141,15 +143,26 @@ object NotmidRuntimeModule {
 
     @Provides
     @Singleton
-    fun provideNotmidContentRepository(
+    fun provideObservableContentRepository(
         source: NotmidContentSource,
         @NotmidApi client: NotmidNetworkClient,
-    ): NotmidContentRepository {
-        return when (source) {
+    ): ObservableNotmidContentRepository {
+        val repository = when (source) {
             NotmidContentSource.Static -> StaticNotmidContentRepository()
             NotmidContentSource.Api -> ApiNotmidContentRepository(client)
         }
+        return ObservableNotmidContentRepository(repository)
     }
+
+    @Provides
+    fun provideNotmidContentRepository(
+        repository: ObservableNotmidContentRepository,
+    ): NotmidContentRepository = repository
+
+    @Provides
+    fun provideContentUpdates(
+        repository: ObservableNotmidContentRepository,
+    ): NotmidContentUpdates = repository
 
     @Provides
     @Singleton

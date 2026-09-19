@@ -1,6 +1,8 @@
 package app.thdev.glassnavlab.feature.notmid
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.ui.graphics.Color
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
 import app.thdev.glassnavlab.feature.capture.CaptureScreen
@@ -43,6 +45,7 @@ internal fun NotmidRouteContent(
     chatMessage: String?,
     profileSettingsMessage: String?,
     onRouteEvent: (RouteEvent) -> Unit,
+    onFeedBackdropColorChanged: (Color) -> Unit,
     onContinueLocalAuth: () -> Unit,
     onContinueGoogleAuth: () -> Unit,
     onBrowseSignedOut: () -> Unit,
@@ -65,6 +68,7 @@ internal fun NotmidRouteContent(
     ) -> Unit,
     onUpdateProfileSettings: (displayName: String, homeNeighborhood: String) -> Unit,
 ) {
+    val feedStateHolder = rememberSaveableStateHolder()
     if (routeState.shouldShowLogin) {
         NotmidLoginScreen(
             errorMessage = authErrorMessage,
@@ -90,11 +94,12 @@ internal fun NotmidRouteContent(
         }
 
         FeedRoute -> {
-            FeedScreen(
-                destination = routeState.selectedDestination,
-                listState = routeState.listState,
-                onRouteEvent = onRouteEvent,
-            )
+            feedStateHolder.SaveableStateProvider("feed") {
+                FeedScreen(
+                    onRouteEvent = onRouteEvent,
+                    onBackdropColorChanged = onFeedBackdropColorChanged,
+                )
+            }
         }
 
         is ClipDetailRoute -> {
@@ -173,10 +178,9 @@ internal fun NotmidRouteContent(
         }
 
         else -> {
-            FeedScreen(
-                destination = routeState.selectedDestination,
-                listState = routeState.listState,
-            )
+            feedStateHolder.SaveableStateProvider("feed") {
+                FeedScreen(onBackdropColorChanged = onFeedBackdropColorChanged)
+            }
         }
     }
 }

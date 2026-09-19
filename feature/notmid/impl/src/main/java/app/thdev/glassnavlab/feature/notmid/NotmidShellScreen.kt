@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.thdev.glassnavlab.core.designsystem.component.liquidglass.LiquidGlassBackdropHost
@@ -16,6 +18,8 @@ import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
 import app.thdev.glassnavlab.core.navigation.notmid.NotmidRoute
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidBackgroundColor
 import app.thdev.glassnavlab.feature.notmid.common.model.toNotmidDestinations
+import app.thdev.glassnavlab.core.designsystem.component.backdrop.rememberListBackdropColor
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun NotmidShellScreen(
@@ -74,10 +78,13 @@ fun NotmidShellScreen(
         navigationStack = navigationStack,
         authState = authState,
     )
-    val navigationBackdropColor by rememberNavigationBackdropColor(
+    val navigationBackdropColor by rememberListBackdropColor(
         listState = routeState.listState,
-        destination = routeState.selectedDestination,
+        palettes = routeState.selectedDestination.let { destination ->
+            listOf(emptyList<Color>()) + destination.clips.map { it.palette } + destination.places.map { it.palette }
+        },
     )
+    var feedBackdropColor by remember { mutableStateOf(NotmidBackgroundColor) }
 
     LiquidGlassBackdropHost(
         modifier = Modifier
@@ -102,6 +109,7 @@ fun NotmidShellScreen(
                 chatMessage = chatMessage,
                 profileSettingsMessage = profileSettingsMessage,
                 onRouteEvent = onRouteEvent,
+                onFeedBackdropColorChanged = { feedBackdropColor = it },
                 onContinueLocalAuth = onContinueLocalAuth,
                 onContinueGoogleAuth = onContinueGoogleAuth,
                 onBrowseSignedOut = onBrowseSignedOut,
@@ -119,7 +127,9 @@ fun NotmidShellScreen(
                 NotmidShellBottomNavigation(
                     destinations = notmidDestinations,
                     selectedDestinationId = routeState.selectedDestinationId,
-                    navigationBackdropColor = navigationBackdropColor,
+                    navigationBackdropColor = if (routeState.activeRoute == FeedRoute) {
+                        feedBackdropColor
+                    } else navigationBackdropColor,
                     backdrop = backdrop,
                     modifier = Modifier.align(Alignment.BottomCenter),
                     onRouteEvent = { event -> onRouteEvent(event) },

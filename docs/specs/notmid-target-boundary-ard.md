@@ -312,7 +312,7 @@ core:*:assertions -> 같은 owner의 api
 | 1 | `feature:notmid:api` → `core:navigation:api`, router 개명 | 전 모듈 컴파일, feature→feature api 엣지 0 | 낮음 | done 2026-09-12 |
 | 2 | `impl` → `ui` 개명 | 컴파일, `settings.gradle.kts`와 namespace 일치 | 낮음(기계적) | done 2026-09-12 |
 | 3 | 모델 이중화 제거, `feature:notmid:common` 정리 | 컴파일, core:model과 이름이 겹치는 타입이 3종 이하 | 중간 | done 2026-09-12 |
-| 4 | ViewModel 분해 — feature 하나씩 1 PR | feature별 ViewModel 테스트, 화면 파라미터에서 `destination`/`listState` 제거 | 높음 | next |
+| 4 | ViewModel 분해 — feature 하나씩 1 PR | feature별 ViewModel 테스트, 화면 파라미터에서 `destination`/`listState` 제거 | 높음 | in progress — 피드 첫 화면 분리 |
 | 5 | 셸을 `:app`으로 이동, `feature:notmid` 삭제 | 컴파일, 딥링크 수동 스모크, `:app`만 라우트 그래프 소유 | 높음 | |
 | 6 | `core:base`/`core:runtime` 해체, `core:data` 분할 | 컴파일, `Static*`가 프로덕션 의존성에 없음 | 중간 | |
 
@@ -340,6 +340,28 @@ CI를 두었다. Android에는 OpenAPI 고정 JSON 사본과 Kotlin 어댑터를
 계속 소유한다. 예외와 취소는 포트 경계에서 변환하지 않는다.
 기존 앱 ViewModel 테스트와 실행기 단위 테스트가 이 경계를 검증한다.
 이것은 feature별 ViewModel 분해의 선행 작업이며 단계 4 전체 완료는 아니다.
+
+### 단계 4 — 피드 첫 화면
+
+`FeedScreen`은 `FeedViewModel`의 상태를 수집하며 `destination`과 `listState`를
+셸에서 받지 않는다. 데이터 소유자는 기존 콘텐츠 저장소다.
+`ObservableNotmidContentRepository`가 기존 조회의 상태와 결과를
+`NotmidContentUpdates`로 발행하고, 피드는 이 스트림을 화면 모델로 변환한다.
+구독만으로 API 조회가 추가되지 않으며 초기 조회는 기존 앱 시작 경로가 맡는다.
+피드 재시도만 명시적으로 같은 저장소를 다시 조회한다. 요청은 호출자의 코루틴에서
+실행하고, 실패는 기존 호출자에게 전달하면서 구독자에게 안전한 실패 상태를 발행한다.
+
+피드 스크롤은 화면의 `rememberLazyListState`가 소유한다. 셸의 saveable 경계는
+탭 전환 뒤 복원을 보장하며, 하단바에는 화면이 계산한 배경색만 전달한다.
+색 샘플링은 도메인 모델을 받지 않는 디자인 시스템 함수로 공유한다.
+기존 클립 상세 화면과 나머지 feature의 ViewModel 이전은 아직 남아 있다.
+
+검증은 `:core:data:test`, `:feature:feed:ui:testDebugUnitTest`,
+`:app:testDebugUnitTest`, `:app:assembleDebug`로 수행한다.
+기기 확인용 빌드는 `-PNOTMID_DEBUG_CONTENT_SOURCE=static`을 사용한다.
+Pixel_9a/Android 17에서 피드 → 지도 → 피드의 스크롤 좌표 복원과 클립 상세 진입을
+화면·UI 계층으로 확인했다. 기존 Espresso 3.5.1은 Android 17의 입력 API와
+호환되지 않아 자동 기기 테스트 대신 동일 경로를 직접 검증했다.
 
 ### 단계 3 실행 기록 (2026-09-12)
 
