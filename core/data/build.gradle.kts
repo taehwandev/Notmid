@@ -2,6 +2,11 @@ plugins {
     id("glassnavlab.kotlin.library")
 }
 
+sourceSets.test {
+    resources.srcDir(rootProject.file("docs/contracts"))
+    resources.include("notmid-openapi.json")
+}
+
 dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:model"))

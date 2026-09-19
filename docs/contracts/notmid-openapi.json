@@ -1,0 +1,1812 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "notmid API",
+    "version": "0.1.0",
+    "description": "Contract surface for the notmid server-first product API. Local fixture mode is supported, but production deployments must provide real auth and environment configuration."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8787",
+      "description": "Local development"
+    },
+    {
+      "url": "https://thdev.app",
+      "description": "Production host placeholder"
+    }
+  ],
+  "tags": [
+    {
+      "name": "health"
+    },
+    {
+      "name": "auth"
+    },
+    {
+      "name": "feed"
+    },
+    {
+      "name": "map"
+    },
+    {
+      "name": "capture"
+    },
+    {
+      "name": "inbox"
+    },
+    {
+      "name": "profile"
+    },
+    {
+      "name": "deeplinks"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "API health",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "operationId": "getOpenApiDocument",
+        "responses": {
+          "200": {
+            "description": "OpenAPI contract document"
+          }
+        }
+      }
+    },
+    "/v1/auth/status": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "getAuthStatus",
+        "security": [
+          {},
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current auth status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidAuthStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/fake-sign-in": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "fakeSignIn",
+        "requestBody": {
+          "required": true,
+          "description": "Sign-in request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotmidSignInRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Local fake session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidSignInResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid JSON request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Fake auth disabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/profile/settings": {
+      "get": {
+        "tags": [
+          "profile"
+        ],
+        "operationId": "getProfileSettings",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidProfileSettingsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Auth required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "profile"
+        ],
+        "operationId": "updateProfileSettings",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Profile settings update request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotmidProfileSettingsUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile settings update response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidProfileSettingsUpdateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid profile settings request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Auth required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/capture/draft": {
+      "get": {
+        "tags": [
+          "capture"
+        ],
+        "operationId": "getCaptureDraft",
+        "responses": {
+          "200": {
+            "description": "Capture draft",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidCaptureDraftResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/capture/publish": {
+      "post": {
+        "tags": [
+          "capture"
+        ],
+        "operationId": "publishCapture",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Capture publish request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotmidCapturePublishRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Capture publish response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidCapturePublishResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid capture request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Auth required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Place not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/feed": {
+      "get": {
+        "tags": [
+          "feed"
+        ],
+        "operationId": "getFeed",
+        "responses": {
+          "200": {
+            "description": "Feed response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidFeedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/map": {
+      "get": {
+        "tags": [
+          "map"
+        ],
+        "operationId": "getMap",
+        "responses": {
+          "200": {
+            "description": "Map response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidMapResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/clips/{clipId}": {
+      "get": {
+        "tags": [
+          "feed"
+        ],
+        "operationId": "getClip",
+        "parameters": [
+          {
+            "name": "clipId",
+            "in": "path",
+            "required": true,
+            "description": "Clip id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Clip detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidClip"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Clip not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/clips/{clipId}/save": {
+      "post": {
+        "tags": [
+          "feed"
+        ],
+        "operationId": "saveClip",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "clipId",
+            "in": "path",
+            "required": true,
+            "description": "Clip id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Clip save response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidClipSaveResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Auth required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Clip not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/places/{placeId}": {
+      "get": {
+        "tags": [
+          "map"
+        ],
+        "operationId": "getPlace",
+        "parameters": [
+          {
+            "name": "placeId",
+            "in": "path",
+            "required": true,
+            "description": "Place id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Place detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidPlace"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Place not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/inbox/threads": {
+      "get": {
+        "tags": [
+          "inbox"
+        ],
+        "operationId": "getInboxThreads",
+        "responses": {
+          "200": {
+            "description": "Inbox threads",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidInboxResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "inbox"
+        ],
+        "operationId": "startInboxThread",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Start thread request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotmidStartThreadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Start thread response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidStartThreadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid start thread request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Auth required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Participant or attachment not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/inbox/threads/{threadId}": {
+      "get": {
+        "tags": [
+          "inbox"
+        ],
+        "operationId": "getInboxThread",
+        "parameters": [
+          {
+            "name": "threadId",
+            "in": "path",
+            "required": true,
+            "description": "Thread id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thread summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidThread"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/inbox/threads/{threadId}/detail": {
+      "get": {
+        "tags": [
+          "inbox"
+        ],
+        "operationId": "getInboxThreadDetail",
+        "parameters": [
+          {
+            "name": "threadId",
+            "in": "path",
+            "required": true,
+            "description": "Thread id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thread detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidThreadDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/inbox/threads/{threadId}/invite/accept": {
+      "post": {
+        "tags": [
+          "inbox"
+        ],
+        "operationId": "acceptInboxThreadInvite",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "threadId",
+            "in": "path",
+            "required": true,
+            "description": "Thread id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chat invite response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidChatInviteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invite not actionable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Auth required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/inbox/threads/{threadId}/invite/reject": {
+      "post": {
+        "tags": [
+          "inbox"
+        ],
+        "operationId": "rejectInboxThreadInvite",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "threadId",
+            "in": "path",
+            "required": true,
+            "description": "Thread id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chat invite response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidChatInviteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invite not actionable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Auth required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/inbox/threads/{threadId}/messages": {
+      "post": {
+        "tags": [
+          "inbox"
+        ],
+        "operationId": "sendInboxThreadMessage",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "threadId",
+            "in": "path",
+            "required": true,
+            "description": "Thread id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Send message request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotmidSendThreadMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Send message response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidSendThreadMessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid message request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Auth required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Chat invite required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/deeplinks/resolve": {
+      "get": {
+        "tags": [
+          "deeplinks"
+        ],
+        "operationId": "resolveDeepLink",
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resolved route stack",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotmidResolvedRouteStack"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "service": {
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/NotmidAuthMode"
+          }
+        }
+      },
+      "NotmidSource": {
+        "type": "string",
+        "enum": [
+          "fixture",
+          "api",
+          "cache"
+        ]
+      },
+      "NotmidAuthMode": {
+        "type": "string",
+        "enum": [
+          "fake",
+          "firebase",
+          "disabled"
+        ]
+      },
+      "NotmidAuthProvider": {
+        "type": "string",
+        "enum": [
+          "fake",
+          "anonymous",
+          "google"
+        ]
+      },
+      "NotmidAuthIntent": {
+        "type": "string",
+        "enum": [
+          "browse",
+          "capture",
+          "chat",
+          "profile"
+        ]
+      },
+      "NotmidAuthRequirement": {
+        "type": "string",
+        "enum": [
+          "capture",
+          "save",
+          "chat",
+          "profile-edit",
+          "moderation"
+        ]
+      },
+      "NotmidCaptureVisibility": {
+        "type": "string",
+        "enum": [
+          "public",
+          "friends",
+          "private"
+        ]
+      },
+      "NotmidMetricSet": {
+        "type": "object",
+        "properties": {
+          "likes": {
+            "type": "number"
+          },
+          "saves": {
+            "type": "number"
+          },
+          "comments": {
+            "type": "number"
+          },
+          "distanceLabel": {
+            "type": "string"
+          }
+        }
+      },
+      "NotmidPlace": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "neighborhood": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "openNow": {
+            "type": "boolean"
+          },
+          "score": {
+            "type": "number"
+          },
+          "receiptCount": {
+            "type": "number"
+          },
+          "coverImageUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "NotmidClip": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          },
+          "creatorHandle": {
+            "type": "string"
+          },
+          "placeId": {
+            "type": "string"
+          },
+          "moodTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "capturedAtLabel": {
+            "type": "string"
+          },
+          "coverImageUrl": {
+            "type": "string"
+          },
+          "videoUrl": {
+            "type": "string"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/NotmidMetricSet"
+          }
+        }
+      },
+      "NotmidClipSaveResponse": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/NotmidSource"
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "clip": {
+            "$ref": "#/components/schemas/NotmidClip"
+          },
+          "saved": {
+            "type": "boolean"
+          }
+        }
+      },
+      "NotmidChatRelationship": {
+        "type": "string",
+        "enum": [
+          "friend",
+          "non-friend"
+        ]
+      },
+      "NotmidChatInviteStatus": {
+        "type": "string",
+        "enum": [
+          "accepted",
+          "pending-inbound",
+          "pending-outbound",
+          "rejected"
+        ]
+      },
+      "NotmidChatAccess": {
+        "type": "object",
+        "properties": {
+          "relationship": {
+            "$ref": "#/components/schemas/NotmidChatRelationship"
+          },
+          "inviteStatus": {
+            "$ref": "#/components/schemas/NotmidChatInviteStatus"
+          },
+          "canSendMessage": {
+            "type": "boolean"
+          },
+          "canAcceptInvite": {
+            "type": "boolean"
+          },
+          "canRejectInvite": {
+            "type": "boolean"
+          },
+          "reasonLabel": {
+            "type": "string"
+          }
+        }
+      },
+      "NotmidThread": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "preview": {
+            "type": "string"
+          },
+          "updatedAtLabel": {
+            "type": "string"
+          },
+          "participantHandles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "attachedPlaceId": {
+            "type": "string"
+          },
+          "attachedClipId": {
+            "type": "string"
+          },
+          "unreadCount": {
+            "type": "number"
+          },
+          "chatAccess": {
+            "$ref": "#/components/schemas/NotmidChatAccess"
+          }
+        }
+      },
+      "NotmidMessageAttachment": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "clip"
+              },
+              "clipId": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "place"
+              },
+              "placeId": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "route"
+              },
+              "title": {
+                "type": "string"
+              },
+              "placeIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "NotmidThreadMessage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "threadId": {
+            "type": "string"
+          },
+          "senderHandle": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "createdAtLabel": {
+            "type": "string"
+          },
+          "mine": {
+            "type": "boolean"
+          },
+          "attachment": {
+            "$ref": "#/components/schemas/NotmidMessageAttachment"
+          }
+        }
+      },
+      "NotmidThreadDetailResponse": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/NotmidSource"
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "thread": {
+            "$ref": "#/components/schemas/NotmidThread"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotmidThreadMessage"
+            }
+          },
+          "attachedClip": {
+            "$ref": "#/components/schemas/NotmidClip"
+          },
+          "attachedPlace": {
+            "$ref": "#/components/schemas/NotmidPlace"
+          }
+        }
+      },
+      "NotmidSendThreadMessageRequest": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "attachment": {
+            "$ref": "#/components/schemas/NotmidMessageAttachment"
+          }
+        }
+      },
+      "NotmidStartThreadRequest": {
+        "type": "object",
+        "properties": {
+          "participantHandle": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "attachedClipId": {
+            "type": "string"
+          },
+          "attachedPlaceId": {
+            "type": "string"
+          }
+        }
+      },
+      "NotmidSendThreadMessageResponse": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/NotmidSource"
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "message": {
+            "$ref": "#/components/schemas/NotmidThreadMessage"
+          }
+        }
+      },
+      "NotmidChatInviteResponse": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/NotmidSource"
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "thread": {
+            "$ref": "#/components/schemas/NotmidThread"
+          }
+        }
+      },
+      "NotmidStartThreadResponse": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/NotmidSource"
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "thread": {
+            "$ref": "#/components/schemas/NotmidThread"
+          },
+          "message": {
+            "$ref": "#/components/schemas/NotmidThreadMessage"
+          }
+        }
+      },
+      "NotmidCaptureDraft": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          },
+          "placeId": {
+            "type": "string"
+          },
+          "moodTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/NotmidCaptureVisibility"
+          },
+          "mediaState": {
+            "type": "string",
+            "enum": [
+              "empty",
+              "local-preview",
+              "uploaded"
+            ]
+          }
+        }
+      },
+      "NotmidCaptureDraftResponse": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/NotmidSource"
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "draft": {
+            "$ref": "#/components/schemas/NotmidCaptureDraft"
+          },
+          "candidatePlaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotmidPlace"
+            }
+          }
+        }
+      },
+      "NotmidCapturePublishRequest": {
+        "type": "object",
+        "properties": {
+          "draftId": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          },
+          "placeId": {
+            "type": "string"
+          },
+          "moodTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/NotmidCaptureVisibility"
+          }
+        }
+      },
+      "NotmidCapturePublishResponse": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/NotmidSource"
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "clip": {
+            "$ref": "#/components/schemas/NotmidClip"
+          },
+          "moderationStatus": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "published"
+            ]
+          }
+        }
+      },
+      "NotmidFeedResponse": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/NotmidSource"
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "clips": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotmidClip"
+            }
+          },
+          "places": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotmidPlace"
+            }
+          }
+        }
+      },
+      "NotmidMapResponse": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/NotmidSource"
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "places": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotmidPlace"
+            }
+          },
+          "highlightedClipIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "NotmidInboxResponse": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/NotmidSource"
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "threads": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotmidThread"
+            }
+          }
+        }
+      },
+      "NotmidAuthUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "handle": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "homeNeighborhood": {
+            "type": "string"
+          },
+          "avatarImageUrl": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "NotmidProfilePrivacySettings": {
+        "type": "object",
+        "properties": {
+          "savedPlacesVisibility": {
+            "type": "string",
+            "enum": [
+              "private"
+            ]
+          },
+          "chatInvites": {
+            "type": "string",
+            "enum": [
+              "shared-clips-and-places"
+            ]
+          },
+          "defaultReceiptVisibility": {
+            "$ref": "#/components/schemas/NotmidCaptureVisibility"
+          }
+        }
+      },
+      "NotmidProfileSettings": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/NotmidAuthUser"
+          },
+          "privacy": {
+            "$ref": "#/components/schemas/NotmidProfilePrivacySettings"
+          }
+        }
+      },
+      "NotmidProfileSettingsResponse": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/NotmidSource"
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/NotmidProfileSettings"
+          }
+        }
+      },
+      "NotmidProfileSettingsUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "homeNeighborhood": {
+            "type": "string"
+          }
+        }
+      },
+      "NotmidProfileSettingsUpdateResponse": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/NotmidSource"
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/NotmidProfileSettings"
+          },
+          "updated": {
+            "type": "boolean"
+          }
+        }
+      },
+      "NotmidAuthSession": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/NotmidAuthProvider"
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/NotmidAuthUser"
+          }
+        }
+      },
+      "NotmidAuthStatusResponse": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/NotmidSource"
+          },
+          "generatedAt": {
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/NotmidAuthMode"
+          },
+          "authenticated": {
+            "type": "boolean"
+          },
+          "user": {
+            "$ref": "#/components/schemas/NotmidAuthUser"
+          },
+          "sessionExpiresAt": {
+            "type": "string"
+          },
+          "requiredFor": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotmidAuthRequirement"
+            }
+          }
+        }
+      },
+      "NotmidSignInRequest": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/NotmidAuthProvider"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/NotmidAuthIntent"
+          },
+          "returnTo": {
+            "type": "string"
+          }
+        }
+      },
+      "NotmidSignInResponse": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/NotmidAuthMode"
+          },
+          "session": {
+            "$ref": "#/components/schemas/NotmidAuthSession"
+          },
+          "nextPath": {
+            "type": "string"
+          }
+        }
+      },
+      "NotmidResolvedRoute": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "NotmidResolvedRouteStack": {
+        "type": "object",
+        "properties": {
+          "canonicalPath": {
+            "type": "string"
+          },
+          "stack": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotmidResolvedRoute"
+            }
+          }
+        }
+      },
+      "NotmidErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "requestId": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

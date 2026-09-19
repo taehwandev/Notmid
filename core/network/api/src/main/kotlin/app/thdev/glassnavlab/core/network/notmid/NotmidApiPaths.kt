@@ -10,7 +10,6 @@ object NotmidApiPaths {
     const val MAP = "/v1/map"
     const val INBOX_THREADS = "/v1/inbox/threads"
     const val PROFILE_SETTINGS = "/v1/profile/settings"
-    const val DEEPLINK_RESOLVE = "/v1/deeplinks/resolve"
 
     fun clip(clipId: String): String = "/v1/clips/${clipId.urlPathSegment()}"
 
