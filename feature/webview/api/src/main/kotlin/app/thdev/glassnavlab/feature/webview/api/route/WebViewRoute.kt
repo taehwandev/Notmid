@@ -1,6 +1,6 @@
 package app.thdev.glassnavlab.feature.webview.api.route
 
-import app.thdev.glassnavlab.core.router.route.ActivityRoute
+import app.thdev.glassnavlab.core.navigation.route.ActivityRoute
 import app.thdev.glassnavlab.feature.webview.api.activity.WebViewActivityKeys
 
 data class WebViewRoute(

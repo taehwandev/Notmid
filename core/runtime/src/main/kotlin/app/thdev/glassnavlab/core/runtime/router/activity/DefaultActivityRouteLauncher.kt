@@ -1,7 +1,7 @@
 package app.thdev.glassnavlab.core.runtime.router.activity
 
 import android.content.Context
-import app.thdev.glassnavlab.core.router.route.ActivityRoute
+import app.thdev.glassnavlab.core.navigation.route.ActivityRoute
 import dagger.hilt.android.qualifiers.ActivityContext
 import javax.inject.Inject
 

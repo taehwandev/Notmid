@@ -15,6 +15,13 @@ related_pages:
 
 # Target Module Taxonomy
 
+> **부분 대체됨.** 이 문서의 `Feature Impl`, `core/runtime`, `Base/App Shell Rule`,
+> `Import Direction` 섹션은
+> [`../notmid-target-boundary-ard.md`](../notmid-target-boundary-ard.md)가 대체한다.
+> Compose feature는 이제 `impl`이 아니라 `ui`가 소유하고, `impl`은 플랫폼 진입
+> 전용이다. `:core:router:*`는 `:core:navigation:*`로 개명됐다.
+> 나머지 섹션(owner-first 문법, assertions 규칙, 네이밍)은 유효하다.
+
 ## Decision
 
 Notmid의 목표 구조는 다음 두 축을 분리한다.
@@ -27,7 +34,7 @@ Notmid의 목표 구조는 다음 두 축을 분리한다.
 이 분리는 “모든 모듈을 쪼갠다”가 아니라 “의존성 방향을 문서화하고 테스트 가능한 계약을 만든다”가 목적이다.
 
 `core` module type 판단 기준은 Tao Agent OS
-`platforms/android/android-module-structure.md`의 `Core Is A Capability Namespace`가
+`${TAO_HOME}/platforms/android/skills/android-module-structure/references/module-layout.md`의 `Core Is A Capability Namespace`가
 source of truth다. 이 문서는 그 기준을 Notmid module 이름으로 매핑한다.
 
 ## Target Tree
@@ -342,7 +349,7 @@ PermissionHost
 behavior.
 
 Activity가 있는 host와 없는 host의 공통 기준은 Tao Agent OS
-`platforms/android/android-architecture.md`의 runtime boundary 예제를 따른다.
+`${TAO_HOME}/platforms/android/skills/android-architecture/references/structure-baseline.md`의 runtime boundary 예제를 따른다.
 Notmid 매핑은 Activity lifecycle 자체가 필요한 `Intent`, `onNewIntent`,
 `ActivityResultRegistry` 연결만 `:core:base`에 두고, `NoticeHost`, router runtime
 state, ActivityRoute pending queue/effect, permission/result adapter contract는

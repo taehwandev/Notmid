@@ -1,6 +1,6 @@
 package app.thdev.glassnavlab.feature.notmid.di
 
-import app.thdev.glassnavlab.core.router.runtime.RouteEventHandler
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEventHandler
 import app.thdev.glassnavlab.feature.notmid.router.FeedRouteEventHandler
 import app.thdev.glassnavlab.feature.notmid.router.InboxRouteEventHandler
 import app.thdev.glassnavlab.feature.notmid.router.MapRouteEventHandler

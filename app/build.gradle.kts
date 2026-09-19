@@ -258,7 +258,7 @@ dependencies {
     implementation(project(":core:network:api"))
     implementation(project(":core:network:impl"))
     implementation(project(":core:runtime"))
-    implementation(project(":feature:notmid:api"))
+    implementation(project(":core:navigation:api"))
     implementation(project(":feature:notmid:impl"))
     implementation(project(":feature:webview:impl"))
 

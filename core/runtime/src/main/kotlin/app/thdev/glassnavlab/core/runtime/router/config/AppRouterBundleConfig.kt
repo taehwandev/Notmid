@@ -1,8 +1,8 @@
 package app.thdev.glassnavlab.core.runtime.router.config
 
-import app.thdev.glassnavlab.core.router.deeplink.DeepLinkSpec
-import app.thdev.glassnavlab.core.router.route.TopLevelRoute
-import app.thdev.glassnavlab.core.router.runtime.RouteEventHandler
+import app.thdev.glassnavlab.core.navigation.deeplink.DeepLinkSpec
+import app.thdev.glassnavlab.core.navigation.route.TopLevelRoute
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEventHandler
 
 data class AppRouterBundleConfig(
     val defaultRoute: TopLevelRoute,

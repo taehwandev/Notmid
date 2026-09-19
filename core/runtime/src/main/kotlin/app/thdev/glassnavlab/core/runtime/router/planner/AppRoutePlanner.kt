@@ -1,8 +1,8 @@
 package app.thdev.glassnavlab.core.runtime.router.planner
 
-import app.thdev.glassnavlab.core.router.runtime.RouteCommand
-import app.thdev.glassnavlab.core.router.runtime.RouteEvent
-import app.thdev.glassnavlab.core.router.runtime.RoutePlan
+import app.thdev.glassnavlab.core.navigation.runtime.RouteCommand
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
+import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
 
 interface AppRoutePlanner {
     fun planFor(command: RouteCommand): RoutePlan

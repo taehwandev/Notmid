@@ -1,11 +1,11 @@
 package app.thdev.glassnavlab.core.runtime.router.config
 
-import app.thdev.glassnavlab.core.router.impl.deeplink.DeepLinkUrlPolicy
-import app.thdev.glassnavlab.core.router.impl.deeplink.DefaultDeepLinkResolver
-import app.thdev.glassnavlab.core.router.impl.event.DefaultRouteEventPlanner
-import app.thdev.glassnavlab.core.router.impl.registry.DefaultRouteRegistry
-import app.thdev.glassnavlab.core.router.registry.RouteRegistry
-import app.thdev.glassnavlab.core.router.runtime.RouteStack
+import app.thdev.glassnavlab.core.navigation.impl.deeplink.DeepLinkUrlPolicy
+import app.thdev.glassnavlab.core.navigation.impl.deeplink.DefaultDeepLinkResolver
+import app.thdev.glassnavlab.core.navigation.impl.event.DefaultRouteEventPlanner
+import app.thdev.glassnavlab.core.navigation.impl.registry.DefaultRouteRegistry
+import app.thdev.glassnavlab.core.navigation.registry.RouteRegistry
+import app.thdev.glassnavlab.core.navigation.runtime.RouteStack
 import app.thdev.glassnavlab.core.runtime.router.deeplink.DefaultAppDeepLinkResolver
 import app.thdev.glassnavlab.core.runtime.router.planner.AppRoutePlanner
 import app.thdev.glassnavlab.core.runtime.router.planner.DefaultAppRoutePlanner

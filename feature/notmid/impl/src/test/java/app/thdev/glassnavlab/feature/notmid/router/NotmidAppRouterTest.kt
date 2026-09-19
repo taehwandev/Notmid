@@ -1,11 +1,11 @@
 package app.thdev.glassnavlab.feature.notmid.router
 
-import app.thdev.glassnavlab.core.router.runtime.RouteCommand
-import app.thdev.glassnavlab.core.router.runtime.RouteEventHandler
-import app.thdev.glassnavlab.core.router.runtime.RoutePlan
-import app.thdev.glassnavlab.core.router.runtime.RouteStack
-import app.thdev.glassnavlab.core.router.assertions.TestActivityRoute
-import app.thdev.glassnavlab.core.router.assertions.assertRouteStack
+import app.thdev.glassnavlab.core.navigation.runtime.RouteCommand
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEventHandler
+import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
+import app.thdev.glassnavlab.core.navigation.runtime.RouteStack
+import app.thdev.glassnavlab.core.navigation.assertions.TestActivityRoute
+import app.thdev.glassnavlab.core.navigation.assertions.assertRouteStack
 import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
 import app.thdev.glassnavlab.feature.feed.api.event.FeedRouteEvent
 import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
@@ -15,8 +15,8 @@ import app.thdev.glassnavlab.feature.inbox.api.event.InboxRouteEvent
 import app.thdev.glassnavlab.feature.map.api.route.MapRoute
 import app.thdev.glassnavlab.feature.map.api.event.MapRouteEvent
 import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
-import app.thdev.glassnavlab.feature.notmid.api.destination.NotmidDestinationIds
-import app.thdev.glassnavlab.feature.notmid.api.event.NotmidRouteEvent
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidDestinationIds
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidRouteEvent
 import app.thdev.glassnavlab.feature.profile.api.route.ProfileRoute
 import app.thdev.glassnavlab.feature.profile.api.route.ProfileSettingsRoute
 import org.junit.Assert.assertEquals

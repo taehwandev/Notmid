@@ -1,6 +1,6 @@
 package app.thdev.glassnavlab.core.runtime.router.deeplink
 
-import app.thdev.glassnavlab.core.router.runtime.RoutePlan
+import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
 
 class FakeAppDeepLinkResolver(
     private val plansByUri: Map<String, RoutePlan> = emptyMap(),

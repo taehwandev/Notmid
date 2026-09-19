@@ -1,8 +1,8 @@
 package app.thdev.glassnavlab.feature.webview.api.deeplink
 
-import app.thdev.glassnavlab.core.router.deeplink.DeepLinkRequest
-import app.thdev.glassnavlab.core.router.deeplink.DeepLinkSpec
-import app.thdev.glassnavlab.core.router.runtime.RoutePlan
+import app.thdev.glassnavlab.core.navigation.deeplink.DeepLinkRequest
+import app.thdev.glassnavlab.core.navigation.deeplink.DeepLinkSpec
+import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
 import app.thdev.glassnavlab.feature.webview.api.route.WebViewMode
 import app.thdev.glassnavlab.feature.webview.api.route.WebViewRoute
 import java.net.URI

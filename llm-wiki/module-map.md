@@ -13,7 +13,7 @@ Reusable Android architecture rules live outside this wiki:
 ```text
 app/                 Android entry point
 core/                Android core modules
-feature/             Android feature api/impl modules
+feature/             Android feature api/ui modules; impl only for a platform entry
 build-logic/         Android Gradle convention plugins, including Hilt/KSP wiring
 
 apps/
@@ -46,17 +46,23 @@ Android module family policy의 source of truth는
 :core:network:assertions
 
 :feature:feed:api
-:feature:feed:impl
+:feature:feed:ui
 ```
 
-`owner`는 `auth`, `network`, `router`, `feed`처럼 함께 변경·리뷰되는 capability이고,
-`api`, `impl`, `assertions`는 그 아래의 역할이다. 따라서 `:core:api:auth`처럼
-역할을 owner보다 앞에 두지 않는다.
+`owner`는 `auth`, `network`, `navigation`, `feed`처럼 함께 변경·리뷰되는
+capability이고, `api`, `ui`, `impl`, `assertions`는 그 아래의 역할이다. 따라서
+`:core:api:auth`처럼 역할을 owner보다 앞에 두지 않는다.
+
+역할 이름은 [`docs/specs/notmid-target-boundary-ard.md`](../docs/specs/notmid-target-boundary-ard.md)의
+Decision 2를 따른다. Compose feature는 `ui`가 소유하고, `impl`은 Activity/Intent/
+manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 feature는
+`:feature:webview:impl` 하나다.
 
 일반 consumer는 owner의 `api`에만 의존하고, 같은 owner의 `impl`은 `api`를
 구현한다. `assertions`는 `api`에만 의존하며 production `impl`을 기본 의존성으로
-끌어오지 않는다. `:app`과 product-shell composer인 `:feature:notmid:impl`만
-선택한 feature/core 구현을 runtime graph에 조립한다.
+끌어오지 않는다. 현재는 `:app`과 product-shell composer인 `:feature:notmid:impl`이
+선택한 feature/core 구현을 runtime graph에 조립한다. ARD 5단계에서 이 조립
+책임은 `:app`으로 옮겨가고 `:feature:notmid:impl`은 사라진다.
 
 모든 owner가 완성된 쌍이나 trio를 가져야 하는 것은 아니다. `:core:notice:api`,
 `:core:data`, `:core:runtime`, `:core:base`, `:core:designsystem`,
@@ -142,28 +148,24 @@ Android module family policy의 source of truth는
   notice/host NoticeHost, NoticeEffectLifecycleCollector, NoticeAlertDialog
   Android Toast/Snackbar/Alert dispatch using :core:notice:api and design-system visuals
 
-:core:router:api
+:core:navigation:api
   pure Kotlin route contracts
   Route, ComposeRoute, ActivityRoute, TopLevelRoute
   DeepLinkSpec, DeepLinkRequest, DeepLinkResolver, RouteStack, RoutePlan
   RouteCommand, RouteEventHandler, RouteEventPlanner
+  notmid/ NotmidRoute, NotmidTopLevelRoute, NotmidRouteEvent,
+    NotmidDestinationIds, NotmidStaticDeepLinkSpec
 
-:core:router:impl
+:core:navigation:impl
   registry/ DefaultRouteRegistry
   event/ DefaultRouteEventPlanner
   deeplink/ DefaultDeepLinkResolver, DeepLinkUrlPolicy, UriDeepLinkRequestParser
   deeplink/ StaticRouteDeepLinkSpec, PrefixRouteDeepLinkSpec
 
-:core:router:assertions
+:core:navigation:assertions
   RouteFixtures, RecordingRouter, RecordingRouteEventSink
   FakeRouteEventPlanner, RoutePlanSubject, RouteStackSubject
-  reusable router test support that depends on :core:router:api, not impl
-
-:feature:notmid:api
-  route/ shared notmid route markers
-  deeplink/ notmid static deep-link helper
-  destination/ shared destination ids
-  event/ route events
+  reusable router test support that depends on :core:navigation:api, not impl
 
 :feature:notmid:common
   product-shaped UI adapters and shared screen sections
@@ -188,9 +190,11 @@ Android module family policy의 source of truth는
   event/ public route events
   activity/ Activity lookup keys when the feature exposes ActivityRoute
 
-:feature:*:impl
-  Compose screens for that feature only
-  feature:capture:impl owns Android CameraX preview and local still capture details
+:feature:*:ui
+  Compose surface for that feature only
+  feature:capture:ui owns Android CameraX preview and local still capture details
+  screen state owners land here in ARD migration step 4; today the state still
+  lives in :app NotmidAppViewModel
 ```
 
 ## Web And API Workspaces
@@ -225,21 +229,21 @@ packages/api-client
 Allowed examples:
 
 ```text
-feature:feed:impl -> feature:feed:api
-feature:feed:impl -> feature:notmid:common
-feature:notmid:impl -> feature:feed:impl
-app -> feature:*:api and impl modules
+feature:feed:ui -> feature:feed:api
+feature:feed:ui -> feature:notmid:common
+feature:notmid:impl -> feature:feed:ui
+app -> feature:*:api, feature:*:ui, and feature:webview:impl
 app -> core:notice:api
 ```
 
 Forbidden examples:
 
 ```text
-feature:feed:impl -> feature:map:impl
-feature impl -> app router implementation
+feature:feed:ui -> feature:map:ui
+feature ui -> app router implementation
 core:model -> Compose/Android
 core:designsystem -> product routes or repositories
-core:router:impl -> Android Activity launch
+core:navigation:impl -> Android Activity launch
 ```
 
 ## Build Logic Inventory

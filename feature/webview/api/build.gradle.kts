@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-    api(project(":core:router:api"))
+    api(project(":core:navigation:api"))
 }

@@ -2,6 +2,7 @@ package app.thdev.glassnavlab.feature.notmid.common.model
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import app.thdev.glassnavlab.core.model.notmid.NotmidGeoPoint
 
 data class NotmidPlace(
     val id: String,

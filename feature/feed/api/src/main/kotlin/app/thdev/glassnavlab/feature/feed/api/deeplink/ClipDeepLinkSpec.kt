@@ -1,12 +1,12 @@
 package app.thdev.glassnavlab.feature.feed.api.deeplink
 
-import app.thdev.glassnavlab.core.router.deeplink.DeepLinkRequest
-import app.thdev.glassnavlab.core.router.deeplink.DeepLinkSpec
-import app.thdev.glassnavlab.core.router.runtime.RoutePlan
-import app.thdev.glassnavlab.core.router.runtime.RouteStack
+import app.thdev.glassnavlab.core.navigation.deeplink.DeepLinkRequest
+import app.thdev.glassnavlab.core.navigation.deeplink.DeepLinkSpec
+import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
+import app.thdev.glassnavlab.core.navigation.runtime.RouteStack
 import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
 import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
-import app.thdev.glassnavlab.feature.notmid.api.destination.NotmidDestinationIds
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidDestinationIds
 
 object ClipDeepLinkSpec : DeepLinkSpec {
     override val priority: Int = 20

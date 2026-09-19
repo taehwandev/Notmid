@@ -1,7 +1,7 @@
 package app.thdev.glassnavlab.feature.feed.api.route
 
-import app.thdev.glassnavlab.feature.notmid.api.destination.NotmidDestinationIds
-import app.thdev.glassnavlab.feature.notmid.api.route.NotmidRoute
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidDestinationIds
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidRoute
 
 data class ClipDetailRoute(
     val clipId: String,

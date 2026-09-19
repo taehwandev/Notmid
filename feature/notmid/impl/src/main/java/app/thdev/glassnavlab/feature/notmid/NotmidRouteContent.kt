@@ -2,7 +2,7 @@ package app.thdev.glassnavlab.feature.notmid
 
 import androidx.compose.runtime.Composable
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
-import app.thdev.glassnavlab.core.router.runtime.RouteEvent
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
 import app.thdev.glassnavlab.feature.capture.CaptureScreen
 import app.thdev.glassnavlab.feature.capture.api.route.CaptureRoute
 import app.thdev.glassnavlab.feature.feed.ClipDetailScreen
@@ -18,8 +18,8 @@ import app.thdev.glassnavlab.feature.map.PlaceDetailScreen
 import app.thdev.glassnavlab.feature.map.api.route.MapRoute
 import app.thdev.glassnavlab.feature.map.api.event.MapRouteEvent
 import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
-import app.thdev.glassnavlab.feature.notmid.api.route.NotmidRoute
-import app.thdev.glassnavlab.feature.notmid.api.event.NotmidRouteEvent
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidRoute
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidRouteEvent
 import app.thdev.glassnavlab.feature.profile.ProfileScreen
 import app.thdev.glassnavlab.feature.profile.ProfileSettingsScreen
 import app.thdev.glassnavlab.feature.profile.api.route.ProfileRoute

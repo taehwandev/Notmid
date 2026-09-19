@@ -1,12 +1,12 @@
 package app.thdev.glassnavlab.feature.map.api.deeplink
 
-import app.thdev.glassnavlab.core.router.deeplink.DeepLinkRequest
-import app.thdev.glassnavlab.core.router.deeplink.DeepLinkSpec
-import app.thdev.glassnavlab.core.router.runtime.RoutePlan
-import app.thdev.glassnavlab.core.router.runtime.RouteStack
+import app.thdev.glassnavlab.core.navigation.deeplink.DeepLinkRequest
+import app.thdev.glassnavlab.core.navigation.deeplink.DeepLinkSpec
+import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
+import app.thdev.glassnavlab.core.navigation.runtime.RouteStack
 import app.thdev.glassnavlab.feature.map.api.route.MapRoute
 import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
-import app.thdev.glassnavlab.feature.notmid.api.destination.NotmidDestinationIds
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidDestinationIds
 
 object PlaceDeepLinkSpec : DeepLinkSpec {
     override val priority: Int = 20

@@ -4,12 +4,12 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import app.thdev.glassnavlab.core.router.route.ActivityRoute
-import app.thdev.glassnavlab.core.router.route.Route
-import app.thdev.glassnavlab.core.router.runtime.RouteCommand
-import app.thdev.glassnavlab.core.router.runtime.RouteEvent
-import app.thdev.glassnavlab.core.router.runtime.RoutePlan
-import app.thdev.glassnavlab.core.router.runtime.RouteStack
+import app.thdev.glassnavlab.core.navigation.route.ActivityRoute
+import app.thdev.glassnavlab.core.navigation.route.Route
+import app.thdev.glassnavlab.core.navigation.runtime.RouteCommand
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
+import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
+import app.thdev.glassnavlab.core.navigation.runtime.RouteStack
 import app.thdev.glassnavlab.core.runtime.router.planner.AppRoutePlanner
 
 @Stable

@@ -1,10 +1,10 @@
 package app.thdev.glassnavlab.feature.notmid.router
 
-import app.thdev.glassnavlab.core.router.runtime.RouteEvent
-import app.thdev.glassnavlab.core.router.runtime.RouteEventHandler
-import app.thdev.glassnavlab.core.router.runtime.RoutePlan
-import app.thdev.glassnavlab.core.router.runtime.RouteStack
-import app.thdev.glassnavlab.feature.notmid.api.event.NotmidRouteEvent
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEventHandler
+import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
+import app.thdev.glassnavlab.core.navigation.runtime.RouteStack
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidRouteEvent
 import javax.inject.Inject
 
 class NotmidRouteEventHandler @Inject constructor(

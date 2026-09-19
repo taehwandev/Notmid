@@ -1,8 +1,8 @@
 package app.thdev.glassnavlab.feature.notmid.router
 
-import app.thdev.glassnavlab.core.router.runtime.RouteEvent
-import app.thdev.glassnavlab.core.router.runtime.RouteEventHandler
-import app.thdev.glassnavlab.core.router.runtime.RoutePlan
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEventHandler
+import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
 import app.thdev.glassnavlab.feature.map.api.event.MapRouteEvent
 import javax.inject.Inject
 

@@ -18,8 +18,8 @@ import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLauncher
 import app.thdev.glassnavlab.feature.notmid.NotmidShellErrorScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellLoadingScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellScreen
-import app.thdev.glassnavlab.feature.notmid.api.destination.NotmidDestinationIds
-import app.thdev.glassnavlab.feature.notmid.api.event.NotmidRouteEvent
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidDestinationIds
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidRouteEvent
 import app.thdev.glassnavlab.feature.notmid.router.NotmidAppRouterFactory
 import app.thdev.glassnavlab.feature.notmid.router.notmidRouteStack
 import app.thdev.glassnavlab.feature.notmid.router.rememberNotmidAppRouter

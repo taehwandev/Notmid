@@ -8,8 +8,8 @@ import app.thdev.glassnavlab.feature.capture.api.route.CaptureRoute
 import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
 import app.thdev.glassnavlab.feature.inbox.api.route.ChatThreadRoute
 import app.thdev.glassnavlab.feature.inbox.api.route.InboxRoute
-import app.thdev.glassnavlab.feature.notmid.api.destination.NotmidDestinationIds
-import app.thdev.glassnavlab.feature.notmid.api.route.NotmidRoute
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidDestinationIds
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidRoute
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
 import app.thdev.glassnavlab.feature.notmid.common.model.destinationFor
 import app.thdev.glassnavlab.feature.profile.api.route.ProfileRoute

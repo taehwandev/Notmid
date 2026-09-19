@@ -9,11 +9,11 @@ android {
 
 dependencies {
     api(project(":core:notice:api"))
-    api(project(":core:router:api"))
+    api(project(":core:navigation:api"))
     implementation(project(":core:designsystem"))
-    implementation(project(":core:router:impl"))
+    implementation(project(":core:navigation:impl"))
     implementation(libs.androidx.lifecycle.runtime.compose)
 
-    testImplementation(project(":core:router:assertions"))
+    testImplementation(project(":core:navigation:assertions"))
     testImplementation(libs.junit)
 }

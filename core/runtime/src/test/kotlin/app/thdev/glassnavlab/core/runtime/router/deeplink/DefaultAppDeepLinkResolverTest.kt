@@ -1,9 +1,9 @@
 package app.thdev.glassnavlab.core.runtime.router.deeplink
 
-import app.thdev.glassnavlab.core.router.assertions.TestComposeRoute
-import app.thdev.glassnavlab.core.router.deeplink.DeepLinkResolver
-import app.thdev.glassnavlab.core.router.runtime.RoutePlan
-import app.thdev.glassnavlab.core.router.runtime.RouteStack
+import app.thdev.glassnavlab.core.navigation.assertions.TestComposeRoute
+import app.thdev.glassnavlab.core.navigation.deeplink.DeepLinkResolver
+import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
+import app.thdev.glassnavlab.core.navigation.runtime.RouteStack
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

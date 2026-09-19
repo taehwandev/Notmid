@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-    api(project(":feature:notmid:api"))
+    api(project(":core:navigation:api"))
 }

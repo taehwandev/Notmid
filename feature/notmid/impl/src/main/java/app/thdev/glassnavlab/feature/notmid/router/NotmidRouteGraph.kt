@@ -1,10 +1,10 @@
 package app.thdev.glassnavlab.feature.notmid.router
 
-import app.thdev.glassnavlab.core.router.deeplink.DeepLinkRequest
-import app.thdev.glassnavlab.core.router.registry.RouteRegistry
-import app.thdev.glassnavlab.core.router.runtime.RouteEventHandler
-import app.thdev.glassnavlab.core.router.runtime.RoutePlan
-import app.thdev.glassnavlab.core.router.runtime.RouteStack
+import app.thdev.glassnavlab.core.navigation.deeplink.DeepLinkRequest
+import app.thdev.glassnavlab.core.navigation.registry.RouteRegistry
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEventHandler
+import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
+import app.thdev.glassnavlab.core.navigation.runtime.RouteStack
 import app.thdev.glassnavlab.core.runtime.router.deeplink.AppDeepLinkResolver
 import app.thdev.glassnavlab.core.runtime.router.config.AppDeepLinkUrlConfig
 import app.thdev.glassnavlab.core.runtime.router.config.AppRouterBundle
@@ -24,7 +24,7 @@ import app.thdev.glassnavlab.feature.map.api.deeplink.MapDeepLinkSpec
 import app.thdev.glassnavlab.feature.map.api.deeplink.PlaceDeepLinkSpec
 import app.thdev.glassnavlab.feature.map.api.route.MapRoute
 import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
-import app.thdev.glassnavlab.feature.notmid.api.route.NotmidRoute
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidRoute
 import app.thdev.glassnavlab.feature.profile.api.deeplink.ProfileDeepLinkSpec
 import app.thdev.glassnavlab.feature.profile.api.deeplink.ProfileSettingsDeepLinkSpec
 import app.thdev.glassnavlab.feature.profile.api.route.ProfileRoute

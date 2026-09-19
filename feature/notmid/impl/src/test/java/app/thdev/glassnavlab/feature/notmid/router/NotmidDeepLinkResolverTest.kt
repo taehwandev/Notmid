@@ -1,6 +1,6 @@
 package app.thdev.glassnavlab.feature.notmid.router
 
-import app.thdev.glassnavlab.core.router.assertions.assertRoutePlan
+import app.thdev.glassnavlab.core.navigation.assertions.assertRoutePlan
 import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
 import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
 import app.thdev.glassnavlab.feature.inbox.api.route.ChatThreadRoute

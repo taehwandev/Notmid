@@ -1,5 +1,12 @@
 # notmid Router Architecture
 
+> **부분 대체됨.** 이 문서의 `Modules`와 `Current Route Event Wiring` 섹션은
+> [`notmid-target-boundary-ard.md`](notmid-target-boundary-ard.md)가 대체한다.
+> `:core:router:*`는 `:core:navigation:*`로 개명됐고, `:feature:notmid:api`의
+> 라우트 계약은 `:core:navigation:api`의 `core.navigation.notmid` 패키지로 옮겨졌다.
+> 라우트 그래프 소유권은 ARD 5단계에서 `:app`으로 이동한다.
+> 나머지 섹션(계약 모양, 딥링크 동작, 레지스트리 근거, 테스트 전략)은 유효하다.
+
 ## Direction
 
 notmid should use a production-shaped router, not ad-hoc string navigation.

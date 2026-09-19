@@ -1,10 +1,10 @@
 package app.thdev.glassnavlab.core.runtime.router.runtime
 
-import app.thdev.glassnavlab.core.router.route.Route
-import app.thdev.glassnavlab.core.router.runtime.RouteEventSink
-import app.thdev.glassnavlab.core.router.runtime.RoutePlan
-import app.thdev.glassnavlab.core.router.runtime.RouteStack
-import app.thdev.glassnavlab.core.router.runtime.Router
+import app.thdev.glassnavlab.core.navigation.route.Route
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEventSink
+import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
+import app.thdev.glassnavlab.core.navigation.runtime.RouteStack
+import app.thdev.glassnavlab.core.navigation.runtime.Router
 
 interface AppRouterRuntime : Router, RouteEventSink {
     val backStack: RouteStack
