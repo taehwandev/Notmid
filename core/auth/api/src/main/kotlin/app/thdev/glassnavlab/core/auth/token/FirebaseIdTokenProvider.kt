@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.auth.impl
+package app.thdev.glassnavlab.core.auth.token
 
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 

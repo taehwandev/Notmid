@@ -7,11 +7,11 @@ import app.thdev.glassnavlab.config.notmidRuntimeConfigFromBuildConfig
 import app.thdev.glassnavlab.core.auth.impl.ApiVerifiedNotmidAuthGateway
 import app.thdev.glassnavlab.core.auth.impl.FirebaseAuthRestConfig
 import app.thdev.glassnavlab.core.auth.impl.FirebaseAuthRestIdTokenProvider
-import app.thdev.glassnavlab.core.auth.impl.FirebaseIdTokenProvider
-import app.thdev.glassnavlab.core.auth.impl.GoogleIdTokenProvider
 import app.thdev.glassnavlab.core.auth.impl.LocalNotmidAuthGateway
 import app.thdev.glassnavlab.core.auth.impl.UnavailableFirebaseIdTokenProvider
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthGateway
+import app.thdev.glassnavlab.core.auth.token.FirebaseIdTokenProvider
+import app.thdev.glassnavlab.core.auth.token.GoogleIdTokenProvider
 import app.thdev.glassnavlab.core.data.notmid.ApiNotmidContentRepository
 import app.thdev.glassnavlab.core.data.notmid.ApiNotmidProtectedWriteRepository
 import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource

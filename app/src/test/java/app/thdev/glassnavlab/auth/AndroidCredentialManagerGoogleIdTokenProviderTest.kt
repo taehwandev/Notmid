@@ -1,6 +1,6 @@
 package app.thdev.glassnavlab.auth
 
-import app.thdev.glassnavlab.core.auth.impl.GoogleIdTokenResult
+import app.thdev.glassnavlab.core.auth.token.GoogleIdTokenResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

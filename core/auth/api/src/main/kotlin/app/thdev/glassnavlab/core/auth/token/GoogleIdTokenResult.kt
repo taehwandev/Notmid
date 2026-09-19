@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.auth.impl
+package app.thdev.glassnavlab.core.auth.token
 
 sealed interface GoogleIdTokenResult {
     data class Success(

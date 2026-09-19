@@ -1,5 +1,7 @@
 package app.thdev.glassnavlab.core.auth.impl
 
+import app.thdev.glassnavlab.core.auth.token.FirebaseIdTokenProvider
+import app.thdev.glassnavlab.core.auth.token.FirebaseIdTokenResult
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 
 class UnavailableFirebaseIdTokenProvider(
