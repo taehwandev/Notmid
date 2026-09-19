@@ -27,6 +27,7 @@ rootProject.name = "notmid"
 include(
     ":app",
     ":core:auth:api",
+    ":core:auth:android",
     ":core:auth:impl",
     ":core:data",
     ":core:base",

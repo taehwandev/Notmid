@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.auth
+package app.thdev.glassnavlab.core.auth.android
 
 import android.content.Context
 import androidx.credentials.CredentialManager

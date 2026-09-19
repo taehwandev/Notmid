@@ -1,7 +1,7 @@
 package app.thdev.glassnavlab.di
 
 import android.content.Context
-import app.thdev.glassnavlab.auth.AndroidCredentialManagerGoogleIdTokenProvider
+import app.thdev.glassnavlab.core.auth.android.AndroidCredentialManagerGoogleIdTokenProvider
 import app.thdev.glassnavlab.config.NotmidRuntimeConfig
 import app.thdev.glassnavlab.config.notmidRuntimeConfigFromBuildConfig
 import app.thdev.glassnavlab.core.auth.impl.ApiVerifiedNotmidAuthGateway

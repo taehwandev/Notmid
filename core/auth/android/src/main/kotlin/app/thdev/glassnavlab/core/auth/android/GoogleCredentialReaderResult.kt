@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.auth
+package app.thdev.glassnavlab.core.auth.android
 
 internal sealed interface GoogleCredentialReaderResult {
     data class Success(

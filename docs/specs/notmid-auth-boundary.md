@@ -38,11 +38,38 @@ passed with the existing dependency versions. The SDK 36.1 platform required by
 the project was installed locally before the app checks. No runtime behavior,
 SDK API usage, dependency version, or server contract changed in this unit.
 
+## Android adapter migration unit
+
+- Owner: `core:auth:android`, package `core.auth.android`.
+- Export: `AndroidCredentialManagerGoogleIdTokenProvider`. The reader and its
+  result stay internal, alongside the provider's existing five unit tests.
+- Allowed imports: `core:auth:api`, Android, Credential Manager, Google ID SDK,
+  and coroutines. Apply the existing Android library convention plugin.
+- Forbidden imports: `app`, `core:auth:impl`, Compose, and feature modules.
+- Consumer: the app Hilt module constructs the adapter using the existing
+  Context and qualified client ID; it consumes the pure `GoogleIdTokenProvider`.
+- Verification: standalone adapter unit tests, auth implementation tests, app
+  unit tests, and Debug APK assembly. Preserve credential request options,
+  Context selection, dispatching, error mapping, and token handling exactly.
+- Collapse rule: the separate Android module keeps SDK dependencies out of
+  pure auth contracts and HTTP implementation; do not merge it into either.
+
+This extraction stays serial because module membership, app dependency updates,
+and DI imports form one integration unit. The prior 46 passing tests and APK
+build cover the unchanged adapter before relocation. Only module ownership
+changes; upstream verified-email, credential API upgrades, and authentication
+policy changes are outside this unit.
+
+Verified on 2026-09-19: `:core:auth:android:testDebugUnitTest` (5 tests),
+`:core:auth:impl:test` (22 tests), `:app:testDebugUnitTest` (19 tests), and
+`:app:assembleDebug` passed. All five relocated Kotlin files are identical to
+their previous versions except the package declaration. App source contains
+no direct Credential Manager or Google ID SDK imports after the move.
+
 ## Remaining migration
 
-The Android Credential Manager adapter still lives in `app/auth`. Move it and
-its tests to an Android auth implementation boundary after the pure contracts
-compile. Keep BuildConfig selection and app DI assembly in `app`.
+Keep BuildConfig selection and app DI assembly in `app`; credential SDK code
+belongs to `core:auth:android` and token exchange belongs to `core:auth:impl`.
 
 The broader feature-state, data-fixture, app-shell, and web/API extraction work
 remains governed by `notmid-target-boundary-ard.md`; this note does not declare

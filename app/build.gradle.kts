@@ -247,6 +247,7 @@ android {
 
 dependencies {
     implementation(project(":core:auth:api"))
+    implementation(project(":core:auth:android"))
     implementation(project(":core:auth:impl"))
     implementation(project(":core:base"))
     implementation(project(":core:data"))
@@ -262,13 +263,10 @@ dependencies {
     implementation(project(":feature:webview:impl"))
 
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    implementation(libs.googleid)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(platform(libs.androidx.compose.bom))
