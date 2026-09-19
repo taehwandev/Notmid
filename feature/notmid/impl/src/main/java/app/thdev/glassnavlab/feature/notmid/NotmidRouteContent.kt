@@ -60,12 +60,6 @@ internal fun NotmidRouteContent(
     onAcceptThreadInvite: (String) -> Unit,
     onRejectThreadInvite: (String) -> Unit,
     onSendThreadMessage: (threadId: String, body: String) -> Unit,
-    onStartThread: (
-        participantHandle: String,
-        body: String,
-        attachedClipId: String?,
-        attachedPlaceId: String?,
-    ) -> Unit,
     onUpdateProfileSettings: (displayName: String, homeNeighborhood: String) -> Unit,
 ) {
     val feedStateHolder = rememberSaveableStateHolder()
@@ -96,20 +90,19 @@ internal fun NotmidRouteContent(
         FeedRoute -> {
             feedStateHolder.SaveableStateProvider("feed") {
                 FeedScreen(
-                    onRouteEvent = onRouteEvent,
                     onBackdropColorChanged = onFeedBackdropColorChanged,
                 )
             }
         }
 
         is ClipDetailRoute -> {
-            ClipDetailScreen(
-                destination = routeState.selectedDestination,
-                route = route,
-                listState = routeState.listState,
-                isStartingChat = isStartingChat,
-                onStartThread = onStartThread,
-            )
+            feedStateHolder.SaveableStateProvider(route.route) {
+                ClipDetailScreen(
+                    route = route,
+                    isStartingChat = isStartingChat,
+                    onBackdropColorChanged = onFeedBackdropColorChanged,
+                )
+            }
         }
 
         MapRoute -> {

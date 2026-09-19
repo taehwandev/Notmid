@@ -8,12 +8,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import app.thdev.glassnavlab.feature.feed.api.event.FeedRouteEvent
 import app.thdev.glassnavlab.core.designsystem.component.backdrop.rememberListBackdropColor
 
 @Composable
 fun FeedScreen(
-    onRouteEvent: (FeedRouteEvent) -> Unit = {},
     onBackdropColorChanged: (Color) -> Unit = {},
 ) {
     val viewModel: FeedViewModel = viewModel()
@@ -32,9 +30,9 @@ fun FeedScreen(
     FeedLoadContent(
         state = state,
         listState = listState,
-        onRetry = viewModel::retry,
+        onRetry = { viewModel.onAction(FeedAction.Retry) },
         onClipSelected = { clipId ->
-            onRouteEvent(FeedRouteEvent.ClipRequested(clipId))
+            viewModel.onAction(FeedAction.ClipClicked(clipId))
         },
     )
 }

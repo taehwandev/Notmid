@@ -2,6 +2,8 @@ package app.thdev.glassnavlab.feature.feed
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEventSink
+import app.thdev.glassnavlab.feature.feed.api.event.FeedRouteEvent
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentSnapshot
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
@@ -24,6 +26,7 @@ internal class FeedViewModel @Inject constructor(
     contentUpdates: NotmidContentUpdates,
     private val repository: NotmidContentRepository,
     @param:FeedIoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val routeEvents: RouteEventSink,
 ) : ViewModel() {
     private var retryJob: Job? = null
 
@@ -41,7 +44,14 @@ internal class FeedViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FeedLoadState.Loading)
 
-    fun retry() {
+    fun onAction(action: FeedAction) {
+        when (action) {
+            is FeedAction.ClipClicked -> routeEvents.onRouteEvent(FeedRouteEvent.ClipRequested(action.clipId))
+            FeedAction.Retry -> retry()
+        }
+    }
+
+    private fun retry() {
         if (retryJob?.isActive == true) return
         retryJob = viewModelScope.launch {
             try {

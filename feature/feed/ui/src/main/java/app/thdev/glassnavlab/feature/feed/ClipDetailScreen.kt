@@ -1,77 +1,44 @@
 package app.thdev.glassnavlab.feature.feed
 
-import androidx.compose.foundation.lazy.LazyListState
+import android.os.Bundle
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
-import app.thdev.glassnavlab.core.designsystem.component.NotmidButton
-import app.thdev.glassnavlab.core.designsystem.component.NotmidButtonVariant
-import app.thdev.glassnavlab.core.designsystem.theme.NotmidColorTokens
-import app.thdev.glassnavlab.core.model.notmid.NotmidNavigationIcon
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.HasDefaultViewModelProviderFactory
+import androidx.lifecycle.DEFAULT_ARGS_KEY
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.MutableCreationExtras
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
+import app.thdev.glassnavlab.core.designsystem.component.backdrop.rememberListBackdropColor
 import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
-import app.thdev.glassnavlab.feature.notmid.common.components.NotmidGlassIcon
-import app.thdev.glassnavlab.feature.notmid.common.components.NotmidRouteDetailContent
-import app.thdev.glassnavlab.feature.notmid.common.model.NotmidBadge
-import app.thdev.glassnavlab.feature.notmid.common.model.NotmidClip
-import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
-import app.thdev.glassnavlab.feature.notmid.common.model.NotmidPlace
 
 @Composable
 fun ClipDetailScreen(
-    destination: NotmidDestination,
     route: ClipDetailRoute,
-    listState: LazyListState,
     isStartingChat: Boolean = false,
-    onStartThread: (
-        participantHandle: String,
-        body: String,
-        attachedClipId: String?,
-        attachedPlaceId: String?,
-    ) -> Unit = { _, _, _, _ -> },
+    onBackdropColorChanged: (Color) -> Unit = {},
 ) {
-    val primaryClip = destination.clips.firstOrNull { it.id == route.clipId } ?: NotmidClip(
-        id = route.clipId,
-        title = "Clip",
-        description = "This clip route is valid, but the loaded content has no matching item.",
-        badge = NotmidBadge.Label("missing"),
-        palette = listOf(NotmidColorTokens.Ink, NotmidColorTokens.Subtle, NotmidColorTokens.Mist),
-    )
-    val primaryPlace = primaryClip.placeId
-        ?.let { placeId -> destination.places.firstOrNull { it.id == placeId } }
-        ?: destination.places.firstOrNull()
-        ?: NotmidPlace(
-            id = "clip-${route.clipId}-place",
-            title = "Linked place",
-            description = "The loaded content has no place attached to this clip.",
-            metric = "clip",
-            palette = primaryClip.palette,
-            height = 176.dp,
-            contentColor = NotmidColorTokens.Cloud,
-        )
+    val owner = checkNotNull(LocalViewModelStoreOwner.current)
+    val extras = remember(owner, route.clipId) {
+        MutableCreationExtras((owner as HasDefaultViewModelProviderFactory).defaultViewModelCreationExtras).apply {
+            set(DEFAULT_ARGS_KEY, Bundle().apply { putString(ClipDetailViewModel.CLIP_ID, route.clipId) })
+        }
+    }
+    val viewModel: ClipDetailViewModel = viewModel(key = route.route, extras = extras)
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
+    val palettes = (state as? ClipDetailUiState.Ready)?.backdropPalettes.orEmpty()
+    val backdropColor by rememberListBackdropColor(listState, palettes)
+    SideEffect { onBackdropColorChanged(backdropColor) }
 
-    NotmidRouteDetailContent(
-        routeTitle = primaryClip.title,
-        routeSubtitle = primaryClip.description,
-        routeMeta = "clips/${route.clipId}",
-        primaryClip = primaryClip,
-        primaryPlace = primaryPlace,
+    ClipDetailContent(
+        state = state,
         listState = listState,
-        actions = {
-            NotmidButton(
-                text = if (isStartingChat) "Starting" else "Chat",
-                onClick = {
-                    onStartThread(
-                        primaryClip.creatorHandle,
-                        "Can we chat about ${primaryClip.title}?",
-                        primaryClip.id,
-                        primaryClip.placeId,
-                    )
-                },
-                enabled = primaryClip.creatorHandle.isNotBlank() && !isStartingChat,
-                variant = NotmidButtonVariant.Secondary,
-                leadingIcon = { color ->
-                    NotmidGlassIcon(NotmidNavigationIcon.Inbox, color)
-                },
-            )
-        },
+        isStartingChat = isStartingChat,
+        onAction = viewModel::onAction,
     )
 }

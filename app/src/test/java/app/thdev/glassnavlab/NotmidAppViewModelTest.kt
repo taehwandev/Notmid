@@ -8,6 +8,10 @@ import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
 import app.thdev.glassnavlab.core.data.notmid.RepositoryNotmidProtectedWriteExecutor
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRequest
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEventSink
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidRouteEvent
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectDelegate
 import app.thdev.glassnavlab.core.notice.api.effect.MutableNoticeEffectDelegate
@@ -41,6 +45,32 @@ import org.junit.Test
 class NotmidAppViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    @Test
+    fun featureWriteActionUsesExistingStateNoticeAndNavigationHandling() = runTest(mainDispatcherRule.dispatcher) {
+        val writes = ChannelNotmidActionDelegate<NotmidProtectedWriteRequest>()
+        val vm = newViewModel(protectedWriteActions = writes)
+        val effects = mutableListOf<NoticeEffect>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.effects.take(2).toList(effects) }
+        writes.dispatch(NotmidProtectedWriteRequest.StartThread(NotmidStartThreadRequest(
+            participantHandle = "@second", body = "Chat", attachedClipId = "clip-2", attachedPlaceId = null,
+        )))
+        advanceUntilIdle()
+        assertEquals("Chat started.", vm.state.value.messageFor(NotmidProtectedWriteAction.ChatStart))
+        assertEquals(2, effects.size)
+        assertEquals("Chat started.", (effects[0] as NoticeEffect.ShowNotice).notice.message)
+        assertEquals("https://thdev.app/notmid/inbox/chats/thread-start", (effects[1] as NoticeEffect.NavigateDeepLink).deepLink)
+    }
+
+    @Test
+    fun routeAndBrowseActionsAreHandledByViewModel() = runTest(mainDispatcherRule.dispatcher) {
+        val events = mutableListOf<RouteEvent>()
+        val vm = newViewModel(routeEvents = RouteEventSink { events.add(it) })
+        vm.onAction(NotmidAppAction.RouteRequested(NotmidRouteEvent.SettingsRequested))
+        vm.onAction(NotmidAppAction.BrowseSignedOut)
+        advanceUntilIdle()
+        assertEquals(listOf(NotmidRouteEvent.SettingsRequested, NotmidRouteEvent.DestinationSelected("feed")), events)
+    }
 
     @Test
     fun initLoadsContentIntoState() = runTest(mainDispatcherRule.dispatcher) {
@@ -301,6 +331,8 @@ class NotmidAppViewModelTest {
         authGateway: NotmidAuthGateway = FakeAuthGateway(signedInAuthState),
         actionDelegate: NotmidActionDelegate<NotmidAppAction> = ChannelNotmidActionDelegate(),
         uiEffects: NoticeEffectDelegate = MutableNoticeEffectDelegate(),
+        protectedWriteActions: NotmidActionDelegate<NotmidProtectedWriteRequest> = ChannelNotmidActionDelegate(),
+        routeEvents: RouteEventSink = RouteEventSink {},
     ): NotmidAppViewModel {
         return NotmidAppViewModel(
             contentSource = NotmidContentSource.Static,
@@ -310,6 +342,8 @@ class NotmidAppViewModelTest {
             actionDelegate = actionDelegate,
             uiEffects = uiEffects,
             ioDispatcher = mainDispatcherRule.dispatcher,
+            protectedWriteActions = protectedWriteActions,
+            routeEvents = routeEvents,
         )
     }
 }

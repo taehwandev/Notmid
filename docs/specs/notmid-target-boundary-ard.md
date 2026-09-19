@@ -312,7 +312,7 @@ core:*:assertions -> 같은 owner의 api
 | 1 | `feature:notmid:api` → `core:navigation:api`, router 개명 | 전 모듈 컴파일, feature→feature api 엣지 0 | 낮음 | done 2026-09-12 |
 | 2 | `impl` → `ui` 개명 | 컴파일, `settings.gradle.kts`와 namespace 일치 | 낮음(기계적) | done 2026-09-12 |
 | 3 | 모델 이중화 제거, `feature:notmid:common` 정리 | 컴파일, core:model과 이름이 겹치는 타입이 3종 이하 | 중간 | done 2026-09-12 |
-| 4 | ViewModel 분해 — feature 하나씩 1 PR | feature별 ViewModel 테스트, 화면 파라미터에서 `destination`/`listState` 제거 | 높음 | in progress — 피드 첫 화면 분리 |
+| 4 | ViewModel 분해 — feature 하나씩 1 PR | feature별 ViewModel 테스트, 화면 파라미터에서 `destination`/`listState` 제거 | 높음 | in progress — 피드·클립 상세 상태와 액션 분리 |
 | 5 | 셸을 `:app`으로 이동, `feature:notmid` 삭제 | 컴파일, 딥링크 수동 스모크, `:app`만 라우트 그래프 소유 | 높음 | |
 | 6 | `core:base`/`core:runtime` 해체, `core:data` 분할 | 컴파일, `Static*`가 프로덕션 의존성에 없음 | 중간 | |
 
@@ -354,7 +354,28 @@ CI를 두었다. Android에는 OpenAPI 고정 JSON 사본과 Kotlin 어댑터를
 피드 스크롤은 화면의 `rememberLazyListState`가 소유한다. 셸의 saveable 경계는
 탭 전환 뒤 복원을 보장하며, 하단바에는 화면이 계산한 배경색만 전달한다.
 색 샘플링은 도메인 모델을 받지 않는 디자인 시스템 함수로 공유한다.
-기존 클립 상세 화면과 나머지 feature의 ViewModel 이전은 아직 남아 있다.
+클립 상세도 `ClipDetailViewModel`이 콘텐츠를 구독하고 클립·연결 장소·누락 항목
+표시 상태를 선택한다. 클립 ID는 화면 경계에서 `SavedStateHandle`의 기본 인자로
+한 번 전달하며, ViewModel과 저장 가능한 스크롤 상태를 클립 경로별로 구분한다.
+기존 상세 표시 문구와 장소 대체 선택, 배경색 샘플링은 유지한다.
+
+화면은 `FeedAction`/`ClipDetailAction`을 보내며 라우트 이벤트나 채팅 요청을
+구성하지 않는다. `FeedViewModel`이 `RouteEventSink`를 호출하고,
+`ClipDetailViewModel`은 기존 `NotmidActionDelegate<NotmidProtectedWriteRequest>`에
+채팅 요청을 보낸다. 이 입력의 단일 소비자인 앱 ViewModel이 기존 인증·중복 제출
+방지·쓰기 실행·콘텐츠 갱신·토스트/알럿·채팅 화면 이동을 처리한다. 이 쓰기 처리
+소유자의 feature 이전은 후속 작업이며, 입력 채널만 옮겼다고 완료로 보지 않는다.
+채널은 ActivityRetained 범위로 공유하고 앱 ViewModel 종료 시 닫는다.
+
+라우터 인스턴스와 순수 라우트 핸들러는 ActivityRetained 범위에서 DI로 구성해
+Activity와 ViewModel에 같은 인스턴스를 제공한다. Compose는 스택 표시와 플랫폼
+UI 실행을 맡는다. 비로그인 탐색의 피드 이동과 기본 로그인 제공자 선택도 앱
+ViewModel의 액션 처리에 속한다. 다른 feature의 화면 내 라우트 이벤트 구성과
+ViewModel 이전은 아직 남아 있다.
+
+검증: 피드/상세 ViewModel의 선택·새로고침·재시도·취소·라우트 포트 호출·채팅
+액션 생성 테스트, 앱의 공유 쓰기 입력과 알림/이동 테스트, 기존 라우터 테스트 및
+APK 빌드를 실행한다. 화면의 스크롤 복귀와 DI 연결은 정적 콘텐츠 APK로 확인한다.
 
 검증은 `:core:data:test`, `:feature:feed:ui:testDebugUnitTest`,
 `:app:testDebugUnitTest`, `:app:assembleDebug`로 수행한다.

@@ -13,16 +13,12 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidCaptureVisibility
 import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteDecision
 import app.thdev.glassnavlab.core.model.notmid.NotmidProfileSettingsUpdateRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
-import app.thdev.glassnavlab.core.model.notmid.NotmidStartThreadRequest
 import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLauncher
 import app.thdev.glassnavlab.feature.notmid.NotmidShellErrorScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellLoadingScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellScreen
-import app.thdev.glassnavlab.core.navigation.notmid.NotmidDestinationIds
-import app.thdev.glassnavlab.core.navigation.notmid.NotmidRouteEvent
-import app.thdev.glassnavlab.feature.notmid.router.NotmidAppRouterFactory
+import app.thdev.glassnavlab.core.runtime.router.runtime.AppRouterRuntime
 import app.thdev.glassnavlab.feature.notmid.router.notmidRouteStack
-import app.thdev.glassnavlab.feature.notmid.router.rememberNotmidAppRouter
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -32,13 +28,12 @@ class MainActivity : BaseActivity() {
     lateinit var activityRouteLauncher: ActivityRouteLauncher
 
     @Inject
-    lateinit var notmidAppRouterFactory: NotmidAppRouterFactory
+    lateinit var appRouter: AppRouterRuntime
 
     @Composable
     override fun Content() {
         val notmidAppViewModel: NotmidAppViewModel = viewModel()
         val appState by notmidAppViewModel.state.collectAsStateWithLifecycle()
-        val appRouter = rememberNotmidAppRouter(notmidAppRouterFactory)
 
         BaseAppRoot(
             router = appRouter,
@@ -90,12 +85,10 @@ class MainActivity : BaseActivity() {
                             NotmidProtectedWriteAction.ProfileSettings,
                         ),
                         navigationStack = appRouter.notmidRouteStack(),
-                        onRouteEvent = { event -> appRouter.onRouteEvent(event) },
+                        onRouteEvent = { event -> notmidAppViewModel.onAction(NotmidAppAction.RouteRequested(event)) },
                         onContinueLocalAuth = {
                             notmidAppViewModel.onAction(
-                                NotmidAppAction.ContinueAuth(
-                                    notmidAppViewModel.primaryAuthProvider(),
-                                ),
+                                NotmidAppAction.ContinuePrimaryAuth,
                             )
                         },
                         onContinueGoogleAuth = {
@@ -105,11 +98,6 @@ class MainActivity : BaseActivity() {
                         },
                         onBrowseSignedOut = {
                             notmidAppViewModel.onAction(NotmidAppAction.BrowseSignedOut)
-                            appRouter.onRouteEvent(
-                                NotmidRouteEvent.DestinationSelected(
-                                    NotmidDestinationIds.FEED,
-                                ),
-                            )
                         },
                         onPublishCapture = {
                             draftId,
@@ -156,23 +144,6 @@ class MainActivity : BaseActivity() {
                                 NotmidAppAction.SendThreadMessage(
                                     threadId = threadId,
                                     request = NotmidSendThreadMessageRequest(body = body),
-                                ),
-                            )
-                        },
-                        onStartThread = {
-                            participantHandle,
-                            body,
-                            attachedClipId,
-                            attachedPlaceId,
-                            ->
-                            notmidAppViewModel.onAction(
-                                NotmidAppAction.StartThread(
-                                    NotmidStartThreadRequest(
-                                        participantHandle = participantHandle,
-                                        body = body,
-                                        attachedClipId = attachedClipId,
-                                        attachedPlaceId = attachedPlaceId,
-                                    ),
                                 ),
                             )
                         },

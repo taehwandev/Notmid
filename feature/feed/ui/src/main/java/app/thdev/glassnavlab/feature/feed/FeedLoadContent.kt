@@ -25,19 +25,24 @@ internal fun FeedLoadContent(
 ) {
     when (state) {
         is FeedLoadState.Ready -> FeedContent(state.content, listState, onClipSelected)
-        else -> Column(
-            modifier = Modifier.fillMaxSize().padding(NotmidTheme.spacing.screenHorizontal),
-            verticalArrangement = Arrangement.spacedBy(NotmidTheme.spacing.md, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            NotmidText(
-                text = stringResource(
-                    if (state == FeedLoadState.Loading) R.string.feed_loading else R.string.feed_unavailable,
-                ),
-            )
-            if (state == FeedLoadState.Unavailable) {
-                NotmidButton(text = stringResource(R.string.feed_retry), onClick = onRetry)
-            }
+        else -> FeedLoadStatus(state == FeedLoadState.Loading, onRetry)
+    }
+}
+
+@Composable
+internal fun FeedLoadStatus(isLoading: Boolean, onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(NotmidTheme.spacing.screenHorizontal),
+        verticalArrangement = Arrangement.spacedBy(NotmidTheme.spacing.md, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        NotmidText(
+            text = stringResource(
+                if (isLoading) R.string.feed_loading else R.string.feed_unavailable,
+            ),
+        )
+        if (!isLoading) {
+            NotmidButton(text = stringResource(R.string.feed_retry), onClick = onRetry)
         }
     }
 }

@@ -33,6 +33,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URLEncoder
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEventSink
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidRouteEvent
+import app.thdev.glassnavlab.core.navigation.notmid.NotmidDestinationIds
 import javax.inject.Inject
 
 @HiltViewModel
@@ -45,6 +48,8 @@ internal class NotmidAppViewModel internal constructor(
     private val uiEffects: NoticeEffectDelegate,
     @param:IoDispatcher
     private val ioDispatcher: CoroutineDispatcher,
+    private val protectedWriteActions: NotmidActionDelegate<NotmidProtectedWriteRequest>,
+    private val routeEvents: RouteEventSink,
 ) : ViewModel(), NoticeEffectViewModel by uiEffects {
     @Inject
     constructor(
@@ -53,6 +58,8 @@ internal class NotmidAppViewModel internal constructor(
         protectedWriteExecutor: NotmidProtectedWriteExecutor,
         authGateway: NotmidAuthGateway,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
+        protectedWriteActions: NotmidActionDelegate<NotmidProtectedWriteRequest>,
+        routeEvents: RouteEventSink,
     ) : this(
         contentSource = contentSource,
         getDestinations = getDestinations,
@@ -61,6 +68,8 @@ internal class NotmidAppViewModel internal constructor(
         actionDelegate = ChannelNotmidActionDelegate(),
         uiEffects = MutableNoticeEffectDelegate(),
         ioDispatcher = ioDispatcher,
+        protectedWriteActions = protectedWriteActions,
+        routeEvents = routeEvents,
     )
 
     private val mutableState = MutableStateFlow(
@@ -76,6 +85,7 @@ internal class NotmidAppViewModel internal constructor(
     val state: StateFlow<NotmidAppUiState> = mutableState.asStateFlow()
 
     init {
+        protectedWriteActions.actions.onEach(::enqueueProtectedAction).launchIn(viewModelScope)
         actionDelegate
             .actions
             .onEach(::handleAction)
@@ -98,8 +108,13 @@ internal class NotmidAppViewModel internal constructor(
     private fun handleAction(action: NotmidAppAction) {
         when (action) {
             NotmidAppAction.ReloadContent -> reloadContent()
+            NotmidAppAction.ContinuePrimaryAuth -> continueAuth(primaryAuthProvider())
+            is NotmidAppAction.RouteRequested -> routeEvents.onRouteEvent(action.event)
             is NotmidAppAction.ContinueAuth -> continueAuth(action.provider)
-            NotmidAppAction.BrowseSignedOut -> clearAuthError()
+            NotmidAppAction.BrowseSignedOut -> {
+                clearAuthError()
+                routeEvents.onRouteEvent(NotmidRouteEvent.DestinationSelected(NotmidDestinationIds.FEED))
+            }
             is NotmidAppAction.PublishCapture -> enqueueProtectedAction(
                 NotmidProtectedWriteRequest.PublishCapture(action.request),
             )
@@ -132,7 +147,7 @@ internal class NotmidAppViewModel internal constructor(
         }
     }
 
-    fun primaryAuthProvider(): NotmidAuthProvider {
+    private fun primaryAuthProvider(): NotmidAuthProvider {
         return when (mutableState.value.authState.mode) {
             NotmidAuthMode.Firebase -> NotmidAuthProvider.Anonymous
 
@@ -312,6 +327,7 @@ internal class NotmidAppViewModel internal constructor(
 
     override fun onCleared() {
         actionDelegate.close()
+        protectedWriteActions.close()
         super.onCleared()
     }
 }

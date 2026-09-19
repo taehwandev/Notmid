@@ -15,6 +15,7 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
 import app.thdev.glassnavlab.core.model.notmid.NotmidDestination as NotmidDestinationModel
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
 import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
+import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
 import app.thdev.glassnavlab.core.navigation.notmid.NotmidRoute
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidBackgroundColor
 import app.thdev.glassnavlab.feature.notmid.common.model.toNotmidDestinations
@@ -53,12 +54,6 @@ fun NotmidShellScreen(
     onAcceptThreadInvite: (String) -> Unit = {},
     onRejectThreadInvite: (String) -> Unit = {},
     onSendThreadMessage: (threadId: String, body: String) -> Unit = { _, _ -> },
-    onStartThread: (
-        participantHandle: String,
-        body: String,
-        attachedClipId: String?,
-        attachedPlaceId: String?,
-    ) -> Unit = { _, _, _, _ -> },
     onUpdateProfileSettings: (displayName: String, homeNeighborhood: String) -> Unit = { _, _ -> },
 ) {
     val notmidDestinations = remember(destinations) {
@@ -118,7 +113,6 @@ fun NotmidShellScreen(
                 onAcceptThreadInvite = onAcceptThreadInvite,
                 onRejectThreadInvite = onRejectThreadInvite,
                 onSendThreadMessage = onSendThreadMessage,
-                onStartThread = onStartThread,
                 onUpdateProfileSettings = onUpdateProfileSettings,
             )
         },
@@ -127,7 +121,7 @@ fun NotmidShellScreen(
                 NotmidShellBottomNavigation(
                     destinations = notmidDestinations,
                     selectedDestinationId = routeState.selectedDestinationId,
-                    navigationBackdropColor = if (routeState.activeRoute == FeedRoute) {
+                    navigationBackdropColor = if (routeState.activeRoute == FeedRoute || routeState.activeRoute is ClipDetailRoute) {
                         feedBackdropColor
                     } else navigationBackdropColor,
                     backdrop = backdrop,

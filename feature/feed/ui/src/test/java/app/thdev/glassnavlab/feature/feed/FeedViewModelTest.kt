@@ -1,6 +1,9 @@
 package app.thdev.glassnavlab.feature.feed
 
 import androidx.lifecycle.ViewModelStore
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEventSink
+import app.thdev.glassnavlab.feature.feed.api.event.FeedRouteEvent
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentSnapshot
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
@@ -32,6 +35,8 @@ class FeedViewModelTest {
         override val snapshot = MutableStateFlow<NotmidContentSnapshot>(NotmidContentSnapshot.Loading)
     }
     private var reads = 0
+    private val routeEvents = mutableListOf<RouteEvent>()
+    private val routeSink = RouteEventSink { routeEvents.add(it) }
     private val repository = object : NotmidContentRepository {
         override suspend fun destinations(): List<NotmidDestination> {
             reads++
@@ -76,7 +81,7 @@ class FeedViewModelTest {
         updates.snapshot.value = NotmidContentSnapshot.Unavailable
         advanceUntilIdle()
         assertSame(FeedLoadState.Unavailable, vm.state.value)
-        vm.retry()
+        vm.onAction(FeedAction.Retry)
         advanceUntilIdle()
         assertEquals(1, reads)
         assertEquals("clip-1", (vm.state.value as FeedLoadState.Ready).content.heroClip?.id)
@@ -92,15 +97,22 @@ class FeedViewModelTest {
                 return emptyList()
             }
         }
-        val vm = FeedViewModel(updates, pendingRepository, dispatcher).also { store.put("feed", it) }
-        vm.retry()
-        vm.retry()
+        val vm = FeedViewModel(updates, pendingRepository, dispatcher, routeSink).also { store.put("feed", it) }
+        vm.onAction(FeedAction.Retry)
+        vm.onAction(FeedAction.Retry)
         advanceUntilIdle()
         assertEquals(1, reads)
         release.complete(Unit)
     }
 
-    private fun model() = FeedViewModel(updates, repository, dispatcher).also { store.put("feed", it) }
+    @Test
+    fun clipActionNavigatesThroughInjectedPortWithoutReadingContent() {
+        model().onAction(FeedAction.ClipClicked("clip-2"))
+        assertEquals(listOf(FeedRouteEvent.ClipRequested("clip-2")), routeEvents)
+        assertEquals(0, reads)
+    }
+
+    private fun model() = FeedViewModel(updates, repository, dispatcher, routeSink).also { store.put("feed", it) }
 
     private val feed = NotmidDestination(
         id = "feed", title = "Feed", subtitle = "Receipts", icon = NotmidNavigationIcon.Feed,
