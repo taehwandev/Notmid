@@ -1,5 +1,12 @@
 # Backend, Firebase Auth, And Open Source Security Spec
 
+> Repository split (2026-09-19): service implementation is external.
+> Paths beginning `apps/api` and canonical `packages/contracts` refer to
+> Notmid-server; `apps/web` and `packages/api-client` refer to Notmid-web.
+> API/Web verification scripts and deployment workflows run in those repositories.
+> Android uses only the pinned HTTP contract and client adapters. Historical
+> mixed-platform implementation notes below do not imply local service ownership.
+
 ## Purpose
 
 notmid is evolving into a real short-form, place-based social service with feed, map, capture, inbox/chat, and profile features. The product is server-first, with Firebase used as auxiliary infrastructure where it is the right tool. The repository is open source, so production access must never depend on obscured client files or committed private keys.

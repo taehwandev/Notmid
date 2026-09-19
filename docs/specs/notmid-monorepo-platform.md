@@ -1,3 +1,12 @@
+# Historical monorepo platform specification
+
+Superseded for repository layout by
+[the extraction record](notmid-service-extraction.md).
+The original design below is retained as product history. `apps/api` and its
+contracts now belong to Notmid-server; `apps/web` and the client belong to
+Notmid-web. Commands below apply to that historical combined checkout, not
+the current Android repository.
+
 # notmid Monorepo Platform Spec
 
 ## Decision

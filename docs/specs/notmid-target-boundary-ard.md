@@ -26,8 +26,9 @@ related_pages:
 
 Accepted (2026-09-12). 이 문서가 목표 경계의 source of truth다.
 
-진행 상황은 [Migration Order](#migration-order)의 Status 열이 기록한다. 단계 0은
-Open Decision 3(새 repository 이름과 히스토리 처리)이 답해질 때까지 시작하지 않는다.
+진행 상황은 [Migration Order](#migration-order)의 Status 열이 기록한다.
+Repository 이름과 히스토리 정책은 2026-09-19 사용자 결정으로 확정되었다:
+`Notmid-web`, `Notmid-server`, 기존 Git 이력은 옮기지 않는다.
 
 ## Context
 
@@ -149,7 +150,9 @@ Gradle 프로젝트가 된다.
 낮으며, 현재는 Android CI가 Node/pnpm 설치와 API smoke를 기다린다. 두 제품의
 릴리스 주기도 다르다.
 
-**두 레포의 유일한 계약 seam은 HTTP다.**
+**Android·웹 클라이언트와 서버 사이의 계약은 HTTP다.** 웹과 서버도 각각
+`Notmid-web`, `Notmid-server` 저장소로 분리한다. 웹의 TypeScript 계약은 서버
+원본의 고정 사본으로 보관하고, 형제 저장소의 파일을 직접 import하지 않는다.
 
 - `apps/api`가 OpenAPI 스펙을 산출물로 발행한다.
 - Android은 그 스펙의 고정 사본을 저장하고, `NotmidApiPaths`와 DTO가 사본과
@@ -305,7 +308,7 @@ core:*:assertions -> 같은 owner의 api
 
 | # | 작업 | 검증 | 위험 | Status |
 | --- | --- | --- | --- | --- |
-| 0 | 웹/서버 별도 레포 추출, CI·스크립트 분리 | 새 레포 typecheck/smoke 통과, 이 레포 `./gradlew test :app:assembleDebug` 통과, CI에서 Node 단계 제거 | 낮음 | blocked on Open Decision 3 |
+| 0 | 웹/서버 별도 레포 추출, CI·스크립트 분리 | 새 레포 typecheck/smoke 통과, 이 레포 `./gradlew test :app:assembleDebug` 통과, CI에서 Node 단계 제거 | 낮음 | done locally 2026-09-19 |
 | 1 | `feature:notmid:api` → `core:navigation:api`, router 개명 | 전 모듈 컴파일, feature→feature api 엣지 0 | 낮음 | done 2026-09-12 |
 | 2 | `impl` → `ui` 개명 | 컴파일, `settings.gradle.kts`와 namespace 일치 | 낮음(기계적) | done 2026-09-12 |
 | 3 | 모델 이중화 제거, `feature:notmid:common` 정리 | 컴파일, core:model과 이름이 겹치는 타입이 3종 이하 | 중간 | done 2026-09-12 |
@@ -315,11 +318,13 @@ core:*:assertions -> 같은 owner의 api
 
 단계 0은 1~6과 독립이므로 먼저 끝내면 이후 모든 단계의 CI 시간이 줄어든다.
 
-### 단계 0 준비 (2026-09-19)
+### 단계 0 분리 (2026-09-19)
 
-외부 저장소로의 실제 이동은 아직 미완료다. 먼저 OpenAPI 사본을 고정해 Android
-계약 테스트의 입력으로 두고, Android와 Web/API의 검증 스크립트 및 CI job을
-분리했다. 이전 통합 검증 진입점은 두 검증을 순서대로 실행한다.
+`Notmid-web`, `Notmid-server`로 실제 소스를 분리하고 각 저장소에 독립 검증과
+CI를 두었다. Android에는 OpenAPI 고정 JSON 사본과 Kotlin 어댑터를 남겼다.
+`scripts/verify-local.sh`와 CI는 Android만 검증하며 Node/pnpm을 요구하지 않는다.
+기존 서비스 런타임 코드는 해시로 보존을 확인했고 세 저장소의 로컬 검증이 통과했다.
+원격 저장소 생성과 배포는 이 단계에 포함하지 않는다.
 분리 대상과 완료 조건은 [서비스 추출 기록](notmid-service-extraction.md),
 고정 계약의 출처와 한계는 [계약 기록](../contracts/README.md)을 따른다.
 
@@ -386,8 +391,8 @@ top-level 함수(`toNotmidDestinations`, `notmidPalette`, `destinationFor`,
    서버 `/v1/deeplinks/resolve`로 수렴할 것인가. 별도 레포 분리 후 결정한다.
 2. **`feature:auth:ui` 신설 여부.** 로그인 화면을 feature로 둘지 `:app` 셸에 둘지.
    현재 로그인은 셸 상태(`shouldShowLogin`)에 강하게 묶여 있다.
-3. **새 repository 이름과 히스토리 보존 방식.** `git filter-repo`로 8개 커밋을
-   옮길지, 단일 초기 커밋으로 시작할지.
+3. **해결됨 (2026-09-19): repository와 이력.** 웹은 `Notmid-web`, API는
+   `Notmid-server`로 분리하며 각각 새 초기 커밋으로 시작한다. 기존 이력은 옮기지 않는다.
 4. **`core:designsystem` 개명.** 기존 Transition Policy는 보류를 권고했다. 이
    ARD도 보류를 유지한다.
 5. **`feature:notmid:common` 모듈명과 UI 모델 3종의 타입명.** 3단계가 드러낸

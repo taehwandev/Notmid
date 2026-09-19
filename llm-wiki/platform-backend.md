@@ -1,5 +1,12 @@
 # Platform Backend
 
+> Repository split (2026-09-19): service implementation is external.
+> Paths beginning `apps/api` and canonical `packages/contracts` refer to
+> Notmid-server; `apps/web` and `packages/api-client` refer to Notmid-web.
+> API/Web verification scripts and deployment workflows run in those repositories.
+> Android uses only the pinned HTTP contract and client adapters. Historical
+> mixed-platform implementation notes below do not imply local service ownership.
+
 This page records Notmid backend, web, API, auth, and Android integration facts.
 Reusable module-structure, ViewModel, data-flow, notice, and delegate rules live
 in Tao Agent OS.
@@ -157,7 +164,7 @@ packages/api-client
   public Firebase API key and can exchange an injected Google ID token through
   Identity Toolkit before the notmid API verification call. When the current
   Android session is anonymous, the Google exchange includes that Firebase ID
-  token so Firebase links the account. The app-layer Android Credential Manager
+  token so Firebase links the account. The `:core:auth:android` Credential Manager
   provider obtains the Google ID token with the injected OAuth web client id.
   App Hilt modules own the runtime auth-mode switch between local and
   API-verified gateways; `MainActivity` does not construct auth gateways,

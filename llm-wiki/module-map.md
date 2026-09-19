@@ -8,26 +8,19 @@ Reusable Android architecture rules live outside this wiki:
 - `docs/specs/android-commonization/README.md`
 - Tao Agent OS Android cards for module structure, ViewModel state, and data flow.
 
-## Monorepo Shape
+## Repository Shape
 
 ```text
-app/                 Android entry point
-core/                Android core modules
-feature/             Android feature api/ui modules; impl only for a platform entry
-build-logic/         Android Gradle convention plugins, including Hilt/KSP wiring
-
-apps/
-  api/               TypeScript API server
-  web/               React/Next.js web app
-
-packages/
-  contracts/         canonical URLs, DTOs, fixtures
-  api-client/        typed fetch wrapper
+app/                 Android entry and DI assembly
+core/                Android capabilities, domain ports and client adapters
+feature/             Android feature api/ui modules and platform entries
+build-logic/         Android Gradle conventions
+docs/contracts/      Pinned HTTP contract used by Android tests
 ```
 
-Android and TypeScript builds are intentionally separate. Share product
-contracts through URL/API schema and docs, not by making Android consume
-TypeScript source.
+`Notmid-web` owns the web workspace and API client. `Notmid-server` owns the API,
+SQL migrations and canonical TypeScript/OpenAPI contracts. Android has no
+TypeScript source or Node/pnpm build dependency.
 
 ## Android Module Family Grammar
 
@@ -197,32 +190,12 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
   lives in :app NotmidAppViewModel
 ```
 
-## Web And API Workspaces
+## External Service Repositories
 
-```text
-apps/api
-  Hono HTTP API
-  token verification boundary
-  fixture and Postgres repository adapters
-  protected write policy
-  privacy-safe audit logging
-
-apps/web
-  React/Next.js product shell
-  /notmid canonical web surface
-  shareable detail routes
-  Firebase Auth anonymous and Google session bridge
-  protected write server actions backed by apps/api
-
-packages/contracts
-  routes/ canonical web route helpers and URL shapes
-  dto/ or schema/ shared TypeScript DTO and validation shapes
-  fixtures/ deterministic fixture data
-  parity/ route/API parity resolvers when needed
-
-packages/api-client
-  typed fetch client for web/server-side tooling
-```
+The Web and API workspaces have separate repositories. Refer to their README
+and verification commands. The integration boundary here is the pinned
+`docs/contracts/notmid-openapi.json` plus canonical deep-link URL shapes.
+See [extraction record](../docs/specs/notmid-service-extraction.md).
 
 ## Notmid Dependency Notes
 

@@ -1,5 +1,12 @@
 # Firebase And Open Source
 
+> Repository split (2026-09-19): service implementation is external.
+> Paths beginning `apps/api` and canonical `packages/contracts` refer to
+> Notmid-server; `apps/web` and `packages/api-client` refer to Notmid-web.
+> API/Web verification scripts and deployment workflows run in those repositories.
+> Android uses only the pinned HTTP contract and client adapters. Historical
+> mixed-platform implementation notes below do not imply local service ownership.
+
 ## Direction
 
 notmid is server-first. Firebase is useful auxiliary infrastructure, but it should not be the long-term domain contract by default.
