@@ -312,7 +312,7 @@ core:*:assertions -> 같은 owner의 api
 | 1 | `feature:notmid:api` → `core:navigation:api`, router 개명 | 전 모듈 컴파일, feature→feature api 엣지 0 | 낮음 | done 2026-09-12 |
 | 2 | `impl` → `ui` 개명 | 컴파일, `settings.gradle.kts`와 namespace 일치 | 낮음(기계적) | done 2026-09-12 |
 | 3 | 모델 이중화 제거, `feature:notmid:common` 정리 | 컴파일, core:model과 이름이 겹치는 타입이 3종 이하 | 중간 | done 2026-09-12 |
-| 4 | ViewModel 분해 — feature 하나씩 1 PR | feature별 ViewModel 테스트, 화면 파라미터에서 `destination`/`listState` 제거 | 높음 | in progress — 피드·클립 상세 상태와 액션 분리 |
+| 4 | ViewModel 분해 — feature 하나씩 1 PR | feature별 ViewModel 테스트, 화면 파라미터에서 `destination`/`listState` 제거 | 높음 | in progress — 피드·지도·클립/장소 상세 상태와 액션 분리 |
 | 5 | 셸을 `:app`으로 이동, `feature:notmid` 삭제 | 컴파일, 딥링크 수동 스모크, `:app`만 라우트 그래프 소유 | 높음 | |
 | 6 | `core:base`/`core:runtime` 해체, `core:data` 분할 | 컴파일, `Static*`가 프로덕션 의존성에 없음 | 중간 | |
 
@@ -370,8 +370,25 @@ CI를 두었다. Android에는 OpenAPI 고정 JSON 사본과 Kotlin 어댑터를
 라우터 인스턴스와 순수 라우트 핸들러는 ActivityRetained 범위에서 DI로 구성해
 Activity와 ViewModel에 같은 인스턴스를 제공한다. Compose는 스택 표시와 플랫폼
 UI 실행을 맡는다. 비로그인 탐색의 피드 이동과 기본 로그인 제공자 선택도 앱
-ViewModel의 액션 처리에 속한다. 다른 feature의 화면 내 라우트 이벤트 구성과
-ViewModel 이전은 아직 남아 있다.
+ViewModel의 액션 처리에 속한다.
+
+### 단계 4 — 지도·장소 상세 및 셸 라우트 액션
+
+`MapViewModel`은 공유 콘텐츠 구독, 카테고리·핀 선택, 선택 장소의 라우트 요청을
+소유한다. 선택 입력은 `SavedStateHandle`에 보관하고 지도 스크롤은 화면이
+소유한다. `PlaceDetailViewModel`은 장소 경로 인자로 콘텐츠를 선택하며 기존
+연결 클립/첫 클립/누락 항목 대체 규칙을 유지한다. 두 화면 모두 셸에서
+`destination`/`listState`를 받지 않는다. 구독은 새 네트워크 요청을 발생시키지
+않고 Retry 액션만 명시적으로 저장소를 호출한다.
+
+지도 보드·캔버스·핀·범례와 장소 미리보기를 역할별 컴포넌트로 분리했다.
+기존 가짜 지도 표시, 좌표 클램프, 카테고리 대체 및 미완성 Save later는 보존한다.
+비어 있는 필터에서 첫 전체 핀을 미리보기로 쓰는 기존 규칙도 변경하지 않는다.
+
+셸 탭·설정·대화방·첨부 장소 클릭은 `NotmidShellAction`을 보내고
+`NotmidShellViewModel`이 `RouteEventSink`를 호출한다. 인박스의 클릭 콜백은
+대화방 ID만 전달한다. 인박스 자체 상태, 캡처, 프로필 및 보호된 쓰기 실행의
+feature 이전과 `feature:notmid` 셸을 app으로 옮기는 단계는 아직 남아 있다.
 
 검증: 피드/상세 ViewModel의 선택·새로고침·재시도·취소·라우트 포트 호출·채팅
 액션 생성 테스트, 앱의 공유 쓰기 입력과 알림/이동 테스트, 기존 라우터 테스트 및

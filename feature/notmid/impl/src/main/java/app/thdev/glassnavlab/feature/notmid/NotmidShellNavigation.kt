@@ -13,7 +13,6 @@ import app.thdev.glassnavlab.core.designsystem.component.NotmidBottomNavigation
 import app.thdev.glassnavlab.core.designsystem.component.NotmidBottomNavigationItem
 import app.thdev.glassnavlab.core.designsystem.component.liquidglass.LiquidGlassNavigationAction
 import app.thdev.glassnavlab.core.navigation.notmid.NotmidDestinationIds
-import app.thdev.glassnavlab.core.navigation.notmid.NotmidRouteEvent
 import app.thdev.glassnavlab.feature.notmid.common.components.NotmidGlassIcon
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
 import com.kyant.backdrop.Backdrop
@@ -25,7 +24,7 @@ internal fun NotmidShellBottomNavigation(
     navigationBackdropColor: Color,
     backdrop: Backdrop,
     modifier: Modifier = Modifier,
-    onRouteEvent: (NotmidRouteEvent) -> Unit,
+    onAction: (NotmidShellAction) -> Unit,
 ) {
     NotmidBottomNavigation(
         items = rememberNotmidNavigationItems(destinations),
@@ -38,15 +37,15 @@ internal fun NotmidShellBottomNavigation(
             icon = { color -> NotmidPlusIcon(color) },
             selected = selectedDestinationId == NotmidDestinationIds.CAPTURE,
             onClick = {
-                onRouteEvent(
-                    NotmidRouteEvent.DestinationSelected(
+                onAction(
+                    NotmidShellAction.DestinationClicked(
                         NotmidDestinationIds.CAPTURE,
                     ),
                 )
             },
         ),
         onItemSelected = { item ->
-            onRouteEvent(NotmidRouteEvent.DestinationSelected(item.id))
+            onAction(NotmidShellAction.DestinationClicked(item.id))
         },
     )
 }

@@ -85,7 +85,6 @@ class MainActivity : BaseActivity() {
                             NotmidProtectedWriteAction.ProfileSettings,
                         ),
                         navigationStack = appRouter.notmidRouteStack(),
-                        onRouteEvent = { event -> notmidAppViewModel.onAction(NotmidAppAction.RouteRequested(event)) },
                         onContinueLocalAuth = {
                             notmidAppViewModel.onAction(
                                 NotmidAppAction.ContinuePrimaryAuth,

@@ -13,9 +13,11 @@ import androidx.compose.ui.Modifier
 import app.thdev.glassnavlab.core.designsystem.component.liquidglass.LiquidGlassBackdropHost
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
 import app.thdev.glassnavlab.core.model.notmid.NotmidDestination as NotmidDestinationModel
-import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
+import androidx.lifecycle.viewmodel.compose.viewModel
 import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
 import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
+import app.thdev.glassnavlab.feature.map.api.route.MapRoute
+import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
 import app.thdev.glassnavlab.core.navigation.notmid.NotmidRoute
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidBackgroundColor
 import app.thdev.glassnavlab.feature.notmid.common.model.toNotmidDestinations
@@ -39,7 +41,6 @@ fun NotmidShellScreen(
     chatMessage: String? = null,
     profileSettingsMessage: String? = null,
     navigationStack: List<NotmidRoute> = listOf(FeedRoute),
-    onRouteEvent: (RouteEvent) -> Unit = {},
     onContinueLocalAuth: () -> Unit = {},
     onContinueGoogleAuth: () -> Unit = onContinueLocalAuth,
     onBrowseSignedOut: () -> Unit = {},
@@ -56,6 +57,7 @@ fun NotmidShellScreen(
     onSendThreadMessage: (threadId: String, body: String) -> Unit = { _, _ -> },
     onUpdateProfileSettings: (displayName: String, homeNeighborhood: String) -> Unit = { _, _ -> },
 ) {
+    val viewModel: NotmidShellViewModel = viewModel()
     val notmidDestinations = remember(destinations) {
         destinations.toNotmidDestinations()
     }
@@ -80,6 +82,7 @@ fun NotmidShellScreen(
         },
     )
     var feedBackdropColor by remember { mutableStateOf(NotmidBackgroundColor) }
+    var mapBackdropColor by remember { mutableStateOf(NotmidBackgroundColor) }
 
     LiquidGlassBackdropHost(
         modifier = Modifier
@@ -103,8 +106,9 @@ fun NotmidShellScreen(
                 clipSaveMessage = clipSaveMessage,
                 chatMessage = chatMessage,
                 profileSettingsMessage = profileSettingsMessage,
-                onRouteEvent = onRouteEvent,
+                onAction = viewModel::onAction,
                 onFeedBackdropColorChanged = { feedBackdropColor = it },
+                onMapBackdropColorChanged = { mapBackdropColor = it },
                 onContinueLocalAuth = onContinueLocalAuth,
                 onContinueGoogleAuth = onContinueGoogleAuth,
                 onBrowseSignedOut = onBrowseSignedOut,
@@ -121,12 +125,14 @@ fun NotmidShellScreen(
                 NotmidShellBottomNavigation(
                     destinations = notmidDestinations,
                     selectedDestinationId = routeState.selectedDestinationId,
-                    navigationBackdropColor = if (routeState.activeRoute == FeedRoute || routeState.activeRoute is ClipDetailRoute) {
-                        feedBackdropColor
-                    } else navigationBackdropColor,
+                    navigationBackdropColor = when (routeState.activeRoute) {
+                        FeedRoute, is ClipDetailRoute -> feedBackdropColor
+                        MapRoute, is PlaceDetailRoute -> mapBackdropColor
+                        else -> navigationBackdropColor
+                    },
                     backdrop = backdrop,
                     modifier = Modifier.align(Alignment.BottomCenter),
-                    onRouteEvent = { event -> onRouteEvent(event) },
+                    onAction = viewModel::onAction,
                 )
             }
         },

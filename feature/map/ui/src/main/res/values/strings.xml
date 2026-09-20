@@ -1,0 +1,5 @@
+<resources>
+    <string name="map_loading">Loading places…</string>
+    <string name="map_unavailable">Places are unavailable right now.</string>
+    <string name="map_retry">Retry</string>
+</resources>

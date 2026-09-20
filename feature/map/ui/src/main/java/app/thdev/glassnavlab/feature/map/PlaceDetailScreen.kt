@@ -1,47 +1,42 @@
 package app.thdev.glassnavlab.feature.map
 
-import androidx.compose.foundation.lazy.LazyListState
+import android.os.Bundle
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
-import app.thdev.glassnavlab.core.designsystem.theme.NotmidColorTokens
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.HasDefaultViewModelProviderFactory
+import androidx.lifecycle.DEFAULT_ARGS_KEY
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.MutableCreationExtras
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
+import app.thdev.glassnavlab.core.designsystem.component.backdrop.rememberListBackdropColor
 import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
-import app.thdev.glassnavlab.feature.notmid.common.components.NotmidRouteDetailContent
-import app.thdev.glassnavlab.feature.notmid.common.model.NotmidBadge
-import app.thdev.glassnavlab.feature.notmid.common.model.NotmidClip
-import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
-import app.thdev.glassnavlab.feature.notmid.common.model.NotmidPlace
 
 @Composable
 fun PlaceDetailScreen(
-    destination: NotmidDestination,
     route: PlaceDetailRoute,
-    listState: LazyListState,
+    onBackdropColorChanged: (Color) -> Unit = {},
 ) {
-    val primaryPlace = destination.places.firstOrNull { it.id == route.placeId } ?: NotmidPlace(
-        id = route.placeId,
-        title = "Place",
-        description = "This place route is valid, but the loaded content has no matching item.",
-        metric = "missing",
-        palette = listOf(NotmidColorTokens.Ink, NotmidColorTokens.Subtle, NotmidColorTokens.Mist),
-        height = 176.dp,
-        contentColor = NotmidColorTokens.Cloud,
-    )
-    val primaryClip = destination.clips.firstOrNull { it.placeId == route.placeId }
-        ?: destination.clips.firstOrNull()
-        ?: NotmidClip(
-            id = "place-${route.placeId}-clip",
-            title = "Recent proof",
-            description = "The loaded content has no proof clip attached to this place.",
-            badge = NotmidBadge.Label("place"),
-            palette = primaryPlace.palette,
-        )
+    val owner = checkNotNull(LocalViewModelStoreOwner.current)
+    val extras = remember(owner, route.placeId) {
+        MutableCreationExtras((owner as HasDefaultViewModelProviderFactory).defaultViewModelCreationExtras).apply {
+            set(DEFAULT_ARGS_KEY, Bundle().apply { putString(PlaceDetailViewModel.PLACE_ID, route.placeId) })
+        }
+    }
+    val viewModel: PlaceDetailViewModel = viewModel(key = route.route, extras = extras)
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
+    val palettes = (state as? PlaceDetailUiState.Ready)?.backdropPalettes.orEmpty()
+    val backdropColor by rememberListBackdropColor(listState, palettes)
+    SideEffect { onBackdropColorChanged(backdropColor) }
 
-    NotmidRouteDetailContent(
-        routeTitle = primaryPlace.title,
-        routeSubtitle = primaryPlace.description,
-        routeMeta = "places/${route.placeId}",
-        primaryClip = primaryClip,
-        primaryPlace = primaryPlace,
+    PlaceDetailContent(
+        state = state,
         listState = listState,
+        onAction = viewModel::onAction,
     )
 }

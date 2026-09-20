@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.graphics.Color
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
-import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
 import app.thdev.glassnavlab.feature.capture.CaptureScreen
 import app.thdev.glassnavlab.feature.capture.api.route.CaptureRoute
 import app.thdev.glassnavlab.feature.feed.ClipDetailScreen
@@ -18,10 +17,8 @@ import app.thdev.glassnavlab.feature.inbox.api.route.InboxRoute
 import app.thdev.glassnavlab.feature.map.MapScreen
 import app.thdev.glassnavlab.feature.map.PlaceDetailScreen
 import app.thdev.glassnavlab.feature.map.api.route.MapRoute
-import app.thdev.glassnavlab.feature.map.api.event.MapRouteEvent
 import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
 import app.thdev.glassnavlab.core.navigation.notmid.NotmidRoute
-import app.thdev.glassnavlab.core.navigation.notmid.NotmidRouteEvent
 import app.thdev.glassnavlab.feature.profile.ProfileScreen
 import app.thdev.glassnavlab.feature.profile.ProfileSettingsScreen
 import app.thdev.glassnavlab.feature.profile.api.route.ProfileRoute
@@ -44,8 +41,9 @@ internal fun NotmidRouteContent(
     clipSaveMessage: String?,
     chatMessage: String?,
     profileSettingsMessage: String?,
-    onRouteEvent: (RouteEvent) -> Unit,
+    onAction: (NotmidShellAction) -> Unit,
     onFeedBackdropColorChanged: (Color) -> Unit,
+    onMapBackdropColorChanged: (Color) -> Unit,
     onContinueLocalAuth: () -> Unit,
     onContinueGoogleAuth: () -> Unit,
     onBrowseSignedOut: () -> Unit,
@@ -106,19 +104,15 @@ internal fun NotmidRouteContent(
         }
 
         MapRoute -> {
-            MapScreen(
-                destination = routeState.selectedDestination,
-                listState = routeState.listState,
-                onRouteEvent = onRouteEvent,
-            )
+            feedStateHolder.SaveableStateProvider("map") {
+                MapScreen(onBackdropColorChanged = onMapBackdropColorChanged)
+            }
         }
 
         is PlaceDetailRoute -> {
-            PlaceDetailScreen(
-                destination = routeState.selectedDestination,
-                route = route,
-                listState = routeState.listState,
-            )
+            feedStateHolder.SaveableStateProvider(route.route) {
+                PlaceDetailScreen(route = route, onBackdropColorChanged = onMapBackdropColorChanged)
+            }
         }
 
         CaptureRoute -> {
@@ -135,7 +129,7 @@ internal fun NotmidRouteContent(
             InboxScreen(
                 destination = routeState.selectedDestination,
                 listState = routeState.listState,
-                onRouteEvent = onRouteEvent,
+                onThreadClicked = { onAction(NotmidShellAction.ThreadClicked(it)) },
             )
         }
 
@@ -151,7 +145,7 @@ internal fun NotmidRouteContent(
                 chatMessage = chatMessage,
                 onSaveClip = onSaveClip,
                 onOpenPlace = { placeId ->
-                    onRouteEvent(MapRouteEvent.PlaceRequested(placeId))
+                    onAction(NotmidShellAction.PlaceClicked(placeId))
                 },
                 onAcceptInvite = onAcceptThreadInvite,
                 onRejectInvite = onRejectThreadInvite,
@@ -165,7 +159,7 @@ internal fun NotmidRouteContent(
                 authState = authState,
                 listState = routeState.listState,
                 onSettingsRequested = {
-                    onRouteEvent(NotmidRouteEvent.SettingsRequested)
+                    onAction(NotmidShellAction.SettingsClicked)
                 },
             )
         }

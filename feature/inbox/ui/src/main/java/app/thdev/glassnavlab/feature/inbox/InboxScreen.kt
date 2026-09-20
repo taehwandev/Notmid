@@ -19,7 +19,6 @@ import app.thdev.glassnavlab.core.designsystem.component.NotmidPillButton
 import app.thdev.glassnavlab.core.designsystem.component.NotmidSectionHeader
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidColorTokens
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
-import app.thdev.glassnavlab.feature.inbox.api.event.InboxRouteEvent
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
 
 private val InboxFilters = listOf("All", "Unread", "Clips", "Places")
@@ -28,7 +27,7 @@ private val InboxFilters = listOf("All", "Unread", "Clips", "Places")
 fun InboxScreen(
     destination: NotmidDestination,
     listState: LazyListState,
-    onRouteEvent: (InboxRouteEvent) -> Unit = {},
+    onThreadClicked: (String) -> Unit = {},
 ) {
     val threads = remember(
         destination.id,
@@ -88,7 +87,7 @@ fun InboxScreen(
             InboxThreadRow(
                 thread = thread,
                 onClick = {
-                    onRouteEvent(InboxRouteEvent.ChatThreadRequested(thread.id))
+                    onThreadClicked(thread.id)
                 },
             )
         }

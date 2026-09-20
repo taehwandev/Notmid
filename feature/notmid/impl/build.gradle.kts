@@ -11,6 +11,8 @@ dependencies {
     implementation(project(":core:runtime"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:model"))
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(project(":feature:capture:api"))
     implementation(project(":feature:capture:ui"))
     implementation(project(":feature:feed:api"))
