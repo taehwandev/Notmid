@@ -116,13 +116,12 @@ internal fun NotmidRouteContent(
         }
 
         CaptureRoute -> {
-            CaptureScreen(
-                destination = routeState.selectedDestination,
-                listState = routeState.listState,
-                isPublishing = isPublishingCapture,
-                publishStatusMessage = capturePublishMessage,
-                onPublish = onPublishCapture,
-            )
+            feedStateHolder.SaveableStateProvider("capture") {
+                CaptureScreen(
+                    isPublishing = isPublishingCapture,
+                    publishStatusMessage = capturePublishMessage,
+                )
+            }
         }
 
         InboxRoute -> {
