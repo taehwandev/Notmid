@@ -6,13 +6,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.thdev.glassnavlab.core.base.activity.BaseActivity
 import app.thdev.glassnavlab.core.designsystem.theme.notmidTheme
-import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLauncher
-import app.thdev.glassnavlab.feature.notmid.NotmidShellErrorScreen
-import app.thdev.glassnavlab.feature.notmid.NotmidShellLoadingScreen
-import app.thdev.glassnavlab.feature.notmid.NotmidShellScreen
+import app.thdev.glassnavlab.shell.NotmidShellErrorScreen
+import app.thdev.glassnavlab.shell.NotmidShellLoadingScreen
+import app.thdev.glassnavlab.shell.NotmidShellScreen
 import app.thdev.glassnavlab.core.runtime.router.runtime.AppRouterRuntime
-import app.thdev.glassnavlab.feature.notmid.router.notmidRouteStack
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -57,23 +55,6 @@ class MainActivity : BaseActivity() {
                 is NotmidContentUiState.Ready -> {
                     NotmidShellScreen(
                         destinations = contentState.destinations,
-                        authState = appState.authState,
-                        authErrorMessage = appState.authErrorMessage,
-                        isAuthenticating = appState.isAuthenticating,
-                        navigationStack = appRouter.notmidRouteStack(),
-                        onContinueLocalAuth = {
-                            notmidAppViewModel.onAction(
-                                NotmidAppAction.ContinuePrimaryAuth,
-                            )
-                        },
-                        onContinueGoogleAuth = {
-                            notmidAppViewModel.onAction(
-                                NotmidAppAction.ContinueAuth(NotmidAuthProvider.Google),
-                            )
-                        },
-                        onBrowseSignedOut = {
-                            notmidAppViewModel.onAction(NotmidAppAction.BrowseSignedOut)
-                        },
                     )
                 }
             }

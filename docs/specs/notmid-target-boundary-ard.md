@@ -192,6 +192,13 @@ Gradle 프로젝트가 된다.
 서버 `/v1/deeplinks/resolve`로 수렴할지는 Open Decision 1로 남긴다. 다만 죽은 상수
 `NotmidApiPaths.DEEPLINK_RESOLVE`는 결정 전까지 제거한다.
 
+진행 상태: 제품 셸·라우트 그래프·이벤트 핸들러·Hilt 바인딩을 `:app`으로 옮겼고,
+로그인 화면과 액션/상태/인증 요청은 `:feature:auth:ui`가 소유한다.
+셸 ViewModel은 라우터 스택과 인증 상태를 관찰해 활성 경로와 로그인 게이트를
+결정한다. 앱 ViewModel은 셸 경로·인증 요청을 중계하지 않는다.
+`:feature:notmid:impl`은 빌드에서 제거했다. `core:runtime`의 앱 정책 타입 이동은
+Decision 5 작업으로 남는다.
+
 ## Decision 4 — 화면 상태는 feature `ui`가 소유한다
 
 `NotmidAppViewModel`을 feature별 ViewModel로 분해한다: `FeedViewModel`,
@@ -210,7 +217,8 @@ Gradle 프로젝트가 된다.
 - `core:runtime` 해체 → 라우트 정책은 `:app`, `NoticeHost` 렌더링은 `core:notice:ui`,
   ActivityRoute launcher는 `core:activity`.
 - `core:notice:api`의 `NoticeEffectViewModel` → `core:notice:ui`.
-- `core:model`의 `ChannelNotmidActionDelegate` → `core:activity` 또는 `:app`.
+- `core:model`의 사용처 없는 `ChannelNotmidActionDelegate`와
+  `NotmidActionDelegate`는 앱 액션 채널 제거 후 삭제한다.
 - `core:data` → `core:data:{api,impl,assertions}`. `Static*` fixture repository는
   `assertions`로 이동한다.
 - `feature:notmid:common`은 **해체하지 않고 정리한다**(아래 정정 참조).

@@ -53,9 +53,8 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
 
 일반 consumer는 owner의 `api`에만 의존하고, 같은 owner의 `impl`은 `api`를
 구현한다. `assertions`는 `api`에만 의존하며 production `impl`을 기본 의존성으로
-끌어오지 않는다. 현재는 `:app`과 product-shell composer인 `:feature:notmid:impl`이
-선택한 feature/core 구현을 runtime graph에 조립한다. ARD 5단계에서 이 조립
-책임은 `:app`으로 옮겨가고 `:feature:notmid:impl`은 사라진다.
+끌어오지 않는다. `:app`이 선택한 feature/core 구현을 runtime graph에 조립한다.
+로그인 UI는 `:feature:auth:ui`, 셸과 제품 라우트 그래프는 `:app`이 소유한다.
 
 모든 owner가 완성된 쌍이나 trio를 가져야 하는 것은 아니다. `:core:notice:api`,
 `:core:data`, `:core:runtime`, `:core:base`, `:core:designsystem`,
@@ -72,9 +71,9 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
   Hilt runtime modules for BuildConfig-backed config, network clients,
   static/API repository selection, auth gateway selection, and dispatcher
   bindings
-  top-level injected ActivityRouteLauncher and NotmidAppRouterFactory
-  @HiltViewModel NotmidAppViewModel for top-level state, auth/write
-  orchestration, and effects
+  injected ActivityRouteLauncher and AppRouterRuntime from NotmidAppRouterFactory
+  NotmidAppViewModel for app content loading and notice host effects
+  NotmidShellViewModel for active route, auth gate, and shell actions
   Android Credential Manager Google ID-token provider for Firebase REST
   exchange, provided through app DI
 
@@ -86,7 +85,6 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
 
 :core:model
   pure Kotlin immutable product models
-  platform-independent action delegate contracts
 
 :core:notice:api
   pure Kotlin notice request/effect contracts
@@ -172,8 +170,11 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
   WebView Activity wrapper and reusable Compose WebView content/controller
   Hilt @IntoSet ActivityRouteLaunchHandler contribution
 
-:feature:notmid:impl
-  notmid app shell and feature orchestration
+:feature:auth:ui
+  login screen state/action owner and auth gateway caller
+
+:app
+  notmid app shell and route dispatch
   router/ Notmid route registrations, deep-link registrations, event handlers
   rememberNotmidAppRouter and notmidRouteStack over the reusable runtime bundle
 
@@ -186,8 +187,7 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
 :feature:*:ui
   Compose surface for that feature only
   feature:capture:ui owns Android CameraX preview and local still capture details
-  screen state owners land here in ARD migration step 4; today the state still
-  lives in :app NotmidAppViewModel
+  screen state owners live here; :app NotmidAppViewModel retains app content loading
 ```
 
 ## External Service Repositories
@@ -204,7 +204,8 @@ Allowed examples:
 ```text
 feature:feed:ui -> feature:feed:api
 feature:feed:ui -> feature:notmid:common
-feature:notmid:impl -> feature:feed:ui
+app -> feature:feed:ui
+app -> feature:auth:ui
 app -> feature:*:api, feature:*:ui, and feature:webview:impl
 app -> core:notice:api
 ```

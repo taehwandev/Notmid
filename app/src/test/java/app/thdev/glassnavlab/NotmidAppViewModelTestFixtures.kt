@@ -41,10 +41,6 @@ internal class FakeContentRepository(
 
 internal class FakeAuthGateway(
     initialState: NotmidAuthState,
-    private val signInResult: NotmidAuthResult = NotmidAuthResult.Success(
-        state = signedInAuthState,
-        nextPath = "/notmid",
-    ),
 ) : NotmidAuthGateway {
     private val mutableAuth = kotlinx.coroutines.flow.MutableStateFlow(initialState)
     override val states: kotlinx.coroutines.flow.StateFlow<NotmidAuthState> = mutableAuth
@@ -65,12 +61,7 @@ internal class FakeAuthGateway(
     override fun currentState(): NotmidAuthState = state
 
     override suspend fun signIn(request: NotmidAuthSignInRequest): NotmidAuthResult {
-        return signInResult.also { result ->
-            when (result) {
-                is NotmidAuthResult.Success -> state = result.state
-                is NotmidAuthResult.Rejected -> state = result.state
-            }
-        }
+        return NotmidAuthResult.Success(signedInAuthState, "/notmid").also { state = signedInAuthState }
     }
 
     override fun signOut(): NotmidAuthState {

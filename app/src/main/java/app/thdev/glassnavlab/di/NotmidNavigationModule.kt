@@ -2,7 +2,7 @@ package app.thdev.glassnavlab.di
 
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEventSink
 import app.thdev.glassnavlab.core.runtime.router.runtime.AppRouterRuntime
-import app.thdev.glassnavlab.feature.notmid.router.NotmidAppRouterFactory
+import app.thdev.glassnavlab.router.NotmidAppRouterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

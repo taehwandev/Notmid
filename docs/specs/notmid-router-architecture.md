@@ -4,7 +4,7 @@
 > [`notmid-target-boundary-ard.md`](notmid-target-boundary-ard.md)가 대체한다.
 > `:core:router:*`는 `:core:navigation:*`로 개명됐고, `:feature:notmid:api`의
 > 라우트 계약은 `:core:navigation:api`의 `core.navigation.notmid` 패키지로 옮겨졌다.
-> 라우트 그래프 소유권은 ARD 5단계에서 `:app`으로 이동한다.
+> 라우트 그래프·이벤트 핸들러·셸은 `:app`으로 이동했다.
 > 나머지 섹션(계약 모양, 딥링크 동작, 레지스트리 근거, 테스트 전략)은 유효하다.
 
 ## Direction
@@ -28,7 +28,7 @@ The implementation is adapted for notmid's current shape:
 ## Modules
 
 ```text
-:core:router:api
+:core:navigation:api
   Route
   ComposeRoute
   ActivityRoute
@@ -45,7 +45,7 @@ The implementation is adapted for notmid's current shape:
   RouteEventPlanner
   RouteRegistry
 
-:core:router:impl
+:core:navigation:impl
   registry/DefaultRouteRegistry
   event/DefaultRouteEventPlanner
   deeplink/DefaultDeepLinkResolver
@@ -84,15 +84,16 @@ The implementation is adapted for notmid's current shape:
   deeplink/WebViewDeepLinkSpec
   activity/WebViewActivityKeys
 
-:feature:*:impl
-  Compose screens only
+:feature:*:ui
+  Compose screens and screen ViewModels
 
-:feature:notmid:impl
+:app
   router/NotmidAppRouter binding
   router/NotmidRouteGraph
   router/*RouteEventHandler
   di/NotmidRouteEventHandlerModule
   product shell route registrations and event-family handler bindings
+  MainActivity product wiring, auth gate, and injected ActivityRouteLauncher/AppRouterRuntime
 
 :feature:webview:impl
   WebViewActivity
@@ -101,9 +102,6 @@ The implementation is adapted for notmid's current shape:
 
 :core:base
   BaseActivity external intent and pending deep-link handoff
-
-:app
-  MainActivity product wiring, auth gate, injected ActivityRouteLauncher, and injected NotmidAppRouterFactory
 ```
 
 ## Rule
@@ -270,7 +268,7 @@ Android architecture and module-structure cards. Notmid's current wiring follows
 that shared rule:
 
 ```text
-:feature:notmid:impl
+:app
   FeedRouteEventHandler
   MapRouteEventHandler
   InboxRouteEventHandler
@@ -279,9 +277,8 @@ that shared rule:
   NotmidRouteGraph @Inject
   NotmidAppRouterFactory @Inject
 
-:app
-  MainActivity injects NotmidAppRouterFactory
-  rememberNotmidAppRouter(factory)
+  NotmidNavigationModule provides AppRouterRuntime from NotmidAppRouterFactory
+  MainActivity consumes the injected runtime
 ```
 
 Each handler owns one route event family and returns `null` for events it does
