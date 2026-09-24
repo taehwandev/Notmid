@@ -1,7 +1,7 @@
 package app.thdev.glassnavlab
 
-import app.thdev.glassnavlab.core.data.notmid.ApiNotmidContentException
-import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
+import app.thdev.glassnavlab.core.data.api.notmid.ApiNotmidContentException
+import app.thdev.glassnavlab.core.data.api.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.model.notmid.NotmidDestination
 import app.thdev.glassnavlab.core.model.notmid.NotmidNavigationIcon
 import org.junit.Assert.assertEquals

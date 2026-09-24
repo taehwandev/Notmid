@@ -57,7 +57,7 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
 로그인 UI는 `:feature:auth:ui`, 셸과 제품 라우트 그래프는 `:app`이 소유한다.
 
 모든 owner가 완성된 쌍이나 trio를 가져야 하는 것은 아니다. `:core:notice:api`,
-`:core:data`, `:core:activity`, `:core:designsystem`,
+`:core:activity`, `:core:designsystem`,
 `:feature:notmid:common`은 현재 소유권과 caller 압력에 맞춘 의도적인 단일 역할
 또는 collapsed 경계다. 빈 `impl`이나 한 테스트만 쓰는 `assertions`를 추가해
 모양만 맞추지 않는다.
@@ -69,8 +69,8 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
   Android entry point, NotmidApplication, MainActivity, manifest/theme selection
   Hilt root with @HiltAndroidApp and @AndroidEntryPoint activity injection
   Hilt runtime modules for BuildConfig-backed config, network clients,
-  static/API repository selection, auth gateway selection, and dispatcher
-  bindings
+  auth gateway selection, and dispatcher bindings
+  debug DI selects static/API repositories; release DI binds API repositories only
   injected ActivityRouteLauncher and AppRouterRuntime from NotmidAppRouterFactory
   app-owned router config, deep-link resolver, planner, and runtime policy
   NotmidAppViewModel for app content loading and notice host effects
@@ -101,15 +101,22 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
 :core:domain
   suspend repository contracts, typed domain exceptions, and use cases
 
-:core:data
-  fake/static repository implementations
+:core:data:api
+  content source selection value and typed API content failures
+
+:core:data:impl
   API-backed notmid content repository behind :core:network:api
   thread detail/message hydration for inbox chat screens
-  static/API protected-write repositories for capture, save, chat, and profile
-  content repository selector for static vs API-backed runtime sources
+  API protected-write repositories for capture, save, chat, and profile
+  observable content cache and protected-write executors
   one shared notmid API JSON layer used by both API-backed repositories:
   field accessors, enum codec, model decoders, request encoders, and the
   id-derived palette/progress values the API does not send
+
+:core:data:assertions
+  static content, protected-write, and auth fixture repositories
+  debug-only static/API content repository selector and fixture validation
+  absent from the app release runtime classpath
 
 :core:auth:api
   Firebase-free notmid auth gateway, sign-in request/result, and intent contracts

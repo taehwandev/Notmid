@@ -1,6 +1,6 @@
 package app.thdev.glassnavlab
 
-import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
+import app.thdev.glassnavlab.core.data.api.notmid.NotmidContentSource
 
 internal data class NotmidAppUiState(
     val contentSource: NotmidContentSource,

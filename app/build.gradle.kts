@@ -92,10 +92,6 @@ val notmidDebugContentSource = localConfigValue(
         defaultValue = "api",
     ),
 )
-val notmidReleaseContentSource = localConfigValue(
-    name = "NOTMID_RELEASE_CONTENT_SOURCE",
-    defaultValue = "api",
-)
 val notmidDebugMapProvider = localConfigValue(
     name = "NOTMID_DEBUG_MAP_PROVIDER",
     defaultValue = localConfigValue(
@@ -227,7 +223,7 @@ android {
             buildConfigField(
                 "String",
                 "NOTMID_CONTENT_SOURCE",
-                notmidReleaseContentSource.asBuildConfigString(),
+                "api".asBuildConfigString(),
             )
             buildConfigField(
                 "String",
@@ -250,7 +246,9 @@ dependencies {
     implementation(project(":core:auth:android"))
     implementation(project(":core:auth:impl"))
     implementation(project(":core:activity"))
-    implementation(project(":core:data"))
+    implementation(project(":core:data:api"))
+    implementation(project(":core:data:impl"))
+    debugImplementation(project(":core:data:assertions"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
     implementation(project(":core:notice:api"))

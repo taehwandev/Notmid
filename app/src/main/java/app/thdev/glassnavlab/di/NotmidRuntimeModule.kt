@@ -12,15 +12,10 @@ import app.thdev.glassnavlab.core.auth.impl.UnavailableFirebaseIdTokenProvider
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthGateway
 import app.thdev.glassnavlab.core.auth.token.FirebaseIdTokenProvider
 import app.thdev.glassnavlab.core.auth.token.GoogleIdTokenProvider
-import app.thdev.glassnavlab.core.data.notmid.ApiNotmidContentRepository
-import app.thdev.glassnavlab.core.data.notmid.ApiNotmidProtectedWriteRepository
-import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
-import app.thdev.glassnavlab.core.data.notmid.StaticNotmidContentRepository
-import app.thdev.glassnavlab.core.data.notmid.StaticNotmidProtectedWriteRepository
+import app.thdev.glassnavlab.core.data.api.notmid.NotmidContentSource
+import app.thdev.glassnavlab.core.data.impl.notmid.ObservableNotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
-import app.thdev.glassnavlab.core.data.notmid.ObservableNotmidContentRepository
-import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.network.impl.OkHttpNotmidNetworkClient
 import app.thdev.glassnavlab.core.network.notmid.NotmidApiConfig
@@ -142,19 +137,6 @@ object NotmidRuntimeModule {
     }
 
     @Provides
-    @Singleton
-    fun provideObservableContentRepository(
-        source: NotmidContentSource,
-        @NotmidApi client: NotmidNetworkClient,
-    ): ObservableNotmidContentRepository {
-        val repository = when (source) {
-            NotmidContentSource.Static -> StaticNotmidContentRepository()
-            NotmidContentSource.Api -> ApiNotmidContentRepository(client)
-        }
-        return ObservableNotmidContentRepository(repository)
-    }
-
-    @Provides
     fun provideNotmidContentRepository(
         repository: ObservableNotmidContentRepository,
     ): NotmidContentRepository = repository
@@ -164,16 +146,4 @@ object NotmidRuntimeModule {
         repository: ObservableNotmidContentRepository,
     ): NotmidContentUpdates = repository
 
-    @Provides
-    @Singleton
-    fun provideNotmidProtectedWriteRepository(
-        source: NotmidContentSource,
-        @NotmidApi client: NotmidNetworkClient,
-    ): NotmidProtectedWriteRepository {
-        return when (source) {
-            // Fixture lookups must not publish a refresh that replaces successful local receipts.
-            NotmidContentSource.Static -> StaticNotmidProtectedWriteRepository()
-            NotmidContentSource.Api -> ApiNotmidProtectedWriteRepository(client)
-        }
-    }
 }

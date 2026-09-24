@@ -1,7 +1,7 @@
 package app.thdev.glassnavlab
 
-import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
-import app.thdev.glassnavlab.core.data.notmid.ObservableNotmidContentRepository
+import app.thdev.glassnavlab.core.data.api.notmid.NotmidContentSource
+import app.thdev.glassnavlab.core.data.impl.notmid.ObservableNotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect

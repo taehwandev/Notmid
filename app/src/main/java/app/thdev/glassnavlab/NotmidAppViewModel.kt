@@ -3,7 +3,7 @@ package app.thdev.glassnavlab
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.thdev.glassnavlab.di.IoDispatcher
-import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
+import app.thdev.glassnavlab.core.data.api.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentSnapshot

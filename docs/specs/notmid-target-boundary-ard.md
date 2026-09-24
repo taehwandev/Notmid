@@ -230,6 +230,10 @@ Decision 5 작업으로 남는다.
 나머지 앱 라우터 config/deeplink/planner/runtime 정책과 해당 테스트도 `:app`으로
 옮겨 `:core:runtime` 모듈을 제거했다. 사용하지 않던 Compose 라우터 생성 helper는
 삭제했다.
+`:core:data`는 `api`(콘텐츠 소스·오류 계약), `impl`(API 저장소·캐시·쓰기 실행),
+`assertions`(정적 fixture 저장소)로 분리했다. `assertions`는 앱 debug에만 의존하고
+release DI는 API 저장소만 제공한다. release 런타임 의존성 검사에서
+`:core:data:assertions`가 없음을 확인했다.
 - `feature:notmid:common`은 **해체하지 않고 정리한다**(아래 정정 참조).
 
 > **정정 (2026-09-12).** 최초 작성 시 "`feature:notmid:common` 해체 → 도메인 무관
@@ -316,7 +320,7 @@ core:*:assertions -> 같은 owner의 api
 | `:feature:webview:impl` | 유지 | 유일한 정당 impl |
 | ~~`:core:base`~~ | `:core:activity` | 완료 |
 | ~~`:core:runtime`~~ | `:app` / `:core:notice:ui` / `:core:activity` | 완료, 모듈 제거 |
-| `:core:data` | `:core:data:{api,impl,assertions}` | `Static*` → assertions |
+| ~~`:core:data`~~ | `:core:data:{api,impl,assertions}` | 완료, 정적 fixture는 debug 전용 |
 | `NotmidAppViewModel` | feature별 ViewModel + app 인증/세션 | |
 
 ## Migration Order
@@ -331,7 +335,7 @@ core:*:assertions -> 같은 owner의 api
 | 3 | 모델 이중화 제거, `feature:notmid:common` 정리 | 컴파일, core:model과 이름이 겹치는 타입이 3종 이하 | 중간 | done 2026-09-12 |
 | 4 | ViewModel 분해 — feature 하나씩 1 PR | feature별 ViewModel 테스트, 화면 파라미터에서 `destination`/`listState` 제거 | 높음 | in progress — 피드·지도·클립/장소 상세 상태와 액션 분리 |
 | 5 | 셸을 `:app`으로 이동, `feature:notmid` 삭제 | 컴파일, 딥링크 수동 스모크, `:app`만 라우트 그래프 소유 | 높음 | done locally 2026-09-24 |
-| 6 | `core:base`/`core:runtime` 해체, `core:data` 분할 | 컴파일, `Static*`가 프로덕션 의존성에 없음 | 중간 | in progress — base/runtime 제거, data 분할 남음 |
+| 6 | `core:base`/`core:runtime` 해체, `core:data` 분할 | 컴파일, `Static*`가 프로덕션 의존성에 없음 | 중간 | done locally 2026-09-24 |
 
 단계 0은 1~6과 독립이므로 먼저 끝내면 이후 모든 단계의 CI 시간이 줄어든다.
 
