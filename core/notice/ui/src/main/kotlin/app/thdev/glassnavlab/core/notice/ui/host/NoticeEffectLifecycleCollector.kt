@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.runtime.notice.host
+package app.thdev.glassnavlab.core.notice.ui.host
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue

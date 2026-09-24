@@ -8,12 +8,14 @@ import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentSnapshot
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectDelegate
-import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectViewModel
+import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
+import app.thdev.glassnavlab.core.notice.ui.NoticeEffectViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -31,7 +33,8 @@ internal class NotmidAppViewModel @Inject constructor(
     private val uiEffects: NoticeEffectDelegate,
     @param:IoDispatcher
     private val ioDispatcher: CoroutineDispatcher,
-) : ViewModel(), NoticeEffectViewModel by uiEffects {
+) : ViewModel(), NoticeEffectViewModel {
+    override val effects: Flow<NoticeEffect> = uiEffects.effects
 
     private val mutableState = MutableStateFlow(
         NotmidAppUiState(

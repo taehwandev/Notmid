@@ -254,6 +254,7 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
     implementation(project(":core:notice:api"))
+    implementation(project(":core:notice:ui"))
     implementation(project(":core:model"))
     implementation(project(":core:network:api"))
     implementation(project(":core:network:impl"))

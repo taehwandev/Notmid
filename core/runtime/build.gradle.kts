@@ -8,11 +8,8 @@ android {
 }
 
 dependencies {
-    api(project(":core:notice:api"))
     api(project(":core:navigation:api"))
-    implementation(project(":core:designsystem"))
     implementation(project(":core:navigation:impl"))
-    implementation(libs.androidx.lifecycle.runtime.compose)
 
     testImplementation(project(":core:navigation:assertions"))
     testImplementation(libs.junit)

@@ -10,5 +10,5 @@ dependencies {
     api(libs.androidx.activity.compose)
     api(libs.kotlinx.coroutines.core)
     api(project(":core:runtime"))
-    api(project(":core:notice:api"))
+    api(project(":core:notice:ui"))
 }

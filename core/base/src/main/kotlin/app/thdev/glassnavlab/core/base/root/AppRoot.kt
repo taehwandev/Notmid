@@ -3,7 +3,7 @@ package app.thdev.glassnavlab.core.base.root
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
-import app.thdev.glassnavlab.core.runtime.notice.host.NoticeHost
+import app.thdev.glassnavlab.core.notice.ui.host.NoticeHost
 import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLauncher
 import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLauncherEffect
 import app.thdev.glassnavlab.core.runtime.router.runtime.AppRouterRuntime

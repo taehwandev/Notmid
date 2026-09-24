@@ -221,6 +221,10 @@ Decision 5 작업으로 남는다.
   `NotmidActionDelegate`는 앱 액션 채널 제거 후 삭제한다.
 - `core:data` → `core:data:{api,impl,assertions}`. `Static*` fixture repository는
   `assertions`로 이동한다.
+
+진행 상태: `NoticeHost`와 알림 UI 렌더링, `NoticeEffectViewModel`을
+`:core:notice:ui`로 옮겼다. `:core:notice:api`는 효과·요청·delegate 계약만
+소유한다. `:core:runtime`의 라우터/ActivityRoute와 `:core:base` 해체는 남아 있다.
 - `feature:notmid:common`은 **해체하지 않고 정리한다**(아래 정정 참조).
 
 > **정정 (2026-09-12).** 최초 작성 시 "`feature:notmid:common` 해체 → 도메인 무관

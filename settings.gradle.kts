@@ -35,6 +35,7 @@ include(
     ":core:domain",
     ":core:model",
     ":core:notice:api",
+    ":core:notice:ui",
     ":core:network:api",
     ":core:network:assertions",
     ":core:network:impl",

@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.runtime.notice.host
+package app.thdev.glassnavlab.core.notice.ui.host
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box

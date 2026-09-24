@@ -91,6 +91,11 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
   NoticeRequest, NoticePresentation, NoticeTone, NoticeAction
   NoticeEffect and NoticeEffectDelegate
 
+:core:notice:ui
+  NoticeHost, lifecycle collector, and alert dialog rendering
+  Android Toast/Snackbar/Alert dispatch using :core:notice:api and design-system visuals
+  NoticeEffectViewModel UI output contract
+
 :core:domain
   suspend repository contracts, typed domain exceptions, and use cases
 
@@ -136,8 +141,6 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
   router/runtime AppRouterRuntime, DefaultAppRouterRuntime, PendingActivityRouteRequest
   router/activity ActivityRouteLauncher, ActivityRouteLaunchHandler, DefaultActivityRouteLauncher, ActivityRouteLauncherEffect
   Hilt ActivityComponent binding for the default ActivityRouteLauncher
-  notice/host NoticeHost, NoticeEffectLifecycleCollector, NoticeAlertDialog
-  Android Toast/Snackbar/Alert dispatch using :core:notice:api and design-system visuals
 
 :core:navigation:api
   pure Kotlin route contracts
