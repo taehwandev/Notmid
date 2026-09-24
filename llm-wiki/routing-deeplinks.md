@@ -45,6 +45,9 @@ WebViewRoute(url, title, mode)
 
 WebView is intentionally Activity-backed because lifecycle, reload behavior,
 file chooser, permissions, history, and fullscreen media are cleaner there.
+Its `ui` ViewModel accepts browser history and back actions, then emits a
+one-off back effect. The Compose WebView host executes that effect through its
+Android controller; `impl` owns only the Activity/Intent launch boundary.
 The shell ViewModel observes both the Compose stack and pending Activity route
 requests. `MainActivity` executes the request exposed in shell UI state and sends
 the launch acknowledgment back as an action. The profile settings screen

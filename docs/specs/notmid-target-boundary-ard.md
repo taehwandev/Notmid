@@ -173,6 +173,9 @@ Gradle 프로젝트가 된다.
 `ui` 모듈은 holder `Route`, `ViewModel`, `UiState`/`Action`/`Effect`, stateless
 `Screen`, UI mapper, feature-local component, preview, UI/ViewModel 테스트를
 소유한다. `impl` 없이 컴파일·렌더·테스트가 가능해야 한다.
+WebView도 Compose 호스트·브라우저 뒤로 가기 액션/효과·컨트롤러를
+`:feature:webview:ui`로 옮겼다. `:feature:webview:impl`은 Activity/Intent 진입과
+런처 바인딩만 소유한다.
 
 ## Decision 3 — 라우트 계약은 core가, 라우트 그래프는 app이 소유한다
 
@@ -281,7 +284,7 @@ feature/
   capture/{api,ui}
   inbox/{api,ui}
   profile/{api,ui}
-  webview/{api,impl}            유일하게 정당한 impl
+  webview/{api,ui,impl}         UI/브라우저 액션과 Activity 진입 분리
 ```
 
 ## Import Direction

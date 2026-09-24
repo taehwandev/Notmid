@@ -171,8 +171,12 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
   deeplink/ WebViewDeepLinkSpec
   activity/ WebViewActivityKeys
 
+:feature:webview:ui
+  WebView holder, ViewModel, history state/actions and back effect
+  Compose WebView content and Android WebView controller
+
 :feature:webview:impl
-  WebView Activity wrapper and reusable Compose WebView content/controller
+  WebView Activity/Intent entry delegating to :feature:webview:ui
   Hilt @IntoSet ActivityRouteLaunchHandler contribution
 
 :feature:auth:ui

@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import app.thdev.glassnavlab.feature.webview.api.route.WebViewMode
 import app.thdev.glassnavlab.feature.webview.api.route.WebViewRoute
+import app.thdev.glassnavlab.feature.webview.ui.NotmidWebViewRouteContent
 
 class NotmidWebViewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

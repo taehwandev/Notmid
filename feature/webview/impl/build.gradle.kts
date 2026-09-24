@@ -10,6 +10,7 @@ android {
 dependencies {
     implementation(project(":core:activity"))
     implementation(project(":feature:webview:api"))
+    implementation(project(":feature:webview:ui"))
 
     implementation(libs.androidx.activity.compose)
 }

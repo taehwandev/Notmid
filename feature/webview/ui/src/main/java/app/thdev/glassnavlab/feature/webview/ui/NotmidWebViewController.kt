@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.feature.webview
+package app.thdev.glassnavlab.feature.webview.ui
 
 import android.annotation.SuppressLint
 import android.content.Context

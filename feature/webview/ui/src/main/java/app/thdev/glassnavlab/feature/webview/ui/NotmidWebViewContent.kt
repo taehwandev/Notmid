@@ -1,18 +1,18 @@
-package app.thdev.glassnavlab.feature.webview
+package app.thdev.glassnavlab.feature.webview.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import app.thdev.glassnavlab.feature.webview.api.route.WebViewMode
+import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun NotmidWebViewContent(
@@ -21,21 +21,30 @@ fun NotmidWebViewContent(
     mode: WebViewMode = WebViewMode.Generic,
     javaScriptEnabled: Boolean = true,
     handleBack: Boolean = true,
+    canGoBack: Boolean,
+    effects: Flow<WebViewEffect>,
+    onBackRequested: () -> Unit,
     onCanGoBackChanged: (Boolean) -> Unit = {},
 ) {
     val controller = remember { NotmidWebViewController() }
     val currentOnCanGoBackChanged by rememberUpdatedState(onCanGoBackChanged)
-    var canGoBack by remember { mutableStateOf(false) }
 
     fun notifyCanGoBack(value: Boolean) {
-        canGoBack = value
         currentOnCanGoBackChanged(value)
     }
 
     val backDispatcherOwner = LocalOnBackPressedDispatcherOwner.current
     if (handleBack && backDispatcherOwner != null) {
         BackHandler(enabled = canGoBack) {
-            controller.goBack()
+            onBackRequested()
+        }
+    }
+
+    LaunchedEffect(controller, effects) {
+        effects.collect { effect ->
+            when (effect) {
+                WebViewEffect.GoBack -> controller.goBack()
+            }
         }
     }
 

@@ -58,5 +58,6 @@ include(
     ":feature:profile:api",
     ":feature:profile:ui",
     ":feature:webview:api",
+    ":feature:webview:ui",
     ":feature:webview:impl",
 )
