@@ -1,0 +1,5 @@
+<resources>
+    <string name="inbox_loading">Loading chats…</string>
+    <string name="inbox_unavailable">Chats are unavailable.</string>
+    <string name="inbox_retry">Retry</string>
+</resources>

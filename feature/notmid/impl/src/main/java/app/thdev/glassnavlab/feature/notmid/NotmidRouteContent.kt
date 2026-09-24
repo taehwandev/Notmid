@@ -126,11 +126,9 @@ internal fun NotmidRouteContent(
         }
 
         InboxRoute -> {
-            InboxScreen(
-                destination = routeState.selectedDestination,
-                listState = routeState.listState,
-                onThreadClicked = { onAction(NotmidShellAction.ThreadClicked(it)) },
-            )
+            feedStateHolder.SaveableStateProvider("inbox") {
+                InboxScreen()
+            }
         }
 
         is ChatThreadRoute -> {

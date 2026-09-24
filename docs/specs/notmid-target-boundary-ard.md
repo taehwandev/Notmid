@@ -396,9 +396,14 @@ ViewModel의 액션 처리에 속한다.
 기존 가짜 지도 표시, 좌표 클램프, 카테고리 대체 및 미완성 Save later는 보존한다.
 비어 있는 필터에서 첫 전체 핀을 미리보기로 쓰는 기존 규칙도 변경하지 않는다.
 
-셸 탭·설정·대화방·첨부 장소 클릭은 `NotmidShellAction`을 보내고
-`NotmidShellViewModel`이 `RouteEventSink`를 호출한다. 인박스의 클릭 콜백은
-대화방 ID만 전달한다. 인박스 자체 상태, 캡처, 프로필 및 보호된 쓰기 실행의
+셸 탭·설정·첨부 장소 클릭은 `NotmidShellAction`을 보내고
+`NotmidShellViewModel`이 `RouteEventSink`를 호출한다.
+인박스는 `InboxViewModel`이 콘텐츠 구독, 필터 선택과
+`InboxRouteEvent` 요청을 소유한다. `InboxScreen`은 `destination`과 공유
+`listState`를 받지 않으며, 필터는 `SavedStateHandle`, 스크롤은 화면의 saveable
+경계에서 복원한다. 기존 서비스 대화 우선·임시 클립/장소 대화 대체 규칙은 유지한다.
+구독은 조회를 발생시키지 않으며 Retry 액션만 저장소를 호출한다.
+대화 상세 자체 상태, 캡처, 프로필 및 보호된 쓰기 실행의
 feature 이전과 `feature:notmid` 셸을 app으로 옮기는 단계는 아직 남아 있다.
 
 검증: 피드/상세 ViewModel의 선택·새로고침·재시도·취소·라우트 포트 호출·채팅
