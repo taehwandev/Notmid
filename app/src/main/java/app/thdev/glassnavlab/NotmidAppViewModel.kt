@@ -90,6 +90,9 @@ internal class NotmidAppViewModel internal constructor(
     val state: StateFlow<NotmidAppUiState> = mutableState.asStateFlow()
 
     init {
+        authGateway.states.onEach { authState ->
+            mutableState.update { it.copy(authState = authState) }
+        }.launchIn(viewModelScope)
         contentUpdates.snapshot.onEach { snapshot ->
             if (snapshot is NotmidContentSnapshot.Ready) {
                 mutableState.update { it.copy(content = notmidContentReadyOrError(contentSource, snapshot.destinations)) }
@@ -283,11 +286,11 @@ internal class NotmidAppViewModel internal constructor(
                 )
             }
 
-            var updatedAuthState = mutableState.value.authState
+            val requestAuthState = authGateway.currentState()
             var followUpEffect: NoticeEffect? = null
             val notice = runCatchingPreservingCancellation {
                 val result = withContext(ioDispatcher) {
-                    protectedWriteExecutor.execute(updatedAuthState, action)
+                    protectedWriteExecutor.execute(requestAuthState, action)
                 }
                 when (result) {
                     NotmidProtectedWriteResult.Completed -> Unit
@@ -299,9 +302,9 @@ internal class NotmidAppViewModel internal constructor(
                     }
                     is NotmidProtectedWriteResult.ThreadUpdated -> Unit
                     is NotmidProtectedWriteResult.ProfileUpdated -> {
-                        updatedAuthState = updatedAuthState.copy(
-                            session = updatedAuthState.session?.copy(user = result.user),
-                        )
+                        requestAuthState.session?.let { session ->
+                            authGateway.applyProfileUpdate(session, result.user)
+                        }
                     }
                 }
                 action.writeAction.toSuccessNotice()
@@ -311,7 +314,7 @@ internal class NotmidAppViewModel internal constructor(
 
             mutableState.update { state ->
                 state.copy(
-                    authState = updatedAuthState,
+                    authState = authGateway.currentState(),
                     protectedActionInFlight = null,
                     protectedActionNotice = notice,
                 )

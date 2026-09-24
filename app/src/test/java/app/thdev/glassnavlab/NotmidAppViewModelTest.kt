@@ -48,6 +48,33 @@ class NotmidAppViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     @Test
+    fun gatewayChangesReachAppWithoutScreenCallbacks() = runTest(mainDispatcherRule.dispatcher) {
+        val gateway = FakeAuthGateway(signedInAuthState)
+        val vm = newViewModel(authGateway = gateway)
+        advanceUntilIdle()
+        val session = checkNotNull(gateway.currentState().session)
+        gateway.applyProfileUpdate(session, session.user.copy(displayName = "Updated elsewhere"))
+        advanceUntilIdle()
+        assertEquals("Updated elsewhere", vm.state.value.authState.session?.user?.displayName)
+        gateway.signOut()
+        advanceUntilIdle()
+        assertNull(vm.state.value.authState.session)
+    }
+
+    @Test
+    fun profileWriteUpdatesSharedGatewayAsWellAsApp() = runTest(mainDispatcherRule.dispatcher) {
+        val gateway = FakeAuthGateway(signedInAuthState)
+        val writes = ChannelNotmidActionDelegate<NotmidProtectedWriteRequest>()
+        val vm = newViewModel(authGateway = gateway, protectedWriteActions = writes)
+        writes.dispatch(NotmidProtectedWriteRequest.UpdateProfileSettings(
+            app.thdev.glassnavlab.core.model.notmid.NotmidProfileSettingsUpdateRequest("Updated", "New place"),
+        ))
+        advanceUntilIdle()
+        assertEquals("Updated", gateway.states.value.session?.user?.displayName)
+        assertEquals(gateway.currentState(), vm.state.value.authState)
+    }
+
+    @Test
     fun featureWriteActionUsesExistingStateNoticeAndNavigationHandling() = runTest(mainDispatcherRule.dispatcher) {
         val writes = ChannelNotmidActionDelegate<NotmidProtectedWriteRequest>()
         val vm = newViewModel(protectedWriteActions = writes)

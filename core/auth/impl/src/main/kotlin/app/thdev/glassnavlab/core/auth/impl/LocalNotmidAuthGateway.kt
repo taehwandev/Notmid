@@ -12,7 +12,16 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidAuthUser
 class LocalNotmidAuthGateway(
     private val mode: NotmidAuthMode = NotmidAuthMode.Fake,
 ) : NotmidAuthGateway {
-    private var state: NotmidAuthState = signedOutState(mode)
+    private val sessionState = NotmidAuthSessionState(signedOutState(mode))
+    override val states = sessionState.states
+    private var state: NotmidAuthState
+        get() = sessionState.value
+        set(value) { sessionState.value = value }
+
+    override fun applyProfileUpdate(
+        expectedSession: NotmidAuthSession,
+        user: NotmidAuthUser,
+    ): NotmidAuthState = sessionState.applyProfileUpdate(expectedSession, user)
 
     override fun currentState(): NotmidAuthState = state
 

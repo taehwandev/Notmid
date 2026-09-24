@@ -67,7 +67,21 @@ internal class FakeAuthGateway(
         nextPath = "/notmid",
     ),
 ) : NotmidAuthGateway {
-    private var state = initialState
+    private val mutableAuth = kotlinx.coroutines.flow.MutableStateFlow(initialState)
+    override val states: kotlinx.coroutines.flow.StateFlow<NotmidAuthState> = mutableAuth
+    private var state: NotmidAuthState
+        get() = mutableAuth.value
+        set(value) { mutableAuth.value = value }
+
+    override fun applyProfileUpdate(
+        expectedSession: app.thdev.glassnavlab.core.model.notmid.NotmidAuthSession,
+        user: app.thdev.glassnavlab.core.model.notmid.NotmidAuthUser,
+    ): NotmidAuthState {
+        if (state.session === expectedSession && user.id == expectedSession.user.id) {
+            state = state.copy(session = expectedSession.copy(user = user))
+        }
+        return state
+    }
 
     override fun currentState(): NotmidAuthState = state
 
