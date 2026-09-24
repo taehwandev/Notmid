@@ -5,6 +5,7 @@ import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteExecutor
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
 import app.thdev.glassnavlab.core.data.notmid.RepositoryNotmidProtectedWriteExecutor
+import app.thdev.glassnavlab.core.data.notmid.ObservableNotmidContentRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,7 +19,8 @@ object NotmidViewModelModule {
     @Provides
     fun provideProtectedWriteExecutor(
         repository: NotmidProtectedWriteRepository,
-    ): NotmidProtectedWriteExecutor = RepositoryNotmidProtectedWriteExecutor(repository)
+        content: ObservableNotmidContentRepository,
+    ): NotmidProtectedWriteExecutor = RepositoryNotmidProtectedWriteExecutor(repository, content)
 
     @Provides
     fun provideGetNotmidDestinationsUseCase(

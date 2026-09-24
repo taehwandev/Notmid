@@ -8,6 +8,7 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
 
 class RepositoryNotmidProtectedWriteExecutor(
     private val repository: NotmidProtectedWriteRepository,
+    private val content: ObservableNotmidContentRepository,
 ) : NotmidProtectedWriteExecutor {
     override suspend fun execute(
         authState: NotmidAuthState,
@@ -37,5 +38,5 @@ class RepositoryNotmidProtectedWriteExecutor(
             val receipt = repository.updateProfileSettings(authState, request.request)
             NotmidProtectedWriteResult.ProfileUpdated(receipt.settings.user)
         }
-    }
+    }.also(content::applyWriteResult)
 }

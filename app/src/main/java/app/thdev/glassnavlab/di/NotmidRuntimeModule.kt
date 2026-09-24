@@ -169,10 +169,10 @@ object NotmidRuntimeModule {
     fun provideNotmidProtectedWriteRepository(
         source: NotmidContentSource,
         @NotmidApi client: NotmidNetworkClient,
-        contentRepository: NotmidContentRepository,
     ): NotmidProtectedWriteRepository {
         return when (source) {
-            NotmidContentSource.Static -> StaticNotmidProtectedWriteRepository(contentRepository)
+            // Fixture lookups must not publish a refresh that replaces successful local receipts.
+            NotmidContentSource.Static -> StaticNotmidProtectedWriteRepository()
             NotmidContentSource.Api -> ApiNotmidProtectedWriteRepository(client)
         }
     }

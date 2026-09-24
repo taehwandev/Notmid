@@ -343,6 +343,17 @@ CI를 두었다. Android에는 OpenAPI 고정 JSON 사본과 Kotlin 어댑터를
 
 ### 단계 4 — 피드 첫 화면
 
+채팅 쓰기 결과의 데이터 병합은 `core:data`가 소유한다.
+`RepositoryNotmidProtectedWriteExecutor`가 성공한 메시지·스레드 결과를 같은
+`ObservableNotmidContentRepository`에 반영하며, 앱과 feature ViewModel은
+`NotmidContentUpdates`를 통해 결과를 구독한다. 앱 UI 상태는 데이터 병합을 하지 않는다.
+조회 중 수신한 결과는 조회 결과에 순서대로 병합한다. 조회 취소 시 이전 콘텐츠에
+반영하고, 조회 실패 시 다음 성공 조회까지 보관한다. 이후 명시적 새로고침은
+서버 결과를 기준으로 하며 이 메모리 상태는 영구 저장소가 아니다.
+정적 쓰기 구현의 fixture 조회는 공유 스트림을 초기화하지 않도록 별도로 수행한다.
+메시지 ID 중복 제거와 스레드의 첨부 클립·장소 연결 규칙은 유지한다.
+라우팅·알림의 결정과 인증 상태 변환은 계속 ViewModel 책임이다.
+
 `FeedScreen`은 `FeedViewModel`의 상태를 수집하며 `destination`과 `listState`를
 셸에서 받지 않는다. 데이터 소유자는 기존 콘텐츠 저장소다.
 `ObservableNotmidContentRepository`가 기존 조회의 상태와 결과를

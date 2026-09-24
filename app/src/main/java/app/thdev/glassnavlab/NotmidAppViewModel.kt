@@ -9,6 +9,8 @@ import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthResult
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthSignInRequest
 import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
+import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
+import app.thdev.glassnavlab.core.domain.notmid.NotmidContentSnapshot
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteExecutor
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRequest
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteResult
@@ -42,6 +44,7 @@ import javax.inject.Inject
 internal class NotmidAppViewModel internal constructor(
     private val contentSource: NotmidContentSource,
     private val getDestinations: GetNotmidDestinationsUseCase,
+    private val contentUpdates: NotmidContentUpdates,
     private val protectedWriteExecutor: NotmidProtectedWriteExecutor,
     private val authGateway: NotmidAuthGateway,
     private val actionDelegate: NotmidActionDelegate<NotmidAppAction>,
@@ -55,6 +58,7 @@ internal class NotmidAppViewModel internal constructor(
     constructor(
         contentSource: NotmidContentSource,
         getDestinations: GetNotmidDestinationsUseCase,
+        contentUpdates: NotmidContentUpdates,
         protectedWriteExecutor: NotmidProtectedWriteExecutor,
         authGateway: NotmidAuthGateway,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
@@ -63,6 +67,7 @@ internal class NotmidAppViewModel internal constructor(
     ) : this(
         contentSource = contentSource,
         getDestinations = getDestinations,
+        contentUpdates = contentUpdates,
         protectedWriteExecutor = protectedWriteExecutor,
         authGateway = authGateway,
         actionDelegate = ChannelNotmidActionDelegate(),
@@ -85,6 +90,11 @@ internal class NotmidAppViewModel internal constructor(
     val state: StateFlow<NotmidAppUiState> = mutableState.asStateFlow()
 
     init {
+        contentUpdates.snapshot.onEach { snapshot ->
+            if (snapshot is NotmidContentSnapshot.Ready) {
+                mutableState.update { it.copy(content = notmidContentReadyOrError(contentSource, snapshot.destinations)) }
+            }
+        }.launchIn(viewModelScope)
         protectedWriteActions.actions.onEach(::enqueueProtectedAction).launchIn(viewModelScope)
         actionDelegate
             .actions
@@ -184,7 +194,10 @@ internal class NotmidAppViewModel internal constructor(
             }
 
             mutableState.update { state ->
-                state.copy(content = contentState)
+                val current = contentUpdates.snapshot.value
+                state.copy(content = if (current is NotmidContentSnapshot.Ready) {
+                    notmidContentReadyOrError(contentSource, current.destinations)
+                } else contentState)
             }
         }
     }
@@ -271,9 +284,6 @@ internal class NotmidAppViewModel internal constructor(
             }
 
             var updatedAuthState = mutableState.value.authState
-            var contentUpdate: (NotmidContentUiState) -> NotmidContentUiState = { content ->
-                content
-            }
             var followUpEffect: NoticeEffect? = null
             val notice = runCatchingPreservingCancellation {
                 val result = withContext(ioDispatcher) {
@@ -281,22 +291,13 @@ internal class NotmidAppViewModel internal constructor(
                 }
                 when (result) {
                     NotmidProtectedWriteResult.Completed -> Unit
-                    is NotmidProtectedWriteResult.MessageSent -> {
-                        contentUpdate = { it.withThreadMessage(result.message) }
-                    }
+                    is NotmidProtectedWriteResult.MessageSent -> Unit
                     is NotmidProtectedWriteResult.ThreadStarted -> {
-                        contentUpdate = { content ->
-                            val contentWithThread = content.withThread(result.thread)
-                            result.message?.let(contentWithThread::withThreadMessage)
-                                ?: contentWithThread
-                        }
                         followUpEffect = NoticeEffect.NavigateDeepLink(
                             notmidChatThreadDeepLink(result.thread.id),
                         )
                     }
-                    is NotmidProtectedWriteResult.ThreadUpdated -> {
-                        contentUpdate = { it.withThread(result.thread) }
-                    }
+                    is NotmidProtectedWriteResult.ThreadUpdated -> Unit
                     is NotmidProtectedWriteResult.ProfileUpdated -> {
                         updatedAuthState = updatedAuthState.copy(
                             session = updatedAuthState.session?.copy(user = result.user),
@@ -311,7 +312,6 @@ internal class NotmidAppViewModel internal constructor(
             mutableState.update { state ->
                 state.copy(
                     authState = updatedAuthState,
-                    content = contentUpdate(state.content),
                     protectedActionInFlight = null,
                     protectedActionNotice = notice,
                 )

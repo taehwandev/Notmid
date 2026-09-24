@@ -25,7 +25,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RepositoryNotmidProtectedWriteExecutorTest {
-    private val executor = RepositoryNotmidProtectedWriteExecutor(StaticNotmidProtectedWriteRepository())
+    private val content = ObservableNotmidContentRepository(StaticNotmidContentRepository())
+    private val executor = RepositoryNotmidProtectedWriteExecutor(StaticNotmidProtectedWriteRepository(), content)
 
     @Test
     fun everyCommandRetainsItsAuthenticationRequirement() {
@@ -56,11 +57,16 @@ class RepositoryNotmidProtectedWriteExecutorTest {
 
     @Test
     fun startResultRetainsThreadAndOptionalInitialMessage() {
+        runSuspend { content.destinations() }
         val result = runSuspend { executor.execute(authState, requests[3]) }
             as NotmidProtectedWriteResult.ThreadStarted
         assertTrue(result.thread.participantHandles.contains("min.zip"))
         assertEquals(result.thread.id, result.message?.threadId)
         assertEquals("hello", result.message?.body)
+        val snapshot = content.snapshot.value as app.thdev.glassnavlab.core.domain.notmid.NotmidContentSnapshot.Ready
+        val inbox = snapshot.destinations.first { it.icon == app.thdev.glassnavlab.core.model.notmid.NotmidNavigationIcon.Inbox }
+        assertTrue(inbox.threads.any { it.id == result.thread.id })
+        assertTrue(inbox.threadMessages.any { it.id == result.message?.id })
     }
 
     @Test
@@ -93,7 +99,7 @@ class RepositoryNotmidProtectedWriteExecutorTest {
                 }
             }
             val actual = assertThrows(failure.javaClass) {
-                runSuspend { RepositoryNotmidProtectedWriteExecutor(repository).execute(authState, requests[1]) }
+                runSuspend { RepositoryNotmidProtectedWriteExecutor(repository, content).execute(authState, requests[1]) }
             }
             assertSame(failure, actual)
             assertEquals(1, calls)

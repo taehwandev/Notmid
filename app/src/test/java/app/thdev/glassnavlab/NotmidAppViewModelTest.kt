@@ -3,6 +3,7 @@ package app.thdev.glassnavlab
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthGateway
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthResult
 import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
+import app.thdev.glassnavlab.core.data.notmid.ObservableNotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
@@ -326,7 +327,6 @@ class NotmidAppViewModelTest {
 
     private fun newViewModel(
         contentRepository: NotmidContentRepository = FakeContentRepository(listOf(viewModelTestDestination)),
-        getDestinations: GetNotmidDestinationsUseCase = GetNotmidDestinationsUseCase(contentRepository),
         protectedWriteRepository: NotmidProtectedWriteRepository = FakeProtectedWriteRepository(),
         authGateway: NotmidAuthGateway = FakeAuthGateway(signedInAuthState),
         actionDelegate: NotmidActionDelegate<NotmidAppAction> = ChannelNotmidActionDelegate(),
@@ -334,10 +334,12 @@ class NotmidAppViewModelTest {
         protectedWriteActions: NotmidActionDelegate<NotmidProtectedWriteRequest> = ChannelNotmidActionDelegate(),
         routeEvents: RouteEventSink = RouteEventSink {},
     ): NotmidAppViewModel {
+        val sharedContent = ObservableNotmidContentRepository(contentRepository)
         return NotmidAppViewModel(
             contentSource = NotmidContentSource.Static,
-            getDestinations = getDestinations,
-            protectedWriteExecutor = RepositoryNotmidProtectedWriteExecutor(protectedWriteRepository),
+            getDestinations = GetNotmidDestinationsUseCase(sharedContent),
+            contentUpdates = sharedContent,
+            protectedWriteExecutor = RepositoryNotmidProtectedWriteExecutor(protectedWriteRepository, sharedContent),
             authGateway = authGateway,
             actionDelegate = actionDelegate,
             uiEffects = uiEffects,
