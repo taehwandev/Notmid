@@ -22,8 +22,6 @@ internal fun CaptureContent(
     state: CaptureUiState,
     listState: LazyListState,
     cameraController: CaptureCameraController,
-    isPublishing: Boolean,
-    publishStatusMessage: String?,
     onAction: (CaptureAction) -> Unit,
 ) {
     val destination = state.destination ?: return
@@ -90,10 +88,10 @@ internal fun CaptureContent(
         item(key = "capture-publish-${destination.id}") {
             CapturePublishPanel(
                 readyToPublish = readyToPublish,
-                isPublishing = isPublishing,
+                isPublishing = state.isPublishing,
                 publicReceipt = publicReceipt,
                 onPublicReceiptChange = { onAction(CaptureAction.VisibilityChanged(it)) },
-                draftStatus = publishStatusMessage ?: draftStatus,
+                draftStatus = state.publishStatusMessage ?: draftStatus,
                 onSaveDraft = { onAction(CaptureAction.SaveDraft) },
                 onPublish = { onAction(CaptureAction.Publish) },
             )
@@ -112,8 +110,6 @@ private fun CapturePermissionRequiredPreview() {
             )),
             listState = rememberLazyListState(),
             cameraController = rememberCaptureCameraController(),
-            isPublishing = false,
-            publishStatusMessage = null,
             onAction = {},
         )
     }

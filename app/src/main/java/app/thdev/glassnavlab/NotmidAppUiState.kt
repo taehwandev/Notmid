@@ -15,9 +15,6 @@ internal data class NotmidAppUiState(
     val protectedActionInFlight: NotmidProtectedWriteAction? = null,
     val protectedActionNotice: NotmidProtectedActionNotice? = null,
 ) {
-    val isPublishingCapture: Boolean
-        get() = protectedActionInFlight == NotmidProtectedWriteAction.CapturePublish
-
     val isSavingClip: Boolean
         get() = protectedActionInFlight == NotmidProtectedWriteAction.ClipSave
 

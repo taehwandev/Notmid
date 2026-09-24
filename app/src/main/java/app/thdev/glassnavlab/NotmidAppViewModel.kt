@@ -131,10 +131,6 @@ internal class NotmidAppViewModel internal constructor(
                 clearAuthError()
                 routeEvents.onRouteEvent(NotmidRouteEvent.DestinationSelected(NotmidDestinationIds.FEED))
             }
-            is NotmidAppAction.PublishCapture -> enqueueProtectedAction(
-                NotmidProtectedWriteRequest.PublishCapture(action.request),
-            )
-
             is NotmidAppAction.SaveClip -> enqueueProtectedAction(
                 NotmidProtectedWriteRequest.SaveClip(action.clipId),
             )

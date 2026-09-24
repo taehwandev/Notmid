@@ -14,6 +14,8 @@ internal data class CaptureUiState(
     val capturedMediaName: String? = null,
     val attachedPlace: NotmidPlace? = null,
     val readyToPublish: Boolean = false,
+    val isPublishing: Boolean = false,
+    val publishStatusMessage: String? = null,
     val camera: CaptureCameraUiState = CaptureCameraUiState(
         CaptureCameraMode.Camera, CaptureCameraLens.Back, false, CaptureCameraStatus.PermissionRequired,
     ),

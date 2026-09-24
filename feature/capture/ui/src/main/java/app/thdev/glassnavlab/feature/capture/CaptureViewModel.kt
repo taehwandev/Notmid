@@ -6,7 +6,14 @@ import androidx.lifecycle.viewModelScope
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentSnapshot
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRequest
-import app.thdev.glassnavlab.core.model.notmid.NotmidActionDelegate
+import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthGateway
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteExecutor
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteResult
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
+import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectDelegate
+import app.thdev.glassnavlab.feature.notmid.notice.toSuccessNotice
+import app.thdev.glassnavlab.feature.notmid.notice.toProtectedActionNotice
+import kotlinx.coroutines.CancellationException
 import app.thdev.glassnavlab.core.model.notmid.NotmidCaptureMediaState
 import app.thdev.glassnavlab.core.model.notmid.NotmidCapturePublishRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidCaptureVisibility
@@ -22,8 +29,10 @@ import kotlinx.coroutines.launch
 internal class CaptureViewModel @Inject constructor(
     private val saved: SavedStateHandle,
     private val content: NotmidContentUpdates,
-    private val writes: NotmidActionDelegate<NotmidProtectedWriteRequest>,
+    private val writes: NotmidProtectedWriteExecutor,
     private val platform: CapturePlatformRequests,
+    private val auth: NotmidAuthGateway,
+    private val notices: NoticeEffectDelegate,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(CaptureUiState(camera = CaptureCameraUiState(
         mode = saved.get<String>("mode")?.let(CaptureCameraMode::valueOf) ?: CaptureCameraMode.Camera,
@@ -53,6 +62,7 @@ internal class CaptureViewModel @Inject constructor(
                 publicReceipt = if (restore) saved["public"] ?: (draft?.visibility != NotmidCaptureVisibility.Private) else draft?.visibility != NotmidCaptureVisibility.Private,
                 draftStatus = if (restore) saved["status"] ?: draft?.statusLabel ?: "Draft saved locally" else draft?.statusLabel ?: "Draft saved locally",
                 capturedMediaName = if (restore) saved["media"] else null,
+                publishStatusMessage = null,
             )
         }
         update(next)
@@ -101,17 +111,42 @@ internal class CaptureViewModel @Inject constructor(
     }
 
     private fun publish() {
+        if (state.value.isPublishing) return
         refreshContent(content.snapshot.value)
         val current = state.value
         val draft = current.destination?.captureDraft
         val place = current.attachedPlace
         if (content.snapshot.value !is NotmidContentSnapshot.Ready || !current.readyToPublish || draft == null || place == null) {
-            update(current.copy(draftStatus = "Attach media, a place, caption, and at least one tag"))
+            update(current.copy(draftStatus = "Attach media, a place, caption, and at least one tag", publishStatusMessage = null))
             return
         }
-        update(current.copy(draftStatus = "Publishing receipt..."))
+        val requestAuth = auth.currentState()
+        update(current.copy(isPublishing = true, publishStatusMessage = null))
         val request = NotmidCapturePublishRequest(draft.id, current.caption, place.id, current.selectedTags.toList(), if (current.publicReceipt) NotmidCaptureVisibility.Public else NotmidCaptureVisibility.Private)
-        viewModelScope.launch { writes.dispatch(NotmidProtectedWriteRequest.PublishCapture(request)) }
+        viewModelScope.launch {
+            try {
+                val result = writes.execute(requestAuth, NotmidProtectedWriteRequest.PublishCapture(request))
+                if (result == NotmidProtectedWriteResult.Busy || auth.currentState().session !== requestAuth.session) return@launch
+                check(result == NotmidProtectedWriteResult.Completed)
+                val notice = NotmidProtectedWriteAction.CapturePublish.toSuccessNotice()
+                if (state.value.destination?.captureDraft?.id == draft.id) {
+                    update(state.value.copy(publishStatusMessage = notice.message))
+                }
+                notices.emit(notice.effect)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                if (auth.currentState().session === requestAuth.session) {
+                    val notice = failure.toProtectedActionNotice(NotmidProtectedWriteAction.CapturePublish)
+                    if (state.value.destination?.captureDraft?.id == draft.id) {
+                        update(state.value.copy(publishStatusMessage = notice.message))
+                    }
+                    notices.emit(notice.effect)
+                }
+            } finally {
+                update(state.value.copy(isPublishing = false))
+            }
+        }
     }
 
     private fun request(request: CapturePlatformRequests.Request) {

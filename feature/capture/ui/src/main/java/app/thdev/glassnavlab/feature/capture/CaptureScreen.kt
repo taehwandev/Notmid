@@ -16,10 +16,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun CaptureScreen(
-    isPublishing: Boolean = false,
-    publishStatusMessage: String? = null,
-) {
+fun CaptureScreen() {
     val viewModel: CaptureViewModel = viewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
@@ -46,5 +43,5 @@ fun CaptureScreen(
             }
         }
     }
-    CaptureContent(state, listState, cameraController, isPublishing, publishStatusMessage, viewModel::onAction)
+    CaptureContent(state, listState, cameraController, viewModel::onAction)
 }

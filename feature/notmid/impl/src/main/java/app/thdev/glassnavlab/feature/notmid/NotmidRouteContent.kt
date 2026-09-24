@@ -31,12 +31,10 @@ internal fun NotmidRouteContent(
     authState: NotmidAuthState,
     authErrorMessage: String?,
     isAuthenticating: Boolean,
-    isPublishingCapture: Boolean,
     isSavingClip: Boolean,
     isSendingMessage: Boolean,
     isStartingChat: Boolean,
     isRespondingChatInvite: Boolean,
-    capturePublishMessage: String?,
     clipSaveMessage: String?,
     chatMessage: String?,
     onAction: (NotmidShellAction) -> Unit,
@@ -45,13 +43,6 @@ internal fun NotmidRouteContent(
     onContinueLocalAuth: () -> Unit,
     onContinueGoogleAuth: () -> Unit,
     onBrowseSignedOut: () -> Unit,
-    onPublishCapture: (
-        draftId: String,
-        caption: String,
-        placeId: String,
-        moodTags: List<String>,
-        visibility: String,
-    ) -> Unit,
     onSaveClip: (String) -> Unit,
     onAcceptThreadInvite: (String) -> Unit,
     onRejectThreadInvite: (String) -> Unit,
@@ -110,10 +101,7 @@ internal fun NotmidRouteContent(
 
         CaptureRoute -> {
             feedStateHolder.SaveableStateProvider("capture") {
-                CaptureScreen(
-                    isPublishing = isPublishingCapture,
-                    publishStatusMessage = capturePublishMessage,
-                )
+                CaptureScreen()
             }
         }
 

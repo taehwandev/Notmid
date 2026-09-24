@@ -8,8 +8,6 @@ import app.thdev.glassnavlab.core.base.activity.BaseActivity
 import app.thdev.glassnavlab.core.designsystem.theme.notmidTheme
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
-import app.thdev.glassnavlab.core.model.notmid.NotmidCapturePublishRequest
-import app.thdev.glassnavlab.core.model.notmid.NotmidCaptureVisibility
 import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteDecision
 import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
 import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLauncher
@@ -65,14 +63,10 @@ class MainActivity : BaseActivity() {
                         authState = appState.authState,
                         authErrorMessage = appState.authErrorMessage,
                         isAuthenticating = appState.isAuthenticating,
-                        isPublishingCapture = appState.isPublishingCapture,
                         isSavingClip = appState.isSavingClip,
                         isSendingMessage = appState.isSendingMessage,
                         isStartingChat = appState.isStartingChat,
                         isRespondingChatInvite = appState.isRespondingChatInvite,
-                        capturePublishMessage = appState.messageFor(
-                            NotmidProtectedWriteAction.CapturePublish,
-                        ),
                         clipSaveMessage = appState.messageFor(
                             NotmidProtectedWriteAction.ClipSave,
                         ),
@@ -92,25 +86,6 @@ class MainActivity : BaseActivity() {
                         },
                         onBrowseSignedOut = {
                             notmidAppViewModel.onAction(NotmidAppAction.BrowseSignedOut)
-                        },
-                        onPublishCapture = {
-                            draftId,
-                            caption,
-                            placeId,
-                            moodTags,
-                            visibility,
-                            ->
-                            notmidAppViewModel.onAction(
-                                NotmidAppAction.PublishCapture(
-                                    NotmidCapturePublishRequest(
-                                        draftId = draftId,
-                                        caption = caption,
-                                        placeId = placeId,
-                                        moodTags = moodTags,
-                                        visibility = visibility.toNotmidCaptureVisibility(),
-                                    ),
-                                ),
-                            )
                         },
                         onSaveClip = { clipId ->
                             notmidAppViewModel.onAction(
@@ -145,13 +120,5 @@ class MainActivity : BaseActivity() {
                 }
             }
         }
-    }
-}
-
-private fun String.toNotmidCaptureVisibility(): NotmidCaptureVisibility {
-    return when (this) {
-        "friends" -> NotmidCaptureVisibility.Friends
-        "private" -> NotmidCaptureVisibility.Private
-        else -> NotmidCaptureVisibility.Public
     }
 }

@@ -1,7 +1,6 @@
 package app.thdev.glassnavlab
 
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
-import app.thdev.glassnavlab.core.model.notmid.NotmidCapturePublishRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteDecision
 import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidStartThreadRequest
@@ -17,10 +16,6 @@ internal sealed interface NotmidAppAction {
     ) : NotmidAppAction
 
     data object BrowseSignedOut : NotmidAppAction
-
-    data class PublishCapture(
-        val request: NotmidCapturePublishRequest,
-    ) : NotmidAppAction
 
     data class SaveClip(
         val clipId: String,
