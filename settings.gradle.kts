@@ -30,7 +30,7 @@ include(
     ":core:auth:android",
     ":core:auth:impl",
     ":core:data",
-    ":core:base",
+    ":core:activity",
     ":core:designsystem",
     ":core:domain",
     ":core:model",

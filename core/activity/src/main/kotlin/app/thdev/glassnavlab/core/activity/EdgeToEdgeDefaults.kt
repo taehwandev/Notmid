@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.base.activity
+package app.thdev.glassnavlab.core.activity
 
 import android.graphics.Color
 import androidx.activity.SystemBarStyle

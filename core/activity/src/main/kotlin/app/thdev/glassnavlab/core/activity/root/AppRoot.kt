@@ -1,27 +1,29 @@
-package app.thdev.glassnavlab.core.base.root
+package app.thdev.glassnavlab.core.activity.root
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.thdev.glassnavlab.core.activity.route.ActivityRouteLauncher
+import app.thdev.glassnavlab.core.activity.route.ActivityRouteLauncherEffect
+import app.thdev.glassnavlab.core.activity.route.PendingActivityRouteRequest
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
 import app.thdev.glassnavlab.core.notice.ui.host.NoticeHost
-import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLauncher
-import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLauncherEffect
-import app.thdev.glassnavlab.core.runtime.router.runtime.AppRouterRuntime
 import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun AppRoot(
-    router: AppRouterRuntime,
+    activityRouteRequest: PendingActivityRouteRequest?,
     activityRouteLauncher: ActivityRouteLauncher,
+    onActivityRouteLaunched: (Long) -> Unit,
     noticeEffects: Flow<NoticeEffect>,
+    onNoticeActionDeepLink: (String) -> Unit,
     modifier: Modifier = Modifier,
-    onNoticeActionDeepLink: (String) -> Unit = {},
     theme: @Composable (@Composable () -> Unit) -> Unit = { content -> content() },
     content: @Composable () -> Unit,
 ) {
     ActivityRouteLauncherEffect(
-        router = router,
+        request = activityRouteRequest,
         launcher = activityRouteLauncher,
+        onLaunched = onActivityRouteLaunched,
     )
 
     theme {

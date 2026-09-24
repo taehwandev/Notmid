@@ -249,7 +249,7 @@ dependencies {
     implementation(project(":core:auth:api"))
     implementation(project(":core:auth:android"))
     implementation(project(":core:auth:impl"))
-    implementation(project(":core:base"))
+    implementation(project(":core:activity"))
     implementation(project(":core:data"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))

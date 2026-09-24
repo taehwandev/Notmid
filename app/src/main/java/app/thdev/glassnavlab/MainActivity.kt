@@ -2,14 +2,20 @@ package app.thdev.glassnavlab
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import app.thdev.glassnavlab.core.base.activity.BaseActivity
+import androidx.compose.ui.Modifier
+import app.thdev.glassnavlab.core.activity.BaseActivity
+import app.thdev.glassnavlab.core.activity.deeplink.PendingDeepLinkEffect
+import app.thdev.glassnavlab.core.activity.root.AppRoot
+import app.thdev.glassnavlab.core.activity.route.ActivityRouteLauncher
 import app.thdev.glassnavlab.core.designsystem.theme.notmidTheme
-import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLauncher
+import app.thdev.glassnavlab.shell.NotmidShellAction
 import app.thdev.glassnavlab.shell.NotmidShellErrorScreen
 import app.thdev.glassnavlab.shell.NotmidShellLoadingScreen
 import app.thdev.glassnavlab.shell.NotmidShellScreen
+import app.thdev.glassnavlab.shell.NotmidShellViewModel
 import app.thdev.glassnavlab.core.runtime.router.runtime.AppRouterRuntime
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -25,12 +31,27 @@ class MainActivity : BaseActivity() {
     @Composable
     override fun Content() {
         val notmidAppViewModel: NotmidAppViewModel = viewModel()
+        val shellViewModel: NotmidShellViewModel = viewModel()
         val appState by notmidAppViewModel.state.collectAsStateWithLifecycle()
+        val deepLink = pendingDeepLink
 
-        BaseAppRoot(
-            router = appRouter,
+        PendingDeepLinkEffect(
+            deepLinkKey = deepLink?.id,
+            uri = deepLink?.uri,
+            onDeepLink = { uri -> shellViewModel.onAction(NotmidShellAction.DeepLinkRequested(uri)) },
+        )
+
+        AppRoot(
+            activityRouteRequest = appRouter.pendingActivityRouteRequest,
             activityRouteLauncher = activityRouteLauncher,
+            onActivityRouteLaunched = { id ->
+                shellViewModel.onAction(NotmidShellAction.ActivityRouteLaunched(id))
+            },
             noticeEffects = notmidAppViewModel.effects,
+            modifier = Modifier.fillMaxSize(),
+            onNoticeActionDeepLink = { uri ->
+                shellViewModel.onAction(NotmidShellAction.DeepLinkRequested(uri))
+            },
             theme = { content ->
                 notmidTheme(darkTheme = false) {
                     content()

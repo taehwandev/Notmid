@@ -8,6 +8,7 @@ android {
 }
 
 dependencies {
+    api(project(":core:activity"))
     api(project(":core:navigation:api"))
     implementation(project(":core:navigation:impl"))
 

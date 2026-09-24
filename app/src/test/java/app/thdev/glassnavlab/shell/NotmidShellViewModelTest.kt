@@ -18,6 +18,7 @@ import app.thdev.glassnavlab.feature.inbox.api.event.InboxRouteEvent
 import app.thdev.glassnavlab.feature.inbox.api.route.ChatThreadRoute
 import app.thdev.glassnavlab.feature.inbox.api.route.InboxRoute
 import app.thdev.glassnavlab.feature.map.api.event.MapRouteEvent
+import app.thdev.glassnavlab.feature.webview.api.route.WebViewRoute
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -67,12 +68,36 @@ class NotmidShellViewModelTest {
         assertFalse(vm.state.value.shouldShowLogin)
     }
 
-    private fun testRouter() = DefaultAppRouterRuntime(
+    @Test fun deepLinkActionPlansRouteInsideViewModel() = runTest(dispatcherRule.dispatcher) {
+        val router = testRouter(deepLinkPlan = RoutePlan.compose(RouteStack.of(FeedRoute, InboxRoute)))
+        val vm = NotmidShellViewModel(RouteEventSink {}, router, FakeAuthGateway(signedOutAuthState))
+
+        vm.onAction(NotmidShellAction.DeepLinkRequested(""))
+        assertEquals(FeedRoute, router.currentRoute)
+
+        vm.onAction(NotmidShellAction.DeepLinkRequested("notmid://inbox"))
+        assertEquals(InboxRoute, router.currentRoute)
+    }
+
+    @Test fun activityLaunchAcknowledgmentConsumesOnlyItsRequest() = runTest(dispatcherRule.dispatcher) {
+        val router = testRouter()
+        val vm = NotmidShellViewModel(RouteEventSink {}, router, FakeAuthGateway(signedOutAuthState))
+        val firstRoute = WebViewRoute("https://example.com/first")
+        val secondRoute = WebViewRoute("https://example.com/second")
+        router.execute(RoutePlan(activityRoutes = listOf(firstRoute, secondRoute)))
+        val firstRequest = router.pendingActivityRouteRequest ?: error("missing first request")
+
+        vm.onAction(NotmidShellAction.ActivityRouteLaunched(firstRequest.id))
+
+        assertEquals(secondRoute, router.pendingActivityRouteRequest?.route)
+    }
+
+    private fun testRouter(deepLinkPlan: RoutePlan? = null) = DefaultAppRouterRuntime(
         initialStack = RouteStack.single(FeedRoute),
         routePlanner = object : AppRoutePlanner {
             override fun planFor(command: RouteCommand): RoutePlan = RoutePlan.compose(RouteStack.single(FeedRoute))
             override fun planFor(event: RouteEvent): RoutePlan? = null
-            override fun planForDeepLink(uriString: String): RoutePlan? = null
+            override fun planForDeepLink(uriString: String): RoutePlan? = deepLinkPlan
         },
     )
 }

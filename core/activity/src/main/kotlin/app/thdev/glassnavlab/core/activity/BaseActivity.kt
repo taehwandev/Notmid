@@ -1,23 +1,15 @@
-package app.thdev.glassnavlab.core.base.activity
+package app.thdev.glassnavlab.core.activity
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import app.thdev.glassnavlab.core.base.deeplink.PendingDeepLink
-import app.thdev.glassnavlab.core.base.deeplink.PendingDeepLinkEffect
-import app.thdev.glassnavlab.core.base.root.AppRoot
-import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
-import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLauncher
-import app.thdev.glassnavlab.core.runtime.router.runtime.AppRouterRuntime
-import kotlinx.coroutines.flow.Flow
+import app.thdev.glassnavlab.core.activity.deeplink.PendingDeepLink
 
 abstract class BaseActivity : ComponentActivity() {
     private var currentPendingDeepLink by mutableStateOf<PendingDeepLink?>(null)
@@ -61,40 +53,6 @@ abstract class BaseActivity : ComponentActivity() {
         enableEdgeToEdge(
             statusBarStyle = config.statusBarStyle,
             navigationBarStyle = config.navigationBarStyle,
-        )
-    }
-
-    @Composable
-    protected fun BaseAppRoot(
-        router: AppRouterRuntime,
-        activityRouteLauncher: ActivityRouteLauncher,
-        noticeEffects: Flow<NoticeEffect>,
-        modifier: Modifier = Modifier.fillMaxSize(),
-        onNoticeActionDeepLink: (String) -> Unit = router::navigateDeepLink,
-        theme: @Composable (@Composable () -> Unit) -> Unit = { content -> content() },
-        content: @Composable () -> Unit,
-    ) {
-        BasePendingDeepLinkEffect(router)
-        AppRoot(
-            router = router,
-            activityRouteLauncher = activityRouteLauncher,
-            noticeEffects = noticeEffects,
-            modifier = modifier,
-            onNoticeActionDeepLink = onNoticeActionDeepLink,
-            theme = theme,
-            content = content,
-        )
-    }
-
-    @Composable
-    protected fun BasePendingDeepLinkEffect(
-        router: AppRouterRuntime,
-    ) {
-        val pendingDeepLink = pendingDeepLink
-        PendingDeepLinkEffect(
-            deepLinkKey = pendingDeepLink?.id,
-            uri = pendingDeepLink?.uri,
-            onDeepLink = router::navigateDeepLink,
         )
     }
 

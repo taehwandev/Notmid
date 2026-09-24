@@ -47,6 +47,14 @@ internal class NotmidShellViewModel @Inject constructor(
             is NotmidShellAction.DestinationClicked -> NotmidRouteEvent.DestinationSelected(action.destinationId)
             is NotmidShellAction.ThreadClicked -> InboxRouteEvent.ChatThreadRequested(action.threadId)
             is NotmidShellAction.PlaceClicked -> MapRouteEvent.PlaceRequested(action.placeId)
+            is NotmidShellAction.DeepLinkRequested -> {
+                action.uri.takeIf(String::isNotBlank)?.let(router::navigateDeepLink)
+                return
+            }
+            is NotmidShellAction.ActivityRouteLaunched -> {
+                router.consumeActivityRouteRequest(action.requestId)
+                return
+            }
             NotmidShellAction.SettingsClicked -> NotmidRouteEvent.SettingsRequested
         }
         routeEvents.onRouteEvent(event)

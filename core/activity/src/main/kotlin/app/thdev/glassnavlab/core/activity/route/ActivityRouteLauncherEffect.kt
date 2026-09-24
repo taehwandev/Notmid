@@ -1,20 +1,22 @@
-package app.thdev.glassnavlab.core.runtime.router.activity
+package app.thdev.glassnavlab.core.activity.route
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import app.thdev.glassnavlab.core.runtime.router.runtime.AppRouterRuntime
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 
 @Composable
 fun ActivityRouteLauncherEffect(
-    router: AppRouterRuntime,
+    request: PendingActivityRouteRequest?,
     launcher: ActivityRouteLauncher,
+    onLaunched: (Long) -> Unit,
 ) {
-    val request = router.pendingActivityRouteRequest
+    val currentOnLaunched by rememberUpdatedState(onLaunched)
 
     LaunchedEffect(request) {
         val pendingRequest = request ?: return@LaunchedEffect
         if (launcher.launch(pendingRequest.route)) {
-            router.consumeActivityRouteRequest(pendingRequest.id)
+            currentOnLaunched(pendingRequest.id)
         }
     }
 }

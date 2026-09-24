@@ -8,7 +8,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":core:runtime"))
+    implementation(project(":core:activity"))
     implementation(project(":feature:webview:api"))
 
     implementation(libs.androidx.activity.compose)

@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.runtime.router.activity
+package app.thdev.glassnavlab.core.activity.route
 
 import dagger.Binds
 import dagger.Module

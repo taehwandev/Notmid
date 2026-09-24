@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.base.deeplink
+package app.thdev.glassnavlab.core.activity.deeplink
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect

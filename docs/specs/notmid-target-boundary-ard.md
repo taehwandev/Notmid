@@ -224,7 +224,10 @@ Decision 5 작업으로 남는다.
 
 진행 상태: `NoticeHost`와 알림 UI 렌더링, `NoticeEffectViewModel`을
 `:core:notice:ui`로 옮겼다. `:core:notice:api`는 효과·요청·delegate 계약만
-소유한다. `:core:runtime`의 라우터/ActivityRoute와 `:core:base` 해체는 남아 있다.
+소유한다. `:core:base`는 `:core:activity`로 옮겼고 ActivityRoute launcher와
+요청 타입도 여기로 옮겼다. 앱 진입/알림 딥링크와 Activity launch 완료는
+`MainActivity`에서 타입 액션으로 `NotmidShellViewModel`에 전달한다.
+`:core:runtime`의 나머지 앱 라우터 정책 이동은 남아 있다.
 - `feature:notmid:common`은 **해체하지 않고 정리한다**(아래 정정 참조).
 
 > **정정 (2026-09-12).** 최초 작성 시 "`feature:notmid:common` 해체 → 도메인 무관
@@ -309,8 +312,8 @@ core:*:assertions -> 같은 owner의 api
 | `:feature:notmid:common` 컴포넌트 | 모듈에 잔류 | 여러 feature가 공유하므로 이동 불가, Decision 5 정정 참조 |
 | ~~`:feature:{feed,map,capture,inbox,profile}:impl`~~ | `…:ui` | 개명 완료, VM 추가는 4단계 |
 | `:feature:webview:impl` | 유지 | 유일한 정당 impl |
-| `:core:base` | `:core:activity` | |
-| `:core:runtime` | `:app` / `:core:notice:ui` / `:core:activity` | 모듈 소멸 |
+| ~~`:core:base`~~ | `:core:activity` | 완료 |
+| `:core:runtime` | `:app` / `:core:notice:ui` / `:core:activity` | 알림·ActivityRoute 이동 완료, 앱 라우터 정책 이동 후 모듈 소멸 |
 | `:core:data` | `:core:data:{api,impl,assertions}` | `Static*` → assertions |
 | `NotmidAppViewModel` | feature별 ViewModel + app 인증/세션 | |
 
