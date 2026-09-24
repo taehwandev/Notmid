@@ -51,6 +51,7 @@ include(
     ":feature:map:api",
     ":feature:map:ui",
     ":feature:notmid:common",
+    ":feature:notmid:notice",
     ":feature:notmid:impl",
     ":feature:profile:api",
     ":feature:profile:ui",

@@ -1,5 +1,7 @@
 package app.thdev.glassnavlab
 
+import app.thdev.glassnavlab.feature.notmid.notice.NotmidProtectedActionNotice
+
 import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
@@ -27,9 +29,6 @@ internal data class NotmidAppUiState(
 
     val isRespondingChatInvite: Boolean
         get() = protectedActionInFlight == NotmidProtectedWriteAction.ChatInviteResponse
-
-    val isSavingProfileSettings: Boolean
-        get() = protectedActionInFlight == NotmidProtectedWriteAction.ProfileSettings
 
     fun messageFor(action: NotmidProtectedWriteAction): String? {
         return protectedActionNotice

@@ -14,7 +14,7 @@ internal fun List<NotmidDestination>.withWriteResult(
         result.message?.let(destinations::withMessage) ?: destinations
     }
     is NotmidProtectedWriteResult.ThreadUpdated -> withThread(result.thread)
-    NotmidProtectedWriteResult.Completed, is NotmidProtectedWriteResult.ProfileUpdated -> this
+    NotmidProtectedWriteResult.Busy, NotmidProtectedWriteResult.Completed, is NotmidProtectedWriteResult.ProfileUpdated -> this
 }
 
 private fun List<NotmidDestination>.withMessage(message: NotmidThreadMessage) = map { destination ->

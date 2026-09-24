@@ -1,5 +1,8 @@
 package app.thdev.glassnavlab
 
+import app.thdev.glassnavlab.feature.notmid.notice.toSuccessNotice
+import app.thdev.glassnavlab.feature.notmid.notice.toProtectedActionNotice
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.thdev.glassnavlab.di.IoDispatcher
@@ -17,7 +20,6 @@ import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteResult
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectDelegate
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectViewModel
-import app.thdev.glassnavlab.core.notice.api.effect.MutableNoticeEffectDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.model.notmid.ChannelNotmidActionDelegate
@@ -62,6 +64,7 @@ internal class NotmidAppViewModel internal constructor(
         protectedWriteExecutor: NotmidProtectedWriteExecutor,
         authGateway: NotmidAuthGateway,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
+        uiEffects: NoticeEffectDelegate,
         protectedWriteActions: NotmidActionDelegate<NotmidProtectedWriteRequest>,
         routeEvents: RouteEventSink,
     ) : this(
@@ -71,7 +74,7 @@ internal class NotmidAppViewModel internal constructor(
         protectedWriteExecutor = protectedWriteExecutor,
         authGateway = authGateway,
         actionDelegate = ChannelNotmidActionDelegate(),
-        uiEffects = MutableNoticeEffectDelegate(),
+        uiEffects = uiEffects,
         ioDispatcher = ioDispatcher,
         protectedWriteActions = protectedWriteActions,
         routeEvents = routeEvents,
@@ -154,9 +157,6 @@ internal class NotmidAppViewModel internal constructor(
                 ),
             )
 
-            is NotmidAppAction.UpdateProfileSettings -> enqueueProtectedAction(
-                NotmidProtectedWriteRequest.UpdateProfileSettings(action.request),
-            )
         }
     }
 
@@ -294,6 +294,9 @@ internal class NotmidAppViewModel internal constructor(
                 }
                 when (result) {
                     NotmidProtectedWriteResult.Completed -> Unit
+                    NotmidProtectedWriteResult.Busy -> {
+                        return@runCatchingPreservingCancellation null
+                    }
                     is NotmidProtectedWriteResult.MessageSent -> Unit
                     is NotmidProtectedWriteResult.ThreadStarted -> {
                         followUpEffect = NoticeEffect.NavigateDeepLink(
@@ -301,11 +304,7 @@ internal class NotmidAppViewModel internal constructor(
                         )
                     }
                     is NotmidProtectedWriteResult.ThreadUpdated -> Unit
-                    is NotmidProtectedWriteResult.ProfileUpdated -> {
-                        requestAuthState.session?.let { session ->
-                            authGateway.applyProfileUpdate(session, result.user)
-                        }
-                    }
+                    is NotmidProtectedWriteResult.ProfileUpdated -> Unit
                 }
                 action.writeAction.toSuccessNotice()
             }.getOrElse { throwable ->
@@ -319,7 +318,7 @@ internal class NotmidAppViewModel internal constructor(
                     protectedActionNotice = notice,
                 )
             }
-            emitEffect(notice.effect)
+            notice?.let { emitEffect(it.effect) }
             followUpEffect?.let(::emitEffect)
         }
     }

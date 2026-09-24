@@ -35,11 +35,9 @@ fun NotmidShellScreen(
     isSendingMessage: Boolean = false,
     isStartingChat: Boolean = false,
     isRespondingChatInvite: Boolean = false,
-    isSavingProfileSettings: Boolean = false,
     capturePublishMessage: String? = null,
     clipSaveMessage: String? = null,
     chatMessage: String? = null,
-    profileSettingsMessage: String? = null,
     navigationStack: List<NotmidRoute> = listOf(FeedRoute),
     onContinueLocalAuth: () -> Unit = {},
     onContinueGoogleAuth: () -> Unit = onContinueLocalAuth,
@@ -55,7 +53,6 @@ fun NotmidShellScreen(
     onAcceptThreadInvite: (String) -> Unit = {},
     onRejectThreadInvite: (String) -> Unit = {},
     onSendThreadMessage: (threadId: String, body: String) -> Unit = { _, _ -> },
-    onUpdateProfileSettings: (displayName: String, homeNeighborhood: String) -> Unit = { _, _ -> },
 ) {
     val viewModel: NotmidShellViewModel = viewModel()
     val notmidDestinations = remember(destinations) {
@@ -101,11 +98,9 @@ fun NotmidShellScreen(
                 isSendingMessage = isSendingMessage,
                 isStartingChat = isStartingChat,
                 isRespondingChatInvite = isRespondingChatInvite,
-                isSavingProfileSettings = isSavingProfileSettings,
                 capturePublishMessage = capturePublishMessage,
                 clipSaveMessage = clipSaveMessage,
                 chatMessage = chatMessage,
-                profileSettingsMessage = profileSettingsMessage,
                 onAction = viewModel::onAction,
                 onFeedBackdropColorChanged = { feedBackdropColor = it },
                 onMapBackdropColorChanged = { mapBackdropColor = it },
@@ -117,7 +112,6 @@ fun NotmidShellScreen(
                 onAcceptThreadInvite = onAcceptThreadInvite,
                 onRejectThreadInvite = onRejectThreadInvite,
                 onSendThreadMessage = onSendThreadMessage,
-                onUpdateProfileSettings = onUpdateProfileSettings,
             )
         },
         floatingContent = { backdrop ->

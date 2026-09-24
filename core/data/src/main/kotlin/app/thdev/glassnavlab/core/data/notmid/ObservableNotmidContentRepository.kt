@@ -45,7 +45,7 @@ class ObservableNotmidContentRepository(
 
     /** Records a receipt before the executor returns; an active read merges it before publishing. */
     internal fun applyWriteResult(result: NotmidProtectedWriteResult) {
-        if (result is NotmidProtectedWriteResult.ProfileUpdated || result == NotmidProtectedWriteResult.Completed) return
+        if (result is NotmidProtectedWriteResult.ProfileUpdated || result == NotmidProtectedWriteResult.Completed || result == NotmidProtectedWriteResult.Busy) return
         synchronized(stateLock) {
             val current = mutableSnapshot.value
             if (current is NotmidContentSnapshot.Ready) {

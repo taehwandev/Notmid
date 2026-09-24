@@ -1,10 +1,10 @@
-package app.thdev.glassnavlab
+package app.thdev.glassnavlab.feature.notmid.notice
 
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
 import app.thdev.glassnavlab.core.notice.api.model.NoticeRequest
 
-internal data class NotmidProtectedActionNotice(
+data class NotmidProtectedActionNotice(
     val action: NotmidProtectedWriteAction,
     val notice: NoticeRequest,
 ) {

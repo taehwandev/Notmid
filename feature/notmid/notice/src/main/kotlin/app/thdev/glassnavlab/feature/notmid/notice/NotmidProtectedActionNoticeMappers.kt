@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab
+package app.thdev.glassnavlab.feature.notmid.notice
 
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteException
@@ -6,18 +6,6 @@ import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteFailure
 import app.thdev.glassnavlab.core.notice.api.model.NoticePresentation
 import app.thdev.glassnavlab.core.notice.api.model.NoticeRequest
 import app.thdev.glassnavlab.core.notice.api.model.NoticeTone
-
-internal fun NotmidProtectedWriteAction.toSuccessNotice(): NotmidProtectedActionNotice {
-    return NotmidProtectedActionNotice(
-        action = this,
-        notice = NoticeRequest(
-            id = "notmid-${name}-success",
-            message = successMessage(),
-            presentation = NoticePresentation.Toast,
-            tone = NoticeTone.Success,
-        ),
-    )
-}
 
 internal fun NotmidProtectedWriteFailure.toNotice(): NotmidProtectedActionNotice {
     return NotmidProtectedActionNotice(
@@ -31,7 +19,7 @@ internal fun NotmidProtectedWriteFailure.toNotice(): NotmidProtectedActionNotice
     )
 }
 
-internal fun Throwable.toProtectedActionNotice(
+fun Throwable.toProtectedActionNotice(
     fallbackAction: NotmidProtectedWriteAction,
 ): NotmidProtectedActionNotice {
     val failure = (this as? NotmidProtectedWriteException)?.failure
@@ -61,17 +49,6 @@ internal fun NotmidProtectedWriteFailure.toUserMessage(): String {
         is NotmidProtectedWriteFailure.MalformedResponse -> {
             "The notmid API response did not match the Android contract."
         }
-    }
-}
-
-internal fun NotmidProtectedWriteAction.successMessage(): String {
-    return when (this) {
-        NotmidProtectedWriteAction.CapturePublish -> "Receipt queued for moderation."
-        NotmidProtectedWriteAction.ClipSave -> "Clip saved."
-        NotmidProtectedWriteAction.ChatStart -> "Chat started."
-        NotmidProtectedWriteAction.ChatMessage -> "Message sent."
-        NotmidProtectedWriteAction.ChatInviteResponse -> "Chat request updated."
-        NotmidProtectedWriteAction.ProfileSettings -> "Profile settings saved."
     }
 }
 

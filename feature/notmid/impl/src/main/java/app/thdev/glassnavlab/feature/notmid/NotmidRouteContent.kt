@@ -36,11 +36,9 @@ internal fun NotmidRouteContent(
     isSendingMessage: Boolean,
     isStartingChat: Boolean,
     isRespondingChatInvite: Boolean,
-    isSavingProfileSettings: Boolean,
     capturePublishMessage: String?,
     clipSaveMessage: String?,
     chatMessage: String?,
-    profileSettingsMessage: String?,
     onAction: (NotmidShellAction) -> Unit,
     onFeedBackdropColorChanged: (Color) -> Unit,
     onMapBackdropColorChanged: (Color) -> Unit,
@@ -58,7 +56,6 @@ internal fun NotmidRouteContent(
     onAcceptThreadInvite: (String) -> Unit,
     onRejectThreadInvite: (String) -> Unit,
     onSendThreadMessage: (threadId: String, body: String) -> Unit,
-    onUpdateProfileSettings: (displayName: String, homeNeighborhood: String) -> Unit,
 ) {
     val feedStateHolder = rememberSaveableStateHolder()
     if (routeState.shouldShowLogin) {
@@ -77,8 +74,6 @@ internal fun NotmidRouteContent(
             feedStateHolder.SaveableStateProvider("profile-settings") {
                 ProfileSettingsScreen(
                     navigationStack = navigationStack,
-                    isSaving = isSavingProfileSettings,
-                    statusMessage = profileSettingsMessage,
                 )
             }
         }

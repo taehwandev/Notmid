@@ -3,7 +3,6 @@ package app.thdev.glassnavlab
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.model.notmid.NotmidCapturePublishRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteDecision
-import app.thdev.glassnavlab.core.model.notmid.NotmidProfileSettingsUpdateRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidStartThreadRequest
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
@@ -41,7 +40,4 @@ internal sealed interface NotmidAppAction {
         val decision: NotmidChatInviteDecision,
     ) : NotmidAppAction
 
-    data class UpdateProfileSettings(
-        val request: NotmidProfileSettingsUpdateRequest,
-    ) : NotmidAppAction
 }

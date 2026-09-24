@@ -11,7 +11,6 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.model.notmid.NotmidCapturePublishRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidCaptureVisibility
 import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteDecision
-import app.thdev.glassnavlab.core.model.notmid.NotmidProfileSettingsUpdateRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
 import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLauncher
 import app.thdev.glassnavlab.feature.notmid.NotmidShellErrorScreen
@@ -71,7 +70,6 @@ class MainActivity : BaseActivity() {
                         isSendingMessage = appState.isSendingMessage,
                         isStartingChat = appState.isStartingChat,
                         isRespondingChatInvite = appState.isRespondingChatInvite,
-                        isSavingProfileSettings = appState.isSavingProfileSettings,
                         capturePublishMessage = appState.messageFor(
                             NotmidProtectedWriteAction.CapturePublish,
                         ),
@@ -80,9 +78,6 @@ class MainActivity : BaseActivity() {
                         ),
                         chatMessage = appState.messageFor(
                             NotmidProtectedWriteAction.ChatMessage,
-                        ),
-                        profileSettingsMessage = appState.messageFor(
-                            NotmidProtectedWriteAction.ProfileSettings,
                         ),
                         navigationStack = appRouter.notmidRouteStack(),
                         onContinueLocalAuth = {
@@ -143,16 +138,6 @@ class MainActivity : BaseActivity() {
                                 NotmidAppAction.SendThreadMessage(
                                     threadId = threadId,
                                     request = NotmidSendThreadMessageRequest(body = body),
-                                ),
-                            )
-                        },
-                        onUpdateProfileSettings = { displayName, homeNeighborhood ->
-                            notmidAppViewModel.onAction(
-                                NotmidAppAction.UpdateProfileSettings(
-                                    NotmidProfileSettingsUpdateRequest(
-                                        displayName = displayName,
-                                        homeNeighborhood = homeNeighborhood,
-                                    ),
                                 ),
                             )
                         },

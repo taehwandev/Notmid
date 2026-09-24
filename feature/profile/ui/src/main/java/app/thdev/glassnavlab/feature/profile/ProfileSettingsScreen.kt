@@ -10,8 +10,6 @@ import app.thdev.glassnavlab.core.navigation.notmid.NotmidRoute
 @Composable
 fun ProfileSettingsScreen(
     navigationStack: List<NotmidRoute>,
-    isSaving: Boolean = false,
-    statusMessage: String? = null,
 ) {
     val viewModel: ProfileSettingsViewModel = viewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -19,8 +17,8 @@ fun ProfileSettingsScreen(
         state = state,
         routeLabel = navigationStack.joinToString(" > ") { it.deepLinkPathSegments.last() },
         listState = rememberLazyListState(),
-        isSaving = isSaving,
-        statusMessage = statusMessage,
+        isSaving = state.isSaving,
+        statusMessage = state.statusMessage,
         onAction = viewModel::onAction,
     )
 }

@@ -20,4 +20,5 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     implementation(project(":feature:profile:api"))
     implementation(project(":feature:notmid:common"))
+    implementation(project(":feature:notmid:notice"))
 }
