@@ -3,7 +3,7 @@ package app.thdev.glassnavlab.router
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEventHandler
-import app.thdev.glassnavlab.core.runtime.router.runtime.AppRouterRuntime
+import app.thdev.glassnavlab.router.runtime.AppRouterRuntime
 import app.thdev.glassnavlab.core.navigation.notmid.NotmidRoute
 
 @Composable

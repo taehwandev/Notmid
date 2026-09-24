@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.runtime.router.config
+package app.thdev.glassnavlab.router.config
 
 data class AppDeepLinkUrlConfig(
     val allowedSchemes: Set<String>,

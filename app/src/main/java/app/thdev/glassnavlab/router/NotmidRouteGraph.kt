@@ -5,11 +5,11 @@ import app.thdev.glassnavlab.core.navigation.registry.RouteRegistry
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEventHandler
 import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
 import app.thdev.glassnavlab.core.navigation.runtime.RouteStack
-import app.thdev.glassnavlab.core.runtime.router.deeplink.AppDeepLinkResolver
-import app.thdev.glassnavlab.core.runtime.router.config.AppDeepLinkUrlConfig
-import app.thdev.glassnavlab.core.runtime.router.config.AppRouterBundle
-import app.thdev.glassnavlab.core.runtime.router.config.AppRouterBundleConfig
-import app.thdev.glassnavlab.core.runtime.router.config.DefaultAppRouterBundle
+import app.thdev.glassnavlab.router.deeplink.AppDeepLinkResolver
+import app.thdev.glassnavlab.router.config.AppDeepLinkUrlConfig
+import app.thdev.glassnavlab.router.config.AppRouterBundle
+import app.thdev.glassnavlab.router.config.AppRouterBundleConfig
+import app.thdev.glassnavlab.router.config.DefaultAppRouterBundle
 import app.thdev.glassnavlab.feature.capture.api.deeplink.CaptureDeepLinkSpec
 import app.thdev.glassnavlab.feature.capture.api.route.CaptureRoute
 import app.thdev.glassnavlab.feature.feed.api.deeplink.ClipDeepLinkSpec

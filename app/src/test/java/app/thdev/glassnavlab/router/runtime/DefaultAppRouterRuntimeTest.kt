@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.runtime.router.runtime
+package app.thdev.glassnavlab.router.runtime
 
 import app.thdev.glassnavlab.core.navigation.assertions.TestActivityRoute
 import app.thdev.glassnavlab.core.navigation.assertions.TestComposeRoute
@@ -8,8 +8,8 @@ import app.thdev.glassnavlab.core.navigation.runtime.RouteCommand
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
 import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
 import app.thdev.glassnavlab.core.navigation.runtime.RouteStack
-import app.thdev.glassnavlab.core.runtime.router.deeplink.FakeAppDeepLinkResolver
-import app.thdev.glassnavlab.core.runtime.router.planner.DefaultAppRoutePlanner
+import app.thdev.glassnavlab.router.deeplink.FakeAppDeepLinkResolver
+import app.thdev.glassnavlab.router.planner.DefaultAppRoutePlanner
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

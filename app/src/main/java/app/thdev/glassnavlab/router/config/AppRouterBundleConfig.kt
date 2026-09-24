@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.runtime.router.config
+package app.thdev.glassnavlab.router.config
 
 import app.thdev.glassnavlab.core.navigation.deeplink.DeepLinkSpec
 import app.thdev.glassnavlab.core.navigation.route.TopLevelRoute

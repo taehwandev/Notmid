@@ -39,7 +39,6 @@ include(
     ":core:network:api",
     ":core:network:assertions",
     ":core:network:impl",
-    ":core:runtime",
     ":core:navigation:api",
     ":core:navigation:assertions",
     ":core:navigation:impl",

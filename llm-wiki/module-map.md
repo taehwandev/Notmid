@@ -57,7 +57,7 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
 로그인 UI는 `:feature:auth:ui`, 셸과 제품 라우트 그래프는 `:app`이 소유한다.
 
 모든 owner가 완성된 쌍이나 trio를 가져야 하는 것은 아니다. `:core:notice:api`,
-`:core:data`, `:core:runtime`, `:core:activity`, `:core:designsystem`,
+`:core:data`, `:core:activity`, `:core:designsystem`,
 `:feature:notmid:common`은 현재 소유권과 caller 압력에 맞춘 의도적인 단일 역할
 또는 collapsed 경계다. 빈 `impl`이나 한 테스트만 쓰는 `assertions`를 추가해
 모양만 맞추지 않는다.
@@ -72,6 +72,7 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
   static/API repository selection, auth gateway selection, and dispatcher
   bindings
   injected ActivityRouteLauncher and AppRouterRuntime from NotmidAppRouterFactory
+  app-owned router config, deep-link resolver, planner, and runtime policy
   NotmidAppViewModel for app content loading and notice host effects
   NotmidShellViewModel for active route, auth gate, shell actions, and entry/notice deep links
   MainActivity forwards incoming deep links and activity-launch completion as typed shell actions
@@ -135,12 +136,6 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
   pending external deep-link delivery to an app-owned action callback
   ActivityRouteLauncher, ActivityRouteLaunchHandler, and launch effect
   Hilt ActivityComponent binding for the default ActivityRouteLauncher
-
-:core:runtime
-  router/config AppRouterBundleConfig, AppDeepLinkUrlConfig, DefaultAppRouterBundle
-  router/planner AppRoutePlanner and DefaultAppRoutePlanner
-  router/deeplink AppDeepLinkResolver and DefaultAppDeepLinkResolver
-  router/runtime AppRouterRuntime and DefaultAppRouterRuntime
 
 :core:navigation:api
   pure Kotlin route contracts

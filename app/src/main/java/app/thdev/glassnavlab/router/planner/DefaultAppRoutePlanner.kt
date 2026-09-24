@@ -1,10 +1,10 @@
-package app.thdev.glassnavlab.core.runtime.router.planner
+package app.thdev.glassnavlab.router.planner
 
 import app.thdev.glassnavlab.core.navigation.runtime.RouteCommand
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEventPlanner
 import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
-import app.thdev.glassnavlab.core.runtime.router.deeplink.AppDeepLinkResolver
+import app.thdev.glassnavlab.router.deeplink.AppDeepLinkResolver
 
 class DefaultAppRoutePlanner(
     private val routeEventPlanner: RouteEventPlanner,

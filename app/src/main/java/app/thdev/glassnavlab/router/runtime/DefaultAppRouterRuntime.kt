@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.runtime.router.runtime
+package app.thdev.glassnavlab.router.runtime
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -11,7 +11,7 @@ import app.thdev.glassnavlab.core.navigation.runtime.RouteCommand
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
 import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
 import app.thdev.glassnavlab.core.navigation.runtime.RouteStack
-import app.thdev.glassnavlab.core.runtime.router.planner.AppRoutePlanner
+import app.thdev.glassnavlab.router.planner.AppRoutePlanner
 
 @Stable
 class DefaultAppRouterRuntime(

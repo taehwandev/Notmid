@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.core.runtime.router.planner
+package app.thdev.glassnavlab.router.planner
 
 import app.thdev.glassnavlab.core.navigation.runtime.RouteCommand
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent

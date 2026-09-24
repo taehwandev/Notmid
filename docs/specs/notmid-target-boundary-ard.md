@@ -5,7 +5,7 @@ purpose: Notmid의 목표 repository 경계와 Android 모듈 taxonomy(api/ui/im
 status: accepted
 owner: notmid architecture
 source_of_truth: docs/specs/notmid-target-boundary-ard.md
-last_verified: 2026-09-12
+last_verified: 2026-09-24
 applies_to: settings.gradle.kts, Gradle modules, package ownership, pnpm workspace, CI
 supersedes:
   - docs/specs/android-commonization/02-target-module-taxonomy.md (Feature Impl, core/runtime, Base/App Shell Rule, Import Direction)
@@ -227,7 +227,9 @@ Decision 5 작업으로 남는다.
 소유한다. `:core:base`는 `:core:activity`로 옮겼고 ActivityRoute launcher와
 요청 타입도 여기로 옮겼다. 앱 진입/알림 딥링크와 Activity launch 완료는
 `MainActivity`에서 타입 액션으로 `NotmidShellViewModel`에 전달한다.
-`:core:runtime`의 나머지 앱 라우터 정책 이동은 남아 있다.
+나머지 앱 라우터 config/deeplink/planner/runtime 정책과 해당 테스트도 `:app`으로
+옮겨 `:core:runtime` 모듈을 제거했다. 사용하지 않던 Compose 라우터 생성 helper는
+삭제했다.
 - `feature:notmid:common`은 **해체하지 않고 정리한다**(아래 정정 참조).
 
 > **정정 (2026-09-12).** 최초 작성 시 "`feature:notmid:common` 해체 → 도메인 무관
@@ -313,7 +315,7 @@ core:*:assertions -> 같은 owner의 api
 | ~~`:feature:{feed,map,capture,inbox,profile}:impl`~~ | `…:ui` | 개명 완료, VM 추가는 4단계 |
 | `:feature:webview:impl` | 유지 | 유일한 정당 impl |
 | ~~`:core:base`~~ | `:core:activity` | 완료 |
-| `:core:runtime` | `:app` / `:core:notice:ui` / `:core:activity` | 알림·ActivityRoute 이동 완료, 앱 라우터 정책 이동 후 모듈 소멸 |
+| ~~`:core:runtime`~~ | `:app` / `:core:notice:ui` / `:core:activity` | 완료, 모듈 제거 |
 | `:core:data` | `:core:data:{api,impl,assertions}` | `Static*` → assertions |
 | `NotmidAppViewModel` | feature별 ViewModel + app 인증/세션 | |
 
@@ -328,8 +330,8 @@ core:*:assertions -> 같은 owner의 api
 | 2 | `impl` → `ui` 개명 | 컴파일, `settings.gradle.kts`와 namespace 일치 | 낮음(기계적) | done 2026-09-12 |
 | 3 | 모델 이중화 제거, `feature:notmid:common` 정리 | 컴파일, core:model과 이름이 겹치는 타입이 3종 이하 | 중간 | done 2026-09-12 |
 | 4 | ViewModel 분해 — feature 하나씩 1 PR | feature별 ViewModel 테스트, 화면 파라미터에서 `destination`/`listState` 제거 | 높음 | in progress — 피드·지도·클립/장소 상세 상태와 액션 분리 |
-| 5 | 셸을 `:app`으로 이동, `feature:notmid` 삭제 | 컴파일, 딥링크 수동 스모크, `:app`만 라우트 그래프 소유 | 높음 | |
-| 6 | `core:base`/`core:runtime` 해체, `core:data` 분할 | 컴파일, `Static*`가 프로덕션 의존성에 없음 | 중간 | |
+| 5 | 셸을 `:app`으로 이동, `feature:notmid` 삭제 | 컴파일, 딥링크 수동 스모크, `:app`만 라우트 그래프 소유 | 높음 | done locally 2026-09-24 |
+| 6 | `core:base`/`core:runtime` 해체, `core:data` 분할 | 컴파일, `Static*`가 프로덕션 의존성에 없음 | 중간 | in progress — base/runtime 제거, data 분할 남음 |
 
 단계 0은 1~6과 독립이므로 먼저 끝내면 이후 모든 단계의 CI 시간이 줄어든다.
 

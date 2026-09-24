@@ -9,10 +9,11 @@ ViewModel event flow live in Tao Agent OS.
 ```text
 :core:navigation:api  pure route contracts and route plan types
 :core:navigation:impl reusable registry, event planner, URL parsing, deep-link matching
-:core:runtime         Compose route runtime and ActivityRoute launch runtime
+:core:activity        generic ActivityRoute launcher and Compose launch host
 :feature:*:api        feature route data, deep-link specs, public route events
 :feature:auth:ui      login screen state, actions, and authentication requests
-:app                  injected Notmid route graph/factory, event handler bindings, shell rendering, Android entrypoint
+:app                  route graph/factory, deep-link policy, planner/runtime, event handler bindings,
+                      shell ViewModel, shell rendering, Android entrypoint
 ```
 
 Production route-event registration uses Hilt multibinding. Add a new
@@ -82,6 +83,7 @@ WebView URL accepts only `http` and `https`.
 ## Contract Tests
 
 ```text
-AppDeepLinkResolverTest
-AppRouterTest
+DefaultAppDeepLinkResolverTest
+DefaultAppRouterRuntimeTest
+NotmidAppRouterTest
 ```

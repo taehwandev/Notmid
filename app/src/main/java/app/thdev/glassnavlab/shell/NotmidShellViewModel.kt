@@ -9,7 +9,7 @@ import app.thdev.glassnavlab.core.navigation.notmid.NotmidRouteEvent
 import app.thdev.glassnavlab.core.navigation.notmid.NotmidRoute
 import app.thdev.glassnavlab.core.navigation.notmid.NotmidDestinationIds
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
-import app.thdev.glassnavlab.core.runtime.router.runtime.AppRouterRuntime
+import app.thdev.glassnavlab.router.runtime.AppRouterRuntime
 import app.thdev.glassnavlab.router.notmidRouteStack
 import app.thdev.glassnavlab.feature.capture.api.route.CaptureRoute
 import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute

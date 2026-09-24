@@ -16,7 +16,7 @@ import app.thdev.glassnavlab.shell.NotmidShellErrorScreen
 import app.thdev.glassnavlab.shell.NotmidShellLoadingScreen
 import app.thdev.glassnavlab.shell.NotmidShellScreen
 import app.thdev.glassnavlab.shell.NotmidShellViewModel
-import app.thdev.glassnavlab.core.runtime.router.runtime.AppRouterRuntime
+import app.thdev.glassnavlab.router.runtime.AppRouterRuntime
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 

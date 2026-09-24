@@ -5,8 +5,8 @@ import app.thdev.glassnavlab.MainDispatcherRule
 import app.thdev.glassnavlab.signedOutAuthState
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthSignInRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
-import app.thdev.glassnavlab.core.runtime.router.planner.AppRoutePlanner
-import app.thdev.glassnavlab.core.runtime.router.runtime.DefaultAppRouterRuntime
+import app.thdev.glassnavlab.router.planner.AppRoutePlanner
+import app.thdev.glassnavlab.router.runtime.DefaultAppRouterRuntime
 import app.thdev.glassnavlab.core.navigation.runtime.RouteCommand
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEventSink
