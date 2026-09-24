@@ -33,7 +33,6 @@ internal fun NotmidRouteContent(
     isAuthenticating: Boolean,
     isSavingClip: Boolean,
     isSendingMessage: Boolean,
-    isStartingChat: Boolean,
     isRespondingChatInvite: Boolean,
     clipSaveMessage: String?,
     chatMessage: String?,
@@ -81,7 +80,6 @@ internal fun NotmidRouteContent(
             feedStateHolder.SaveableStateProvider(route.route) {
                 ClipDetailScreen(
                     route = route,
-                    isStartingChat = isStartingChat,
                     onBackdropColorChanged = onFeedBackdropColorChanged,
                 )
             }

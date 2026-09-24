@@ -65,7 +65,6 @@ class MainActivity : BaseActivity() {
                         isAuthenticating = appState.isAuthenticating,
                         isSavingClip = appState.isSavingClip,
                         isSendingMessage = appState.isSendingMessage,
-                        isStartingChat = appState.isStartingChat,
                         isRespondingChatInvite = appState.isRespondingChatInvite,
                         clipSaveMessage = appState.messageFor(
                             NotmidProtectedWriteAction.ClipSave,

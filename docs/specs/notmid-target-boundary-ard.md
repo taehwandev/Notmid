@@ -372,11 +372,13 @@ CI를 두었다. Android에는 OpenAPI 고정 JSON 사본과 Kotlin 어댑터를
 
 화면은 `FeedAction`/`ClipDetailAction`을 보내며 라우트 이벤트나 채팅 요청을
 구성하지 않는다. `FeedViewModel`이 `RouteEventSink`를 호출하고,
-`ClipDetailViewModel`은 기존 `NotmidActionDelegate<NotmidProtectedWriteRequest>`에
-채팅 요청을 보낸다. 이 입력의 단일 소비자인 앱 ViewModel이 기존 인증·중복 제출
-방지·쓰기 실행·콘텐츠 갱신·토스트/알럿·채팅 화면 이동을 처리한다. 이 쓰기 처리
-소유자의 feature 이전은 후속 작업이며, 입력 채널만 옮겼다고 완료로 보지 않는다.
-채널은 ActivityRetained 범위로 공유하고 앱 ViewModel 종료 시 닫는다.
+`ClipDetailViewModel`은 최신 콘텐츠에서 요청을 구성하고 공유 실행 포트를 직접
+호출한다. 진행 상태·성공/실패 알림·생성된 채팅으로 이동도 이 ViewModel이 소유한다.
+이동은 `feature:inbox:api`의 `ChatThreadRequested`를 `RouteEventSink`로 전달하며
+딥링크 문자열을 앱에서 조립하지 않는다. 중복 클릭과 Busy·취소는 불필요한 이동을
+만들지 않으며, 계정 변경 뒤 늦은 응답은 알림과 이동을 모두 생략한다.
+쓰기 결과의 공유 콘텐츠 반영은 기존 실행기/저장소가 담당한다. 남은 채팅 화면의
+메시지·초대 응답·클립 저장만 ActivityRetained 입력 채널과 앱 소비자를 사용한다.
 
 라우터 인스턴스와 순수 라우트 핸들러는 ActivityRetained 범위에서 DI로 구성해
 Activity와 ViewModel에 같은 인스턴스를 제공한다. Compose는 스택 표시와 플랫폼
@@ -426,7 +428,8 @@ action과 lifecycle 연결만 담당한다. 설정 경로 라벨은 셸의 스�
 `feature:notmid:notice` Kotlin 모듈에서
 공유하고 Activity retained 알림 포트로 호스트에 전달한다. 동일 범위의 쓰기 실행기는
 동시 요청을 Busy로 거절하며 호출자 코루틴에서 실행하고 취소·실패 시 점유를 해제한다.
-클립·채팅의 쓰기 실행과 알림 이전, `feature:notmid` 셸의 app 이전은 남아 있다.
+채팅 화면의 메시지·초대 응답·클립 저장 실행과 알림 이전, `feature:notmid` 셸의
+app 이전은 남아 있다.
 
 프로필 이전의 선행 경계로 `NotmidAuthGateway.states`가 로그인·로그아웃·프로필
 영수증 반영의 단일 관찰 상태를 제공한다. 앱 ViewModel은 이 상태를 구독하고,

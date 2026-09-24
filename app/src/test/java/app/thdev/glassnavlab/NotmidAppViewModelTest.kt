@@ -25,7 +25,6 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteStatus
 import app.thdev.glassnavlab.core.model.notmid.NotmidClipSaveReceipt
 import app.thdev.glassnavlab.core.model.notmid.NotmidDestination
 import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
-import app.thdev.glassnavlab.core.model.notmid.NotmidStartThreadRequest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -62,19 +61,16 @@ class NotmidAppViewModelTest {
     }
 
     @Test
-    fun featureWriteActionUsesExistingStateNoticeAndNavigationHandling() = runTest(mainDispatcherRule.dispatcher) {
+    fun remainingFeatureWriteActionUsesExistingNoticeHandling() = runTest(mainDispatcherRule.dispatcher) {
         val writes = ChannelNotmidActionDelegate<NotmidProtectedWriteRequest>()
         val vm = newViewModel(protectedWriteActions = writes)
         val effects = mutableListOf<NoticeEffect>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.effects.take(2).toList(effects) }
-        writes.dispatch(NotmidProtectedWriteRequest.StartThread(NotmidStartThreadRequest(
-            participantHandle = "@second", body = "Chat", attachedClipId = "clip-2", attachedPlaceId = null,
-        )))
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.effects.take(1).toList(effects) }
+        writes.dispatch(NotmidProtectedWriteRequest.SaveClip("clip-1"))
         advanceUntilIdle()
-        assertEquals("Chat started.", vm.state.value.messageFor(NotmidProtectedWriteAction.ChatStart))
-        assertEquals(2, effects.size)
-        assertEquals("Chat started.", (effects[0] as NoticeEffect.ShowNotice).notice.message)
-        assertEquals("https://thdev.app/notmid/inbox/chats/thread-start", (effects[1] as NoticeEffect.NavigateDeepLink).deepLink)
+        assertEquals("Clip saved.", vm.state.value.messageFor(NotmidProtectedWriteAction.ClipSave))
+        assertEquals(1, effects.size)
+        assertEquals("Clip saved.", (effects[0] as NoticeEffect.ShowNotice).notice.message)
     }
 
     @Test
@@ -187,47 +183,6 @@ class NotmidAppViewModelTest {
         assertEquals(
             "Message sent.",
             viewModel.state.value.messageFor(NotmidProtectedWriteAction.ChatMessage),
-        )
-    }
-
-    @Test
-    fun startThreadAddsReceiptThreadAndMessageToLoadedContent() = runTest(
-        mainDispatcherRule.dispatcher,
-    ) {
-        val viewModel = newViewModel(
-            contentRepository = FakeContentRepository(listOf(viewModelTestDestination, testInboxDestination)),
-        )
-        val effects = mutableListOf<NoticeEffect>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.effects.take(2).toList(effects)
-        }
-        advanceUntilIdle()
-
-        viewModel.onAction(
-            NotmidAppAction.StartThread(
-                NotmidStartThreadRequest(
-                    participantHandle = "min.zip",
-                    body = "Can we chat about Clip?",
-                    attachedClipId = "clip-1",
-                ),
-            ),
-        )
-        advanceUntilIdle()
-
-        val content = viewModel.state.value.content as NotmidContentUiState.Ready
-        val feedThread = content.destinations.first().threads.single()
-        val inboxThread = content.destinations.last().threads.first()
-        assertEquals("thread-start", feedThread.id)
-        assertEquals(feedThread.id, inboxThread.id)
-        assertEquals("message-start", content.destinations.first().threadMessages.single().id)
-        assertEquals(
-            "Chat started.",
-            viewModel.state.value.messageFor(NotmidProtectedWriteAction.ChatStart),
-        )
-        assertEquals("Chat started.", (effects[0] as NoticeEffect.ShowNotice).notice.message)
-        assertEquals(
-            "https://thdev.app/notmid/inbox/chats/thread-start",
-            (effects[1] as NoticeEffect.NavigateDeepLink).deepLink,
         )
     }
 

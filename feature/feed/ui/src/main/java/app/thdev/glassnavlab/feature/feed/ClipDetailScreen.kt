@@ -19,7 +19,6 @@ import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
 @Composable
 fun ClipDetailScreen(
     route: ClipDetailRoute,
-    isStartingChat: Boolean = false,
     onBackdropColorChanged: (Color) -> Unit = {},
 ) {
     val owner = checkNotNull(LocalViewModelStoreOwner.current)
@@ -38,7 +37,6 @@ fun ClipDetailScreen(
     ClipDetailContent(
         state = state,
         listState = listState,
-        isStartingChat = isStartingChat,
         onAction = viewModel::onAction,
     )
 }

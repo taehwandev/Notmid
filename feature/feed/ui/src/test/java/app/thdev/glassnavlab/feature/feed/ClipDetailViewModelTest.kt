@@ -9,7 +9,19 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidClip
 import app.thdev.glassnavlab.core.model.notmid.NotmidDestination
 import app.thdev.glassnavlab.core.model.notmid.NotmidNavigationIcon
 import app.thdev.glassnavlab.core.model.notmid.NotmidPlace
-import app.thdev.glassnavlab.core.model.notmid.ChannelNotmidActionDelegate
+import app.thdev.glassnavlab.core.auth.notmid.*
+import app.thdev.glassnavlab.core.model.notmid.*
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteExecutor
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteResult
+import app.thdev.glassnavlab.core.notice.api.effect.MutableNoticeEffectDelegate
+import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
+import app.thdev.glassnavlab.core.navigation.runtime.RouteEventSink
+import app.thdev.glassnavlab.feature.inbox.api.event.InboxRouteEvent
+import kotlinx.coroutines.test.runCurrent
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import kotlinx.coroutines.CancellationException
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRequest
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +48,26 @@ class ClipDetailViewModelTest {
         override val snapshot = MutableStateFlow<NotmidContentSnapshot>(NotmidContentSnapshot.Loading)
     }
     private var reads = 0
-    private val writeActions = ChannelNotmidActionDelegate<NotmidProtectedWriteRequest>()
+    private val submitted = mutableListOf<NotmidProtectedWriteRequest>()
+    private val thread = NotmidThread("created/thread", "Chat", "", "", listOf("@second"))
+    private var response: suspend () -> NotmidProtectedWriteResult = { NotmidProtectedWriteResult.ThreadStarted(thread, null) }
+    private val writeActions = object : NotmidProtectedWriteExecutor {
+        override suspend fun execute(authState: NotmidAuthState, request: NotmidProtectedWriteRequest): NotmidProtectedWriteResult {
+            submitted.add(request)
+            return response()
+        }
+    }
+    private val auth = object : NotmidAuthGateway {
+        override val states = MutableStateFlow(NotmidAuthState(NotmidAuthMode.Fake,
+            NotmidAuthSession("token", NotmidAuthProvider.Fake, "", NotmidAuthUser("user", "handle", "Name", "Seoul", "", emptyList())), emptyList()))
+        override fun currentState() = states.value
+        override fun signOut() = states.value.copy(session = null).also { states.value = it }
+        override suspend fun signIn(request: NotmidAuthSignInRequest): NotmidAuthResult = error("No sign-in expected")
+        override fun applyProfileUpdate(expectedSession: NotmidAuthSession, user: NotmidAuthUser): NotmidAuthState = error("No profile write expected")
+    }
+    private val notices = MutableNoticeEffectDelegate()
+    private val routeEvents = mutableListOf<RouteEvent>()
+    private val routes = RouteEventSink { routeEvents.add(it) }
     private val repository = object : NotmidContentRepository {
         override suspend fun destinations(): List<NotmidDestination> {
             reads++
@@ -47,7 +78,6 @@ class ClipDetailViewModelTest {
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
     @After fun tearDown() {
         store.clear()
-        writeActions.close()
         Dispatchers.resetMain()
     }
 
@@ -111,8 +141,6 @@ class ClipDetailViewModelTest {
 
     @Test
     fun chatActionBuildsRequestInViewModelAndMissingClipDoesNotSubmit() = runTest(dispatcher) {
-        val submitted = mutableListOf<NotmidProtectedWriteRequest>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { writeActions.actions.collect { submitted.add(it) } }
         val vm = model("clip-2")
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         vm.onAction(ClipDetailAction.ChatClicked)
@@ -167,7 +195,7 @@ class ClipDetailViewModelTest {
                 return emptyList()
             }
         }
-        val vm = ClipDetailViewModel(SavedStateHandle(mapOf(ClipDetailViewModel.CLIP_ID to "clip-1")), updates, pendingRepository, dispatcher, writeActions)
+        val vm = ClipDetailViewModel(SavedStateHandle(mapOf(ClipDetailViewModel.CLIP_ID to "clip-1")), updates, pendingRepository, dispatcher, writeActions, auth, notices, routes)
             .also { store.put("pending", it) }
         vm.onAction(ClipDetailAction.Retry)
         vm.onAction(ClipDetailAction.Retry)
@@ -180,8 +208,79 @@ class ClipDetailViewModelTest {
     }
 
     private fun model(clipId: String) = ClipDetailViewModel(
-        SavedStateHandle(mapOf(ClipDetailViewModel.CLIP_ID to clipId)), updates, repository, dispatcher, writeActions,
+        SavedStateHandle(mapOf(ClipDetailViewModel.CLIP_ID to clipId)), updates, repository, dispatcher, writeActions, auth, notices, routes,
     ).also { store.put(clipId, it) }
+
+    @Test
+    fun successfulCreationOwnsBusyStateNoticeAndTypedRoute() = runTest(dispatcher) {
+        val pending = CompletableDeferred<NotmidProtectedWriteResult>()
+        response = { pending.await() }
+        val effects = mutableListOf<NoticeEffect>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { notices.effects.collect { effects.add(it) } }
+        val vm = model("clip-2")
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        updates.snapshot.value = NotmidContentSnapshot.Ready(listOf(feed))
+        // Actions read the latest source even before the state collector runs.
+        vm.onAction(ClipDetailAction.ChatClicked)
+        vm.onAction(ClipDetailAction.ChatClicked)
+        runCurrent()
+        assertEquals(1, submitted.size)
+        assertTrue((vm.state.value as ClipDetailUiState.Ready).isStartingChat)
+        assertTrue(routeEvents.isEmpty())
+        pending.complete(NotmidProtectedWriteResult.ThreadStarted(thread, null))
+        runCurrent()
+        assertFalse((vm.state.value as ClipDetailUiState.Ready).isStartingChat)
+        assertEquals("Chat started.", (effects.single() as NoticeEffect.ShowNotice).notice.message)
+        assertEquals(listOf(InboxRouteEvent.ChatThreadRequested("created/thread")), routeEvents)
+    }
+
+    @Test
+    fun busyCancellationAndFailureDoNotNavigateAndAllowRetry() = runTest(dispatcher) {
+        var attempt = 0
+        response = {
+            when (attempt++) {
+                0 -> NotmidProtectedWriteResult.Busy
+                1 -> throw CancellationException("cancel")
+                else -> error("private transport detail")
+            }
+        }
+        val effects = mutableListOf<NoticeEffect>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { notices.effects.collect { effects.add(it) } }
+        val vm = model("clip-2")
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        updates.snapshot.value = NotmidContentSnapshot.Ready(listOf(feed))
+        repeat(2) {
+            vm.onAction(ClipDetailAction.ChatClicked)
+            runCurrent()
+            assertFalse((vm.state.value as ClipDetailUiState.Ready).isStartingChat)
+            assertTrue(effects.isEmpty())
+            assertTrue(routeEvents.isEmpty())
+        }
+        vm.onAction(ClipDetailAction.ChatClicked)
+        runCurrent()
+        assertFalse((vm.state.value as ClipDetailUiState.Ready).isStartingChat)
+        assertEquals("This action failed. Try again.", (effects.single() as NoticeEffect.ShowNotice).notice.message)
+        assertTrue(routeEvents.isEmpty())
+    }
+
+    @Test
+    fun logoutBeforeReceiptSuppressesNoticeAndNavigation() = runTest(dispatcher) {
+        val pending = CompletableDeferred<NotmidProtectedWriteResult>()
+        response = { pending.await() }
+        val effects = mutableListOf<NoticeEffect>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { notices.effects.collect { effects.add(it) } }
+        val vm = model("clip-2")
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        updates.snapshot.value = NotmidContentSnapshot.Ready(listOf(feed))
+        vm.onAction(ClipDetailAction.ChatClicked)
+        runCurrent()
+        auth.signOut()
+        pending.complete(NotmidProtectedWriteResult.ThreadStarted(thread, null))
+        runCurrent()
+        assertFalse((vm.state.value as ClipDetailUiState.Ready).isStartingChat)
+        assertTrue(effects.isEmpty())
+        assertTrue(routeEvents.isEmpty())
+    }
 
     private val feed = NotmidDestination(
         id = "feed", title = "Feed", subtitle = "Receipts", icon = NotmidNavigationIcon.Feed,

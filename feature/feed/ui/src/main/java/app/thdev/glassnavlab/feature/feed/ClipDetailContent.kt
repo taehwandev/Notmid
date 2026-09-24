@@ -15,7 +15,6 @@ import app.thdev.glassnavlab.feature.notmid.common.components.NotmidRouteDetailC
 internal fun ClipDetailContent(
     state: ClipDetailUiState,
     listState: LazyListState,
-    isStartingChat: Boolean,
     onAction: (ClipDetailAction) -> Unit,
 ) {
     when (state) {
@@ -30,9 +29,9 @@ internal fun ClipDetailContent(
             listState = listState,
             actions = {
                 NotmidButton(
-                    text = if (isStartingChat) "Starting" else "Chat",
+                    text = if (state.isStartingChat) "Starting" else "Chat",
                     onClick = { onAction(ClipDetailAction.ChatClicked) },
-                    enabled = state.clip.creatorHandle.isNotBlank() && !isStartingChat,
+                    enabled = state.clip.creatorHandle.isNotBlank() && !state.isStartingChat,
                     variant = NotmidButtonVariant.Secondary,
                     leadingIcon = { color -> NotmidGlassIcon(NotmidNavigationIcon.Inbox, color) },
                 )
@@ -45,7 +44,7 @@ internal fun ClipDetailContent(
 @Composable
 private fun ClipDetailMissingPreview() {
     notmidTheme {
-        ClipDetailContent(null.toClipDetailUiState("missing"), rememberLazyListState(), false, {})
+        ClipDetailContent(null.toClipDetailUiState("missing"), rememberLazyListState(), {})
     }
 }
 
@@ -53,6 +52,6 @@ private fun ClipDetailMissingPreview() {
 @Composable
 private fun ClipDetailUnavailablePreview() {
     notmidTheme {
-        ClipDetailContent(ClipDetailUiState.Unavailable, rememberLazyListState(), false, {})
+        ClipDetailContent(ClipDetailUiState.Unavailable, rememberLazyListState(), {})
     }
 }

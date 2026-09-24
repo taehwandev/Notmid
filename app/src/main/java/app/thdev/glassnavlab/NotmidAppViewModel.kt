@@ -36,7 +36,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.net.URLEncoder
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEventSink
 import app.thdev.glassnavlab.core.navigation.notmid.NotmidRouteEvent
 import app.thdev.glassnavlab.core.navigation.notmid.NotmidDestinationIds
@@ -140,10 +139,6 @@ internal class NotmidAppViewModel internal constructor(
                     threadId = action.threadId,
                     request = action.request,
                 ),
-            )
-
-            is NotmidAppAction.StartThread -> enqueueProtectedAction(
-                NotmidProtectedWriteRequest.StartThread(action.request),
             )
 
             is NotmidAppAction.RespondThreadInvite -> enqueueProtectedAction(
@@ -283,7 +278,6 @@ internal class NotmidAppViewModel internal constructor(
             }
 
             val requestAuthState = authGateway.currentState()
-            var followUpEffect: NoticeEffect? = null
             val notice = runCatchingPreservingCancellation {
                 val result = withContext(ioDispatcher) {
                     protectedWriteExecutor.execute(requestAuthState, action)
@@ -294,11 +288,7 @@ internal class NotmidAppViewModel internal constructor(
                         return@runCatchingPreservingCancellation null
                     }
                     is NotmidProtectedWriteResult.MessageSent -> Unit
-                    is NotmidProtectedWriteResult.ThreadStarted -> {
-                        followUpEffect = NoticeEffect.NavigateDeepLink(
-                            notmidChatThreadDeepLink(result.thread.id),
-                        )
-                    }
+                    is NotmidProtectedWriteResult.ThreadStarted -> Unit
                     is NotmidProtectedWriteResult.ThreadUpdated -> Unit
                     is NotmidProtectedWriteResult.ProfileUpdated -> Unit
                 }
@@ -315,7 +305,6 @@ internal class NotmidAppViewModel internal constructor(
                 )
             }
             notice?.let { emitEffect(it.effect) }
-            followUpEffect?.let(::emitEffect)
         }
     }
 
@@ -328,14 +317,6 @@ internal class NotmidAppViewModel internal constructor(
         protectedWriteActions.close()
         super.onCleared()
     }
-}
-
-private fun notmidChatThreadDeepLink(threadId: String): String {
-    return "https://thdev.app/notmid/inbox/chats/${threadId.urlPathSegment()}"
-}
-
-private fun String.urlPathSegment(): String {
-    return URLEncoder.encode(this, Charsets.UTF_8.name()).replace("+", "%20")
 }
 
 private suspend fun <T> runCatchingPreservingCancellation(

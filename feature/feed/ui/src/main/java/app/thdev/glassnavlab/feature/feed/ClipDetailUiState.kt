@@ -19,6 +19,7 @@ internal sealed interface ClipDetailUiState {
         val clip: NotmidClip,
         val place: NotmidPlace,
         val backdropPalettes: List<List<Color>>,
+        val isStartingChat: Boolean = false,
     ) : ClipDetailUiState
 }
 

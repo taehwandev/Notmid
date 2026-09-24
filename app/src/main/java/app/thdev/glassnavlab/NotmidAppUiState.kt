@@ -21,9 +21,6 @@ internal data class NotmidAppUiState(
     val isSendingMessage: Boolean
         get() = protectedActionInFlight == NotmidProtectedWriteAction.ChatMessage
 
-    val isStartingChat: Boolean
-        get() = protectedActionInFlight == NotmidProtectedWriteAction.ChatStart
-
     val isRespondingChatInvite: Boolean
         get() = protectedActionInFlight == NotmidProtectedWriteAction.ChatInviteResponse
 
