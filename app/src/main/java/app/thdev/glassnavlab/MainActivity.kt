@@ -16,7 +16,6 @@ import app.thdev.glassnavlab.shell.NotmidShellErrorScreen
 import app.thdev.glassnavlab.shell.NotmidShellLoadingScreen
 import app.thdev.glassnavlab.shell.NotmidShellScreen
 import app.thdev.glassnavlab.shell.NotmidShellViewModel
-import app.thdev.glassnavlab.router.runtime.AppRouterRuntime
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -25,14 +24,12 @@ class MainActivity : BaseActivity() {
     @Inject
     lateinit var activityRouteLauncher: ActivityRouteLauncher
 
-    @Inject
-    lateinit var appRouter: AppRouterRuntime
-
     @Composable
     override fun Content() {
         val notmidAppViewModel: NotmidAppViewModel = viewModel()
         val shellViewModel: NotmidShellViewModel = viewModel()
         val appState by notmidAppViewModel.state.collectAsStateWithLifecycle()
+        val shellState by shellViewModel.state.collectAsStateWithLifecycle()
         val deepLink = pendingDeepLink
 
         PendingDeepLinkEffect(
@@ -42,7 +39,7 @@ class MainActivity : BaseActivity() {
         )
 
         AppRoot(
-            activityRouteRequest = appRouter.pendingActivityRouteRequest,
+            activityRouteRequest = shellState.activityRouteRequest,
             activityRouteLauncher = activityRouteLauncher,
             onActivityRouteLaunched = { id ->
                 shellViewModel.onAction(NotmidShellAction.ActivityRouteLaunched(id))

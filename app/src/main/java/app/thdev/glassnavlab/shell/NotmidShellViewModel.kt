@@ -3,6 +3,7 @@ package app.thdev.glassnavlab.shell
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.compose.runtime.snapshotFlow
+import app.thdev.glassnavlab.core.activity.route.PendingActivityRouteRequest
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthGateway
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEventSink
 import app.thdev.glassnavlab.core.navigation.notmid.NotmidRouteEvent
@@ -32,14 +33,18 @@ internal class NotmidShellViewModel @Inject constructor(
     private val authGateway: NotmidAuthGateway,
 ) : ViewModel() {
     val state = combine(
-        snapshotFlow { router.backStack },
+        snapshotFlow { router.backStack to router.pendingActivityRouteRequest },
         authGateway.states,
-    ) { stack, authState ->
-        shellUiState(stack.entries.filterIsInstance<NotmidRoute>(), authState)
+    ) { (stack, activityRouteRequest), authState ->
+        shellUiState(stack.entries.filterIsInstance<NotmidRoute>(), authState, activityRouteRequest)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
-        initialValue = shellUiState(router.notmidRouteStack(), authGateway.currentState()),
+        initialValue = shellUiState(
+            router.notmidRouteStack(),
+            authGateway.currentState(),
+            router.pendingActivityRouteRequest,
+        ),
     )
 
     fun onAction(action: NotmidShellAction) {
@@ -64,13 +69,19 @@ internal class NotmidShellViewModel @Inject constructor(
 private fun shellUiState(
     navigationStack: List<NotmidRoute>,
     authState: NotmidAuthState,
+    activityRouteRequest: PendingActivityRouteRequest?,
 ): NotmidShellUiState {
     val activeRoute = navigationStack.lastOrNull() ?: FeedRoute
     return NotmidShellUiState(
-        navigationStack = navigationStack,
         activeRoute = activeRoute,
         selectedDestinationId = activeRoute.selectedDestinationId.ifBlank { NotmidDestinationIds.FEED },
         shouldShowLogin = activeRoute.requiresAuth && !authState.isAuthenticated,
+        settingsRouteLabel = if (activeRoute == ProfileSettingsRoute) {
+            navigationStack.joinToString(" > ") { it.deepLinkPathSegments.last() }
+        } else {
+            ""
+        },
+        activityRouteRequest = activityRouteRequest,
     )
 }
 

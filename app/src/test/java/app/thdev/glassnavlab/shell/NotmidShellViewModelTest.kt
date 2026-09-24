@@ -1,5 +1,6 @@
 package app.thdev.glassnavlab.shell
 
+import androidx.compose.runtime.snapshots.Snapshot
 import app.thdev.glassnavlab.FakeAuthGateway
 import app.thdev.glassnavlab.MainDispatcherRule
 import app.thdev.glassnavlab.signedOutAuthState
@@ -18,6 +19,8 @@ import app.thdev.glassnavlab.feature.inbox.api.event.InboxRouteEvent
 import app.thdev.glassnavlab.feature.inbox.api.route.ChatThreadRoute
 import app.thdev.glassnavlab.feature.inbox.api.route.InboxRoute
 import app.thdev.glassnavlab.feature.map.api.event.MapRouteEvent
+import app.thdev.glassnavlab.feature.profile.api.route.ProfileRoute
+import app.thdev.glassnavlab.feature.profile.api.route.ProfileSettingsRoute
 import app.thdev.glassnavlab.feature.webview.api.route.WebViewRoute
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -79,6 +82,17 @@ class NotmidShellViewModelTest {
         assertEquals(InboxRoute, router.currentRoute)
     }
 
+    @Test fun settingsRouteLabelIsDerivedBeforeRendering() = runTest(dispatcherRule.dispatcher) {
+        val router = testRouter()
+        val vm = NotmidShellViewModel(RouteEventSink {}, router, FakeAuthGateway(signedOutAuthState))
+        assertEquals("", vm.state.value.settingsRouteLabel)
+
+        router.execute(RoutePlan.compose(RouteStack.of(ProfileRoute, ProfileSettingsRoute)))
+        advanceUntilIdle()
+
+        assertEquals("profile > settings", vm.state.value.settingsRouteLabel)
+    }
+
     @Test fun activityLaunchAcknowledgmentConsumesOnlyItsRequest() = runTest(dispatcherRule.dispatcher) {
         val router = testRouter()
         val vm = NotmidShellViewModel(RouteEventSink {}, router, FakeAuthGateway(signedOutAuthState))
@@ -86,10 +100,16 @@ class NotmidShellViewModelTest {
         val secondRoute = WebViewRoute("https://example.com/second")
         router.execute(RoutePlan(activityRoutes = listOf(firstRoute, secondRoute)))
         val firstRequest = router.pendingActivityRouteRequest ?: error("missing first request")
+        Snapshot.sendApplyNotifications()
+        advanceUntilIdle()
+        assertEquals(firstRequest, vm.state.value.activityRouteRequest)
 
         vm.onAction(NotmidShellAction.ActivityRouteLaunched(firstRequest.id))
 
         assertEquals(secondRoute, router.pendingActivityRouteRequest?.route)
+        Snapshot.sendApplyNotifications()
+        advanceUntilIdle()
+        assertEquals(secondRoute, vm.state.value.activityRouteRequest?.route)
     }
 
     private fun testRouter(deepLinkPlan: RoutePlan? = null) = DefaultAppRouterRuntime(

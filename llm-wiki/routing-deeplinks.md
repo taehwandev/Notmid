@@ -45,6 +45,11 @@ WebViewRoute(url, title, mode)
 
 WebView is intentionally Activity-backed because lifecycle, reload behavior,
 file chooser, permissions, history, and fullscreen media are cleaner there.
+The shell ViewModel observes both the Compose stack and pending Activity route
+requests. `MainActivity` executes the request exposed in shell UI state and sends
+the launch acknowledgment back as an action. The profile settings screen
+receives a display label already derived from the route stack by the shell
+ViewModel; it does not inspect route contracts.
 
 ## Deep-Link Behavior
 

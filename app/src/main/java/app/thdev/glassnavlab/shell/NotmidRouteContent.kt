@@ -39,7 +39,7 @@ internal fun NotmidRouteContent(
         ProfileSettingsRoute -> {
             feedStateHolder.SaveableStateProvider("profile-settings") {
                 ProfileSettingsScreen(
-                    navigationStack = shellState.navigationStack,
+                    routeLabel = shellState.settingsRouteLabel,
                 )
             }
         }
