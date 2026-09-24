@@ -11,6 +11,7 @@ class InboxRouteEventHandler @Inject constructor(
 ) : RouteEventHandler {
     override fun planFor(event: RouteEvent): RoutePlan? {
         return when (event) {
+            is InboxRouteEvent.AttachedPlaceRequested -> routeGraph.placeStack(event.placeId)
             is InboxRouteEvent.ChatThreadRequested -> routeGraph.chatThreadStack(event.threadId)
             else -> null
         }?.let(RoutePlan::compose)

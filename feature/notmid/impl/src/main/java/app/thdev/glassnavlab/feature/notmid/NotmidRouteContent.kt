@@ -132,23 +132,16 @@ internal fun NotmidRouteContent(
         }
 
         is ChatThreadRoute -> {
-            ChatThreadScreen(
-                destination = routeState.selectedDestination,
-                route = route,
-                listState = routeState.listState,
-                isSavingClip = isSavingClip,
-                isSendingMessage = isSendingMessage,
-                isRespondingChatInvite = isRespondingChatInvite,
-                clipSaveMessage = clipSaveMessage,
-                chatMessage = chatMessage,
-                onSaveClip = onSaveClip,
-                onOpenPlace = { placeId ->
-                    onAction(NotmidShellAction.PlaceClicked(placeId))
-                },
-                onAcceptInvite = onAcceptThreadInvite,
-                onRejectInvite = onRejectThreadInvite,
-                onSendMessage = onSendThreadMessage,
-            )
+            feedStateHolder.SaveableStateProvider(route.route) {
+                ChatThreadScreen(
+                    route = route,
+                    isSavingClip = isSavingClip,
+                    isSendingMessage = isSendingMessage,
+                    isRespondingChatInvite = isRespondingChatInvite,
+                    clipSaveMessage = clipSaveMessage,
+                    chatMessage = chatMessage,
+                )
+            }
         }
 
         ProfileRoute -> {

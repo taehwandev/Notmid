@@ -111,6 +111,13 @@ class NotmidAppRouterTest {
     }
 
     @Test
+    fun inboxAttachedPlaceEventBuildsOrderedPlaceStack() {
+        val router = createRouter()
+        router.onRouteEvent(InboxRouteEvent.AttachedPlaceRequested("millo-roasters"))
+        assertEquals(listOf(MapRoute, PlaceDetailRoute("millo-roasters")), router.backStack.entries)
+    }
+
+    @Test
     fun activityRouteCommandQueuesActivityLaunchWithoutReplacingComposeStack() {
         val router = createRouter()
         val activityRoute = TestActivityRoute(
