@@ -74,15 +74,13 @@ internal fun NotmidRouteContent(
 
     when (val route = routeState.activeRoute) {
         ProfileSettingsRoute -> {
-            ProfileSettingsScreen(
-                parentDestination = routeState.selectedDestination,
-                authState = authState,
-                navigationStack = navigationStack,
-                listState = routeState.listState,
-                isSaving = isSavingProfileSettings,
-                statusMessage = profileSettingsMessage,
-                onSaveProfileSettings = onUpdateProfileSettings,
-            )
+            feedStateHolder.SaveableStateProvider("profile-settings") {
+                ProfileSettingsScreen(
+                    navigationStack = navigationStack,
+                    isSaving = isSavingProfileSettings,
+                    statusMessage = profileSettingsMessage,
+                )
+            }
         }
 
         FeedRoute -> {
@@ -144,14 +142,7 @@ internal fun NotmidRouteContent(
         }
 
         ProfileRoute -> {
-            ProfileScreen(
-                destination = routeState.selectedDestination,
-                authState = authState,
-                listState = routeState.listState,
-                onSettingsRequested = {
-                    onAction(NotmidShellAction.SettingsClicked)
-                },
-            )
+            feedStateHolder.SaveableStateProvider("profile") { ProfileScreen() }
         }
 
         else -> {

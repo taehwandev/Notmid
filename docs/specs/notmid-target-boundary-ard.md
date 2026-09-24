@@ -414,8 +414,12 @@ ViewModel의 액션 처리에 속한다.
 돌아온다. 초안은 `SavedStateHandle`에 복원하며 게시에는 미디어도 필수로 검증한다.
 기존 업로드 대기 UI와 로컬 촬영은 보존하고 실제 미디어 업로드 기능은 추가하지 않는다.
 게시 진행 상태·결과 문구의 앱 소유권은 아직 남아 있다.
-프로필 및 보호된 쓰기 실행의
-feature 이전과 `feature:notmid` 셸을 app으로 옮기는 단계는 아직 남아 있다.
+프로필·설정은 각각 `ProfileViewModel`, `ProfileSettingsViewModel`이 공유 인증 상태를
+구독한다. 프로필은 공유 콘텐츠와 설정 이동을 소유하고, 설정은 계정에 묶인 입력 복원,
+저장 전 최신 인증 확인과 입력 검증, 공유 쓰기 포트 요청을 소유한다. Screen은 typed
+action과 lifecycle 연결만 담당한다. 설정 경로 라벨은 셸의 스택을 표시 목적으로 받는다.
+앱이 제공하는 저장 진행 상태·결과 문구와 보호된 쓰기 실행의 feature 이전,
+`feature:notmid` 셸을 app으로 옮기는 단계는 아직 남아 있다.
 
 프로필 이전의 선행 경계로 `NotmidAuthGateway.states`가 로그인·로그아웃·프로필
 영수증 반영의 단일 관찰 상태를 제공한다. 앱 ViewModel은 이 상태를 구독하고,
