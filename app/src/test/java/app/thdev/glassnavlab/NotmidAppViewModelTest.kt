@@ -6,10 +6,6 @@ import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.data.notmid.ObservableNotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
-import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
-import app.thdev.glassnavlab.core.data.notmid.RepositoryNotmidProtectedWriteExecutor
-import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRepository
-import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRequest
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEventSink
 import app.thdev.glassnavlab.core.navigation.notmid.NotmidRouteEvent
@@ -17,24 +13,16 @@ import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectDelegate
 import app.thdev.glassnavlab.core.notice.api.effect.MutableNoticeEffectDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
-import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
 import app.thdev.glassnavlab.core.model.notmid.ChannelNotmidActionDelegate
 import app.thdev.glassnavlab.core.model.notmid.NotmidActionDelegate
-import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteDecision
-import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteStatus
-import app.thdev.glassnavlab.core.model.notmid.NotmidClipSaveReceipt
 import app.thdev.glassnavlab.core.model.notmid.NotmidDestination
-import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -58,19 +46,6 @@ class NotmidAppViewModelTest {
         gateway.signOut()
         advanceUntilIdle()
         assertNull(vm.state.value.authState.session)
-    }
-
-    @Test
-    fun remainingFeatureWriteActionUsesExistingNoticeHandling() = runTest(mainDispatcherRule.dispatcher) {
-        val writes = ChannelNotmidActionDelegate<NotmidProtectedWriteRequest>()
-        val vm = newViewModel(protectedWriteActions = writes)
-        val effects = mutableListOf<NoticeEffect>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.effects.take(1).toList(effects) }
-        writes.dispatch(NotmidProtectedWriteRequest.SaveClip("clip-1"))
-        advanceUntilIdle()
-        assertEquals("Clip saved.", vm.state.value.messageFor(NotmidProtectedWriteAction.ClipSave))
-        assertEquals(1, effects.size)
-        assertEquals("Clip saved.", (effects[0] as NoticeEffect.ShowNotice).notice.message)
     }
 
     @Test
@@ -101,135 +76,6 @@ class NotmidAppViewModelTest {
     }
 
     @Test
-    fun protectedWriteUpdatesInlineNoticeAndEmitsNoticeEffect() = runTest(
-        mainDispatcherRule.dispatcher,
-    ) {
-        val viewModel = newViewModel()
-        val effects = mutableListOf<NoticeEffect>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.effects.take(1).toList(effects)
-        }
-
-        viewModel.onAction(NotmidAppAction.SaveClip("clip-1"))
-        advanceUntilIdle()
-
-        assertEquals(
-            "Clip saved.",
-            viewModel.state.value.messageFor(NotmidProtectedWriteAction.ClipSave),
-        )
-        val effect = effects.single() as NoticeEffect.ShowNotice
-        assertEquals("Clip saved.", effect.notice.message)
-    }
-
-    @Test
-    fun protectedWriteEmitsThroughInjectedUiEffectDelegate() = runTest(
-        mainDispatcherRule.dispatcher,
-    ) {
-        val uiEffects = MutableNoticeEffectDelegate()
-        val viewModel = newViewModel(uiEffects = uiEffects)
-        val effects = mutableListOf<NoticeEffect>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            uiEffects.effects.take(1).toList(effects)
-        }
-
-        viewModel.onAction(NotmidAppAction.SaveClip("clip-1"))
-        advanceUntilIdle()
-
-        val effect = effects.single() as NoticeEffect.ShowNotice
-        assertEquals("Clip saved.", effect.notice.message)
-    }
-
-    @Test
-    fun actionsAreProcessedThroughInjectedActionDelegate() = runTest(
-        mainDispatcherRule.dispatcher,
-    ) {
-        val actionDelegate = ChannelNotmidActionDelegate<NotmidAppAction>()
-        val viewModel = newViewModel(actionDelegate = actionDelegate)
-
-        actionDelegate.dispatch(NotmidAppAction.SaveClip("clip-1"))
-        advanceUntilIdle()
-
-        assertEquals(
-            "Clip saved.",
-            viewModel.state.value.messageFor(NotmidProtectedWriteAction.ClipSave),
-        )
-    }
-
-    @Test
-    fun sendThreadMessageAppendsReceiptToLoadedContent() = runTest(
-        mainDispatcherRule.dispatcher,
-    ) {
-        val viewModel = newViewModel(
-            contentRepository = FakeContentRepository(listOf(testInboxDestination)),
-        )
-        advanceUntilIdle()
-
-        viewModel.onAction(
-            NotmidAppAction.SendThreadMessage(
-                threadId = "thread-1",
-                request = NotmidSendThreadMessageRequest(body = "meet at 8"),
-            ),
-        )
-        advanceUntilIdle()
-
-        val content = viewModel.state.value.content as NotmidContentUiState.Ready
-        val thread = content.destinations.single().threads.single()
-        val message = content.destinations.single().threadMessages.single()
-        assertEquals("message-1", message.id)
-        assertEquals("thread-1", message.threadId)
-        assertEquals("meet at 8", message.body)
-        assertEquals("meet at 8", thread.preview)
-        assertEquals("Now", thread.updatedAtLabel)
-        assertEquals(
-            "Message sent.",
-            viewModel.state.value.messageFor(NotmidProtectedWriteAction.ChatMessage),
-        )
-    }
-
-    @Test
-    fun respondThreadInviteUpdatesLoadedContentThread() = runTest(
-        mainDispatcherRule.dispatcher,
-    ) {
-        val viewModel = newViewModel(
-            contentRepository = FakeContentRepository(listOf(testInboxDestination)),
-        )
-        advanceUntilIdle()
-
-        viewModel.onAction(
-            NotmidAppAction.RespondThreadInvite(
-                threadId = "thread-1",
-                decision = NotmidChatInviteDecision.Accept,
-            ),
-        )
-        advanceUntilIdle()
-
-        val content = viewModel.state.value.content as NotmidContentUiState.Ready
-        val thread = content.destinations.single().threads.single()
-        assertEquals("Chat request accepted. You can message now.", thread.preview)
-        assertEquals(NotmidChatInviteStatus.Accepted, thread.chatAccess.inviteStatus)
-        assertEquals(
-            "Chat request updated.",
-            viewModel.state.value.messageFor(NotmidProtectedWriteAction.ChatInviteResponse),
-        )
-    }
-
-    @Test
-    fun uiEffectsDoNotReplayWhenNoCollectorWasStarted() = runTest(
-        mainDispatcherRule.dispatcher,
-    ) {
-        val viewModel = newViewModel()
-
-        viewModel.onAction(NotmidAppAction.SaveClip("clip-1"))
-        advanceUntilIdle()
-
-        val replayedEffect = withTimeoutOrNull(100) {
-            viewModel.effects.first()
-        }
-
-        assertNull(replayedEffect)
-    }
-
-    @Test
     fun contentCancellationIsNotMappedToErrorState() = runTest(mainDispatcherRule.dispatcher) {
         val viewModel = newViewModel(
             contentRepository = object : NotmidContentRepository {
@@ -242,32 +88,6 @@ class NotmidAppViewModelTest {
         advanceUntilIdle()
 
         assertEquals(NotmidContentUiState.Loading, viewModel.state.value.content)
-    }
-
-    @Test
-    fun protectedWriteCancellationIsNotMappedToNotice() = runTest(
-        mainDispatcherRule.dispatcher,
-    ) {
-        val fallbackRepository = FakeProtectedWriteRepository()
-        val protectedWriteRepository = object : NotmidProtectedWriteRepository by fallbackRepository {
-            override suspend fun saveClip(
-                authState: NotmidAuthState,
-                clipId: String,
-            ): NotmidClipSaveReceipt {
-                throw CancellationException("save clip cancelled")
-            }
-        }
-        val viewModel = newViewModel(protectedWriteRepository = protectedWriteRepository)
-        val effects = mutableListOf<NoticeEffect>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.effects.take(1).toList(effects)
-        }
-
-        viewModel.onAction(NotmidAppAction.SaveClip("clip-1"))
-        advanceUntilIdle()
-
-        assertNull(viewModel.state.value.protectedActionNotice)
-        assertEquals(emptyList<NoticeEffect>(), effects)
     }
 
     @Test
@@ -294,13 +114,33 @@ class NotmidAppViewModelTest {
         assertFalse(viewModel.state.value.isAuthenticating)
     }
 
+    @Test
+    fun actionsAreProcessedThroughInjectedActionDelegate() = runTest(mainDispatcherRule.dispatcher) {
+        val actions = ChannelNotmidActionDelegate<NotmidAppAction>()
+        val events = mutableListOf<RouteEvent>()
+        newViewModel(actionDelegate = actions, routeEvents = RouteEventSink { events.add(it) })
+        actions.dispatch(NotmidAppAction.RouteRequested(NotmidRouteEvent.SettingsRequested))
+        advanceUntilIdle()
+        assertEquals(listOf(NotmidRouteEvent.SettingsRequested), events)
+    }
+
+    @Test
+    fun injectedFeatureNoticeStreamIsExposedWithoutAppWriteHandling() = runTest(mainDispatcherRule.dispatcher) {
+        val notices = MutableNoticeEffectDelegate()
+        val vm = newViewModel(uiEffects = notices)
+        val effects = mutableListOf<NoticeEffect>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.effects.toList(effects) }
+        val effect = NoticeEffect.NavigateDeepLink("https://thdev.app/notmid/inbox")
+        notices.emit(effect)
+        advanceUntilIdle()
+        assertEquals(listOf(effect), effects)
+    }
+
     private fun newViewModel(
         contentRepository: NotmidContentRepository = FakeContentRepository(listOf(viewModelTestDestination)),
-        protectedWriteRepository: NotmidProtectedWriteRepository = FakeProtectedWriteRepository(),
         authGateway: NotmidAuthGateway = FakeAuthGateway(signedInAuthState),
         actionDelegate: NotmidActionDelegate<NotmidAppAction> = ChannelNotmidActionDelegate(),
         uiEffects: NoticeEffectDelegate = MutableNoticeEffectDelegate(),
-        protectedWriteActions: NotmidActionDelegate<NotmidProtectedWriteRequest> = ChannelNotmidActionDelegate(),
         routeEvents: RouteEventSink = RouteEventSink {},
     ): NotmidAppViewModel {
         val sharedContent = ObservableNotmidContentRepository(contentRepository)
@@ -308,12 +148,10 @@ class NotmidAppViewModelTest {
             contentSource = NotmidContentSource.Static,
             getDestinations = GetNotmidDestinationsUseCase(sharedContent),
             contentUpdates = sharedContent,
-            protectedWriteExecutor = RepositoryNotmidProtectedWriteExecutor(protectedWriteRepository, sharedContent),
             authGateway = authGateway,
             actionDelegate = actionDelegate,
             uiEffects = uiEffects,
             ioDispatcher = mainDispatcherRule.dispatcher,
-            protectedWriteActions = protectedWriteActions,
             routeEvents = routeEvents,
         )
     }

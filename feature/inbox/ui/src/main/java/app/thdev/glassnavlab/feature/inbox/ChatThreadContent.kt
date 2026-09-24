@@ -1,5 +1,6 @@
 package app.thdev.glassnavlab.feature.inbox
 
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,13 +22,13 @@ import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
 internal fun ChatThreadContent(
     state: ChatThreadUiState.Ready,
     listState: LazyListState,
-    isSavingClip: Boolean,
-    isSendingMessage: Boolean,
-    isRespondingChatInvite: Boolean,
-    clipSaveMessage: String?,
-    chatMessage: String?,
     onAction: (ChatThreadAction) -> Unit,
 ) {
+    val isSavingClip = state.write.inFlight == NotmidProtectedWriteAction.ClipSave
+    val isSendingMessage = state.write.inFlight == NotmidProtectedWriteAction.ChatMessage
+    val isRespondingChatInvite = state.write.inFlight == NotmidProtectedWriteAction.ChatInviteResponse
+    val clipSaveMessage = state.write.notice?.message?.takeIf { state.write.notice.action != NotmidProtectedWriteAction.ChatMessage }
+    val chatMessage = state.write.messageFor(NotmidProtectedWriteAction.ChatMessage)
     val thread = state.thread
     LazyColumn(
         modifier = Modifier
@@ -97,8 +98,7 @@ private fun ChatThreadDraftPreview() {
         ChatThreadContent(
             state = ChatThreadUiState.Ready("preview", thread, emptyList(), "See you there"),
             listState = rememberLazyListState(),
-            isSavingClip = false, isSendingMessage = false, isRespondingChatInvite = false,
-            clipSaveMessage = null, chatMessage = null, onAction = {},
+            onAction = {},
         )
     }
 }

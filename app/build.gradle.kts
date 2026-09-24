@@ -260,7 +260,6 @@ dependencies {
     implementation(project(":core:runtime"))
     implementation(project(":core:navigation:api"))
     implementation(project(":feature:notmid:impl"))
-    implementation(project(":feature:notmid:notice"))
     implementation(project(":feature:webview:impl"))
 
     implementation(libs.androidx.core.ktx)

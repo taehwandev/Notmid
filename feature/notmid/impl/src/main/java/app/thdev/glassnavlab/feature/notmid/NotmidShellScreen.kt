@@ -3,11 +3,11 @@ package app.thdev.glassnavlab.feature.notmid
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.thdev.glassnavlab.core.designsystem.component.liquidglass.LiquidGlassBackdropHost
@@ -30,19 +30,10 @@ fun NotmidShellScreen(
     authState: NotmidAuthState,
     authErrorMessage: String? = null,
     isAuthenticating: Boolean = false,
-    isSavingClip: Boolean = false,
-    isSendingMessage: Boolean = false,
-    isRespondingChatInvite: Boolean = false,
-    clipSaveMessage: String? = null,
-    chatMessage: String? = null,
     navigationStack: List<NotmidRoute> = listOf(FeedRoute),
     onContinueLocalAuth: () -> Unit = {},
     onContinueGoogleAuth: () -> Unit = onContinueLocalAuth,
     onBrowseSignedOut: () -> Unit = {},
-    onSaveClip: (String) -> Unit = {},
-    onAcceptThreadInvite: (String) -> Unit = {},
-    onRejectThreadInvite: (String) -> Unit = {},
-    onSendThreadMessage: (threadId: String, body: String) -> Unit = { _, _ -> },
 ) {
     val viewModel: NotmidShellViewModel = viewModel()
     val notmidDestinations = remember(destinations) {
@@ -83,21 +74,12 @@ fun NotmidShellScreen(
                 authState = authState,
                 authErrorMessage = authErrorMessage,
                 isAuthenticating = isAuthenticating,
-                isSavingClip = isSavingClip,
-                isSendingMessage = isSendingMessage,
-                isRespondingChatInvite = isRespondingChatInvite,
-                clipSaveMessage = clipSaveMessage,
-                chatMessage = chatMessage,
                 onAction = viewModel::onAction,
                 onFeedBackdropColorChanged = { feedBackdropColor = it },
                 onMapBackdropColorChanged = { mapBackdropColor = it },
                 onContinueLocalAuth = onContinueLocalAuth,
                 onContinueGoogleAuth = onContinueGoogleAuth,
                 onBrowseSignedOut = onBrowseSignedOut,
-                onSaveClip = onSaveClip,
-                onAcceptThreadInvite = onAcceptThreadInvite,
-                onRejectThreadInvite = onRejectThreadInvite,
-                onSendThreadMessage = onSendThreadMessage,
             )
         },
         floatingContent = { backdrop ->

@@ -7,7 +7,13 @@ import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentSnapshot
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
 import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRequest
-import app.thdev.glassnavlab.core.model.notmid.NotmidActionDelegate
+import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthGateway
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteExecutor
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteResult
+import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectDelegate
+import app.thdev.glassnavlab.feature.notmid.notice.toSuccessNotice
+import app.thdev.glassnavlab.feature.notmid.notice.toProtectedActionNotice
+import kotlinx.coroutines.flow.MutableStateFlow
 import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteDecision
 import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEventSink
@@ -31,20 +37,23 @@ internal class ChatThreadViewModel @Inject constructor(
     private val savedState: SavedStateHandle,
     private val updates: NotmidContentUpdates,
     private val repository: NotmidContentRepository,
-    private val writes: NotmidActionDelegate<NotmidProtectedWriteRequest>,
+    private val writes: NotmidProtectedWriteExecutor,
     private val routeEvents: RouteEventSink,
     @param:InboxIoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val auth: NotmidAuthGateway,
+    private val notices: NoticeEffectDelegate,
 ) : ViewModel() {
     private val route = ChatThreadRoute(checkNotNull(savedState.get<String>(THREAD_ID)))
     private var retryJob: Job? = null
-    val state = combine(updates.snapshot, savedState.getStateFlow("draft", "")) { snapshot, draft ->
+    private val writeState = MutableStateFlow(ChatWriteUiState())
+    val state = combine(updates.snapshot, savedState.getStateFlow("draft", ""), writeState) { snapshot, draft, write ->
         when (snapshot) {
             NotmidContentSnapshot.Loading -> ChatThreadUiState.Loading
             NotmidContentSnapshot.Unavailable -> ChatThreadUiState.Unavailable
             is NotmidContentSnapshot.Ready -> {
                 val thread = selectedThread(snapshot)
                 if (thread == null) ChatThreadUiState.Unavailable else {
-                    ChatThreadUiState.Ready(route.threadId, thread, thread.toMessages(), draft)
+                    ChatThreadUiState.Ready(route.threadId, thread, thread.toMessages(), draft, write)
                 }
             }
         }
@@ -65,8 +74,7 @@ internal class ChatThreadViewModel @Inject constructor(
             ChatThreadAction.Send -> {
                 val draft = savedState.get<String>("draft").orEmpty()
                 if (!thread.chatAccess.canSendMessage || draft.isBlank()) return
-                dispatch(NotmidProtectedWriteRequest.SendThreadMessage(thread.id, NotmidSendThreadMessageRequest(draft.trim())))
-                savedState["draft"] = ""
+                dispatch(NotmidProtectedWriteRequest.SendThreadMessage(thread.id, NotmidSendThreadMessageRequest(draft.trim())), draft)
             }
             ChatThreadAction.SaveClip -> thread.clip?.id?.let { dispatch(NotmidProtectedWriteRequest.SaveClip(it)) }
             ChatThreadAction.OpenPlace -> thread.place?.id?.let {
@@ -88,8 +96,38 @@ internal class ChatThreadViewModel @Inject constructor(
         return destination?.let { it.toInboxThreads().findMatchingThread(route.threadId) ?: it.fallbackThread(route.threadId) }
     }
 
-    private fun dispatch(request: NotmidProtectedWriteRequest) {
-        viewModelScope.launch { writes.dispatch(request) }
+    private fun dispatch(request: NotmidProtectedWriteRequest, sentDraft: String? = null) {
+        if (writeState.value.inFlight != null) return
+        val requestAuth = auth.currentState()
+        writeState.value = ChatWriteUiState(inFlight = request.writeAction)
+        viewModelScope.launch {
+            try {
+                val result = writes.execute(requestAuth, request)
+                if (result == NotmidProtectedWriteResult.Busy || auth.currentState().session !== requestAuth.session) return@launch
+                when (request) {
+                    is NotmidProtectedWriteRequest.SendThreadMessage -> {
+                        check(result is NotmidProtectedWriteResult.MessageSent)
+                        if (savedState.get<String>("draft") == sentDraft) savedState["draft"] = ""
+                    }
+                    is NotmidProtectedWriteRequest.SaveClip -> check(result == NotmidProtectedWriteResult.Completed)
+                    is NotmidProtectedWriteRequest.RespondThreadInvite -> check(result is NotmidProtectedWriteResult.ThreadUpdated)
+                    else -> error("Unsupported chat write")
+                }
+                val notice = request.writeAction.toSuccessNotice()
+                writeState.value = writeState.value.copy(notice = notice)
+                notices.emit(notice.effect)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                if (auth.currentState().session === requestAuth.session) {
+                    val notice = failure.toProtectedActionNotice(request.writeAction)
+                    writeState.value = writeState.value.copy(notice = notice)
+                    notices.emit(notice.effect)
+                }
+            } finally {
+                writeState.value = writeState.value.copy(inFlight = null)
+            }
+        }
     }
 
     private fun retry() {

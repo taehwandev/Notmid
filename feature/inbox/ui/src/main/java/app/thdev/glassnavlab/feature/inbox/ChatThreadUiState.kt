@@ -11,5 +11,6 @@ internal sealed interface ChatThreadUiState {
         val thread: InboxThreadUi,
         val messages: List<ChatMessageUi>,
         val draft: String,
+        val write: ChatWriteUiState = ChatWriteUiState(),
     ) : ChatThreadUiState
 }

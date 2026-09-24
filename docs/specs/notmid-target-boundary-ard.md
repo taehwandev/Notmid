@@ -334,11 +334,11 @@ CI를 두었다. Android에는 OpenAPI 고정 JSON 사본과 Kotlin 어댑터를
 `NotmidProtectedWriteRequest`, `NotmidProtectedWriteExecutor`가 소유한다.
 `core:data`의 `RepositoryNotmidProtectedWriteExecutor`는 기존 저장소에 요청을
 전달하고 화면이 반영할 도메인 결과를 반환한다. 앱 DI가 구현을 연결하며,
-앱 ViewModel은 저장소별 쓰기 메서드를 직접 호출하지 않는다.
+앱 ViewModel은 보호된 쓰기를 처리하지 않으며 각 feature ViewModel이 실행 포트를 호출한다.
 실행 포트는 Android, Compose, 앱 상태, 알림과 라우터를 참조하지 않는다.
 코루틴 수명·중복 제출 방지와 결과의 화면 상태·알림 변환은 현재 ViewModel이
 계속 소유한다. 예외와 취소는 포트 경계에서 변환하지 않는다.
-기존 앱 ViewModel 테스트와 실행기 단위 테스트가 이 경계를 검증한다.
+feature ViewModel 테스트와 실행기 단위 테스트가 이 경계를 검증한다.
 이것은 feature별 ViewModel 분해의 선행 작업이며 단계 4 전체 완료는 아니다.
 
 ### 단계 4 — 피드 첫 화면
@@ -377,8 +377,8 @@ CI를 두었다. Android에는 OpenAPI 고정 JSON 사본과 Kotlin 어댑터를
 이동은 `feature:inbox:api`의 `ChatThreadRequested`를 `RouteEventSink`로 전달하며
 딥링크 문자열을 앱에서 조립하지 않는다. 중복 클릭과 Busy·취소는 불필요한 이동을
 만들지 않으며, 계정 변경 뒤 늦은 응답은 알림과 이동을 모두 생략한다.
-쓰기 결과의 공유 콘텐츠 반영은 기존 실행기/저장소가 담당한다. 남은 채팅 화면의
-메시지·초대 응답·클립 저장만 ActivityRetained 입력 채널과 앱 소비자를 사용한다.
+쓰기 결과의 공유 콘텐츠 반영은 기존 실행기/저장소가 담당한다. 모든 feature 쓰기가
+직접 실행 포트를 사용하며 보호된 쓰기 입력 채널과 앱 소비자는 제거했다.
 
 라우터 인스턴스와 순수 라우트 핸들러는 ActivityRetained 범위에서 DI로 구성해
 Activity와 ViewModel에 같은 인스턴스를 제공한다. Compose는 스택 표시와 플랫폼
@@ -407,9 +407,11 @@ ViewModel의 액션 처리에 속한다.
 구독은 조회를 발생시키지 않으며 Retry 액션만 저장소를 호출한다.
 대화 상세는 `ChatThreadViewModel`이 공유 콘텐츠, 복원 가능한 초안, 전송·초대 응답
 권한 확인과 첨부 장소 이동을 소유한다. Screen은 typed action을 전달하며 Content는
-표시만 한다. 전송은 기존 공유 쓰기 포트로 전달하고, 첨부 장소는 inbox API 이벤트로
-요청한다. 전송 직후 초안을 비우는 기존 동작과 대체 대화 표시는 유지한다.
-쓰기 진행 상태와 결과 문구는 아직 앱 소유 상태를 표시하므로 소유권 이전이 남아 있다.
+표시만 한다. 전송·초대 응답·클립 저장은 공유 실행 포트를 직접 호출하고 진행 상태와
+결과 문구·토스트/알럿을 소유한다. 첨부 장소는 inbox API 이벤트로 요청한다.
+초안은 성공한 전송의 원래 내용과 여전히 같을 때만 비운다. 실패·Busy·취소와
+계정 변경 시 초안을 보존하며 전송 중 새로 작성한 초안을 지우지 않는다.
+대체 대화 표시는 유지하고 앱/셸의 쓰기 상태·콜백 전달은 제거했다.
 캡처는 `CaptureViewModel`이 초안·태그·공개 범위·게시 검증과 카메라 상태를 소유한다.
 권한/촬영 버튼은 typed action을 전달하고, 주입된 화면 수명 범위의 플랫폼 요청 포트를
 통해 Android 어댑터가 권한 요청과 CameraX 실행을 수행한다. 결과는 다시 액션으로
@@ -428,8 +430,7 @@ action과 lifecycle 연결만 담당한다. 설정 경로 라벨은 셸의 스�
 `feature:notmid:notice` Kotlin 모듈에서
 공유하고 Activity retained 알림 포트로 호스트에 전달한다. 동일 범위의 쓰기 실행기는
 동시 요청을 Busy로 거절하며 호출자 코루틴에서 실행하고 취소·실패 시 점유를 해제한다.
-채팅 화면의 메시지·초대 응답·클립 저장 실행과 알림 이전, `feature:notmid` 셸의
-app 이전은 남아 있다.
+`feature:notmid` 셸의 app 이전과 후속 모듈 경계 정리는 남아 있다.
 
 프로필 이전의 선행 경계로 `NotmidAuthGateway.states`가 로그인·로그아웃·프로필
 영수증 반영의 단일 관찰 상태를 제공한다. 앱 ViewModel은 이 상태를 구독하고,

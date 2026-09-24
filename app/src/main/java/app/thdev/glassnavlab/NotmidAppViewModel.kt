@@ -1,8 +1,5 @@
 package app.thdev.glassnavlab
 
-import app.thdev.glassnavlab.feature.notmid.notice.toSuccessNotice
-import app.thdev.glassnavlab.feature.notmid.notice.toProtectedActionNotice
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.thdev.glassnavlab.di.IoDispatcher
@@ -14,10 +11,6 @@ import app.thdev.glassnavlab.core.data.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentSnapshot
-import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteExecutor
-import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRequest
-import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteResult
-import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectDelegate
 import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectViewModel
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
@@ -46,13 +39,11 @@ internal class NotmidAppViewModel internal constructor(
     private val contentSource: NotmidContentSource,
     private val getDestinations: GetNotmidDestinationsUseCase,
     private val contentUpdates: NotmidContentUpdates,
-    private val protectedWriteExecutor: NotmidProtectedWriteExecutor,
     private val authGateway: NotmidAuthGateway,
     private val actionDelegate: NotmidActionDelegate<NotmidAppAction>,
     private val uiEffects: NoticeEffectDelegate,
     @param:IoDispatcher
     private val ioDispatcher: CoroutineDispatcher,
-    private val protectedWriteActions: NotmidActionDelegate<NotmidProtectedWriteRequest>,
     private val routeEvents: RouteEventSink,
 ) : ViewModel(), NoticeEffectViewModel by uiEffects {
     @Inject
@@ -60,22 +51,18 @@ internal class NotmidAppViewModel internal constructor(
         contentSource: NotmidContentSource,
         getDestinations: GetNotmidDestinationsUseCase,
         contentUpdates: NotmidContentUpdates,
-        protectedWriteExecutor: NotmidProtectedWriteExecutor,
         authGateway: NotmidAuthGateway,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
         uiEffects: NoticeEffectDelegate,
-        protectedWriteActions: NotmidActionDelegate<NotmidProtectedWriteRequest>,
         routeEvents: RouteEventSink,
     ) : this(
         contentSource = contentSource,
         getDestinations = getDestinations,
         contentUpdates = contentUpdates,
-        protectedWriteExecutor = protectedWriteExecutor,
         authGateway = authGateway,
         actionDelegate = ChannelNotmidActionDelegate(),
         uiEffects = uiEffects,
         ioDispatcher = ioDispatcher,
-        protectedWriteActions = protectedWriteActions,
         routeEvents = routeEvents,
     )
 
@@ -87,7 +74,6 @@ internal class NotmidAppViewModel internal constructor(
     )
     private var contentJob: Job? = null
     private var authJob: Job? = null
-    private var protectedActionJob: Job? = null
 
     val state: StateFlow<NotmidAppUiState> = mutableState.asStateFlow()
 
@@ -100,7 +86,6 @@ internal class NotmidAppViewModel internal constructor(
                 mutableState.update { it.copy(content = notmidContentReadyOrError(contentSource, snapshot.destinations)) }
             }
         }.launchIn(viewModelScope)
-        protectedWriteActions.actions.onEach(::enqueueProtectedAction).launchIn(viewModelScope)
         actionDelegate
             .actions
             .onEach(::handleAction)
@@ -130,23 +115,6 @@ internal class NotmidAppViewModel internal constructor(
                 clearAuthError()
                 routeEvents.onRouteEvent(NotmidRouteEvent.DestinationSelected(NotmidDestinationIds.FEED))
             }
-            is NotmidAppAction.SaveClip -> enqueueProtectedAction(
-                NotmidProtectedWriteRequest.SaveClip(action.clipId),
-            )
-
-            is NotmidAppAction.SendThreadMessage -> enqueueProtectedAction(
-                NotmidProtectedWriteRequest.SendThreadMessage(
-                    threadId = action.threadId,
-                    request = action.request,
-                ),
-            )
-
-            is NotmidAppAction.RespondThreadInvite -> enqueueProtectedAction(
-                NotmidProtectedWriteRequest.RespondThreadInvite(
-                    threadId = action.threadId,
-                    decision = action.decision,
-                ),
-            )
 
         }
     }
@@ -261,60 +229,8 @@ internal class NotmidAppViewModel internal constructor(
         }
     }
 
-    private fun enqueueProtectedAction(action: NotmidProtectedWriteRequest) {
-        if (
-            protectedActionJob?.isActive == true ||
-            mutableState.value.protectedActionInFlight != null
-        ) {
-            return
-        }
-
-        protectedActionJob = viewModelScope.launch {
-            mutableState.update { state ->
-                state.copy(
-                    protectedActionInFlight = action.writeAction,
-                    protectedActionNotice = null,
-                )
-            }
-
-            val requestAuthState = authGateway.currentState()
-            val notice = runCatchingPreservingCancellation {
-                val result = withContext(ioDispatcher) {
-                    protectedWriteExecutor.execute(requestAuthState, action)
-                }
-                when (result) {
-                    NotmidProtectedWriteResult.Completed -> Unit
-                    NotmidProtectedWriteResult.Busy -> {
-                        return@runCatchingPreservingCancellation null
-                    }
-                    is NotmidProtectedWriteResult.MessageSent -> Unit
-                    is NotmidProtectedWriteResult.ThreadStarted -> Unit
-                    is NotmidProtectedWriteResult.ThreadUpdated -> Unit
-                    is NotmidProtectedWriteResult.ProfileUpdated -> Unit
-                }
-                action.writeAction.toSuccessNotice()
-            }.getOrElse { throwable ->
-                throwable.toProtectedActionNotice(action.writeAction)
-            }
-
-            mutableState.update { state ->
-                state.copy(
-                    authState = authGateway.currentState(),
-                    protectedActionInFlight = null,
-                    protectedActionNotice = notice,
-                )
-            }
-            notice?.let { emitEffect(it.effect) }
-        }
-    }
-
-    private fun emitEffect(effect: NoticeEffect) {
-        uiEffects.emit(effect)
-    }
-
     override fun onCleared() {
         actionDelegate.close()
-        protectedWriteActions.close()
         super.onCleared()
     }
 }

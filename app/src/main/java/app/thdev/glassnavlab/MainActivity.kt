@@ -6,10 +6,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.thdev.glassnavlab.core.base.activity.BaseActivity
 import app.thdev.glassnavlab.core.designsystem.theme.notmidTheme
-import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteAction
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
-import app.thdev.glassnavlab.core.model.notmid.NotmidChatInviteDecision
-import app.thdev.glassnavlab.core.model.notmid.NotmidSendThreadMessageRequest
 import app.thdev.glassnavlab.core.runtime.router.activity.ActivityRouteLauncher
 import app.thdev.glassnavlab.feature.notmid.NotmidShellErrorScreen
 import app.thdev.glassnavlab.feature.notmid.NotmidShellLoadingScreen
@@ -63,15 +60,6 @@ class MainActivity : BaseActivity() {
                         authState = appState.authState,
                         authErrorMessage = appState.authErrorMessage,
                         isAuthenticating = appState.isAuthenticating,
-                        isSavingClip = appState.isSavingClip,
-                        isSendingMessage = appState.isSendingMessage,
-                        isRespondingChatInvite = appState.isRespondingChatInvite,
-                        clipSaveMessage = appState.messageFor(
-                            NotmidProtectedWriteAction.ClipSave,
-                        ),
-                        chatMessage = appState.messageFor(
-                            NotmidProtectedWriteAction.ChatMessage,
-                        ),
                         navigationStack = appRouter.notmidRouteStack(),
                         onContinueLocalAuth = {
                             notmidAppViewModel.onAction(
@@ -85,35 +73,6 @@ class MainActivity : BaseActivity() {
                         },
                         onBrowseSignedOut = {
                             notmidAppViewModel.onAction(NotmidAppAction.BrowseSignedOut)
-                        },
-                        onSaveClip = { clipId ->
-                            notmidAppViewModel.onAction(
-                                NotmidAppAction.SaveClip(clipId),
-                            )
-                        },
-                        onAcceptThreadInvite = { threadId ->
-                            notmidAppViewModel.onAction(
-                                NotmidAppAction.RespondThreadInvite(
-                                    threadId = threadId,
-                                    decision = NotmidChatInviteDecision.Accept,
-                                ),
-                            )
-                        },
-                        onRejectThreadInvite = { threadId ->
-                            notmidAppViewModel.onAction(
-                                NotmidAppAction.RespondThreadInvite(
-                                    threadId = threadId,
-                                    decision = NotmidChatInviteDecision.Reject,
-                                ),
-                            )
-                        },
-                        onSendThreadMessage = { threadId, body ->
-                            notmidAppViewModel.onAction(
-                                NotmidAppAction.SendThreadMessage(
-                                    threadId = threadId,
-                                    request = NotmidSendThreadMessageRequest(body = body),
-                                ),
-                            )
                         },
                     )
                 }

@@ -31,21 +31,12 @@ internal fun NotmidRouteContent(
     authState: NotmidAuthState,
     authErrorMessage: String?,
     isAuthenticating: Boolean,
-    isSavingClip: Boolean,
-    isSendingMessage: Boolean,
-    isRespondingChatInvite: Boolean,
-    clipSaveMessage: String?,
-    chatMessage: String?,
     onAction: (NotmidShellAction) -> Unit,
     onFeedBackdropColorChanged: (Color) -> Unit,
     onMapBackdropColorChanged: (Color) -> Unit,
     onContinueLocalAuth: () -> Unit,
     onContinueGoogleAuth: () -> Unit,
     onBrowseSignedOut: () -> Unit,
-    onSaveClip: (String) -> Unit,
-    onAcceptThreadInvite: (String) -> Unit,
-    onRejectThreadInvite: (String) -> Unit,
-    onSendThreadMessage: (threadId: String, body: String) -> Unit,
 ) {
     val feedStateHolder = rememberSaveableStateHolder()
     if (routeState.shouldShowLogin) {
@@ -113,11 +104,6 @@ internal fun NotmidRouteContent(
             feedStateHolder.SaveableStateProvider(route.route) {
                 ChatThreadScreen(
                     route = route,
-                    isSavingClip = isSavingClip,
-                    isSendingMessage = isSendingMessage,
-                    isRespondingChatInvite = isRespondingChatInvite,
-                    clipSaveMessage = clipSaveMessage,
-                    chatMessage = chatMessage,
                 )
             }
         }
