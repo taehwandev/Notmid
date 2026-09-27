@@ -74,7 +74,8 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
   injected ActivityRouteLauncher and AppRouterRuntime from NotmidAppRouterFactory
   app-owned router config, deep-link resolver, planner, and runtime policy
   NotmidAppViewModel for app content loading and notice host effects
-  NotmidShellViewModel for active route, auth gate, shell actions, and entry/notice deep links
+  NotmidShellViewModel for active route, auth gate, route-derived presentation,
+  shell actions, and entry/notice deep links
   MainActivity forwards incoming deep links and activity-launch completion as typed shell actions
   Android Credential Manager Google ID-token provider for Firebase REST
   exchange, provided through app DI

@@ -8,5 +8,11 @@ internal data class NotmidShellUiState(
     val selectedDestinationId: String,
     val shouldShowLogin: Boolean,
     val settingsRouteLabel: String,
+    val navigationBackdropSource: NotmidShellBackdropSource,
+    val scrollOwner: NotmidShellScrollOwner,
     val activityRouteRequest: PendingActivityRouteRequest?,
 )
+
+internal enum class NotmidShellBackdropSource { Feed, Map, Destination }
+
+internal enum class NotmidShellScrollOwner { Destination, Settings }

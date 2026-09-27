@@ -198,9 +198,11 @@ WebView도 Compose 호스트·브라우저 뒤로 가기 액션/효과·컨트�
 진행 상태: 제품 셸·라우트 그래프·이벤트 핸들러·Hilt 바인딩을 `:app`으로 옮겼고,
 로그인 화면과 액션/상태/인증 요청은 `:feature:auth:ui`가 소유한다.
 셸 ViewModel은 라우터 스택과 인증 상태를 관찰해 활성 경로와 로그인 게이트를
-결정한다. 앱 ViewModel은 셸 경로·인증 요청을 중계하지 않는다.
-`:feature:notmid:impl`은 빌드에서 제거했다. `core:runtime`의 앱 정책 타입 이동은
-Decision 5 작업으로 남는다.
+결정한다. 내비게이션 배경의 출처와 설정 화면의 스크롤 상태 슬롯도 셸
+ViewModel이 라우트에서 도출하며, Compose는 실제 스크롤 상태를 보유한다.
+앱 ViewModel은 셸 경로·인증 요청을 중계하지 않는다.
+`:feature:notmid:impl`은 빌드에서 제거했고, `core:runtime`은 Decision 5에 따라
+해체했다.
 
 ## Decision 4 — 화면 상태는 feature `ui`가 소유한다
 

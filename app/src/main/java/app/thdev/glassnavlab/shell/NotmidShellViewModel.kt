@@ -14,10 +14,13 @@ import app.thdev.glassnavlab.router.runtime.AppRouterRuntime
 import app.thdev.glassnavlab.router.notmidRouteStack
 import app.thdev.glassnavlab.feature.capture.api.route.CaptureRoute
 import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
+import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
 import app.thdev.glassnavlab.feature.inbox.api.route.ChatThreadRoute
 import app.thdev.glassnavlab.feature.inbox.api.route.InboxRoute
 import app.thdev.glassnavlab.feature.inbox.api.event.InboxRouteEvent
 import app.thdev.glassnavlab.feature.map.api.event.MapRouteEvent
+import app.thdev.glassnavlab.feature.map.api.route.MapRoute
+import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
 import app.thdev.glassnavlab.feature.profile.api.route.ProfileRoute
 import app.thdev.glassnavlab.feature.profile.api.route.ProfileSettingsRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -80,6 +83,16 @@ private fun shellUiState(
             navigationStack.joinToString(" > ") { it.deepLinkPathSegments.last() }
         } else {
             ""
+        },
+        navigationBackdropSource = when (activeRoute) {
+            FeedRoute, is ClipDetailRoute -> NotmidShellBackdropSource.Feed
+            MapRoute, is PlaceDetailRoute -> NotmidShellBackdropSource.Map
+            else -> NotmidShellBackdropSource.Destination
+        },
+        scrollOwner = if (activeRoute == ProfileSettingsRoute) {
+            NotmidShellScrollOwner.Settings
+        } else {
+            NotmidShellScrollOwner.Destination
         },
         activityRouteRequest = activityRouteRequest,
     )

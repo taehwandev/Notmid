@@ -14,10 +14,6 @@ import androidx.compose.ui.Modifier
 import app.thdev.glassnavlab.core.designsystem.component.liquidglass.LiquidGlassBackdropHost
 import app.thdev.glassnavlab.core.model.notmid.NotmidDestination as NotmidDestinationModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
-import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
-import app.thdev.glassnavlab.feature.map.api.route.MapRoute
-import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidBackgroundColor
 import app.thdev.glassnavlab.feature.notmid.common.model.toNotmidDestinations
 import app.thdev.glassnavlab.core.designsystem.component.backdrop.rememberListBackdropColor
@@ -71,10 +67,10 @@ fun NotmidShellScreen(
                 NotmidShellBottomNavigation(
                     destinations = notmidDestinations,
                     selectedDestinationId = shellState.selectedDestinationId,
-                    navigationBackdropColor = when (shellState.activeRoute) {
-                        FeedRoute, is ClipDetailRoute -> feedBackdropColor
-                        MapRoute, is PlaceDetailRoute -> mapBackdropColor
-                        else -> navigationBackdropColor
+                    navigationBackdropColor = when (shellState.navigationBackdropSource) {
+                        NotmidShellBackdropSource.Feed -> feedBackdropColor
+                        NotmidShellBackdropSource.Map -> mapBackdropColor
+                        NotmidShellBackdropSource.Destination -> navigationBackdropColor
                     },
                     backdrop = backdrop,
                     modifier = Modifier.align(Alignment.BottomCenter),

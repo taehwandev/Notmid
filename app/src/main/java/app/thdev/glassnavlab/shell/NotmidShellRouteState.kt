@@ -4,10 +4,8 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import app.thdev.glassnavlab.core.navigation.notmid.NotmidDestinationIds
-import app.thdev.glassnavlab.core.navigation.notmid.NotmidRoute
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
 import app.thdev.glassnavlab.feature.notmid.common.model.destinationFor
-import app.thdev.glassnavlab.feature.profile.api.route.ProfileSettingsRoute
 
 internal data class NotmidShellRouteState(
     val selectedDestination: NotmidDestination,
@@ -25,7 +23,7 @@ internal fun rememberNotmidShellRouteState(
     )
     val listState = rememberDestinationListState(
         destinationId = selectedDestination.id,
-        activeRoute = shellState.activeRoute,
+        scrollOwner = shellState.scrollOwner,
     )
 
     return NotmidShellRouteState(
@@ -37,7 +35,7 @@ internal fun rememberNotmidShellRouteState(
 @Composable
 private fun rememberDestinationListState(
     destinationId: String,
-    activeRoute: NotmidRoute,
+    scrollOwner: NotmidShellScrollOwner,
 ): LazyListState {
     val feedListState = rememberLazyListState()
     val mapListState = rememberLazyListState()
@@ -46,7 +44,7 @@ private fun rememberDestinationListState(
     val profileListState = rememberLazyListState()
     val settingsListState = rememberLazyListState()
 
-    if (activeRoute == ProfileSettingsRoute) {
+    if (scrollOwner == NotmidShellScrollOwner.Settings) {
         return settingsListState
     }
     return when (destinationId) {

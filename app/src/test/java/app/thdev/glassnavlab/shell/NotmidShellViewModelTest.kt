@@ -15,10 +15,13 @@ import app.thdev.glassnavlab.core.navigation.runtime.RoutePlan
 import app.thdev.glassnavlab.core.navigation.runtime.RouteStack
 import app.thdev.glassnavlab.core.navigation.notmid.NotmidRouteEvent
 import app.thdev.glassnavlab.feature.feed.api.route.FeedRoute
+import app.thdev.glassnavlab.feature.feed.api.route.ClipDetailRoute
 import app.thdev.glassnavlab.feature.inbox.api.event.InboxRouteEvent
 import app.thdev.glassnavlab.feature.inbox.api.route.ChatThreadRoute
 import app.thdev.glassnavlab.feature.inbox.api.route.InboxRoute
 import app.thdev.glassnavlab.feature.map.api.event.MapRouteEvent
+import app.thdev.glassnavlab.feature.map.api.route.MapRoute
+import app.thdev.glassnavlab.feature.map.api.route.PlaceDetailRoute
 import app.thdev.glassnavlab.feature.profile.api.route.ProfileRoute
 import app.thdev.glassnavlab.feature.profile.api.route.ProfileSettingsRoute
 import app.thdev.glassnavlab.feature.webview.api.route.WebViewRoute
@@ -91,6 +94,32 @@ class NotmidShellViewModelTest {
         advanceUntilIdle()
 
         assertEquals("profile > settings", vm.state.value.settingsRouteLabel)
+    }
+
+    @Test fun routePresentationPolicyIsDerivedBeforeRendering() = runTest(dispatcherRule.dispatcher) {
+        val router = testRouter()
+        val vm = NotmidShellViewModel(RouteEventSink {}, router, FakeAuthGateway(signedOutAuthState))
+
+        assertEquals(NotmidShellBackdropSource.Feed, vm.state.value.navigationBackdropSource)
+        assertEquals(NotmidShellScrollOwner.Destination, vm.state.value.scrollOwner)
+
+        val cases = listOf(
+            ClipDetailRoute("clip-1") to NotmidShellBackdropSource.Feed,
+            MapRoute to NotmidShellBackdropSource.Map,
+            PlaceDetailRoute("place-1") to NotmidShellBackdropSource.Map,
+            ProfileRoute to NotmidShellBackdropSource.Destination,
+            ProfileSettingsRoute to NotmidShellBackdropSource.Destination,
+        )
+        cases.forEach { (route, backdropSource) ->
+            router.execute(RoutePlan.compose(RouteStack.of(FeedRoute, route)))
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+            assertEquals(backdropSource, vm.state.value.navigationBackdropSource)
+            assertEquals(
+                if (route == ProfileSettingsRoute) NotmidShellScrollOwner.Settings else NotmidShellScrollOwner.Destination,
+                vm.state.value.scrollOwner,
+            )
+        }
     }
 
     @Test fun activityLaunchAcknowledgmentConsumesOnlyItsRequest() = runTest(dispatcherRule.dispatcher) {
