@@ -6,6 +6,7 @@ import app.thdev.glassnavlab.MainDispatcherRule
 import app.thdev.glassnavlab.signedOutAuthState
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthSignInRequest
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
+import app.thdev.glassnavlab.core.notice.api.effect.MutableNoticeEffectDelegate
 import app.thdev.glassnavlab.router.planner.AppRoutePlanner
 import app.thdev.glassnavlab.router.runtime.DefaultAppRouterRuntime
 import app.thdev.glassnavlab.core.navigation.runtime.RouteCommand
@@ -44,6 +45,7 @@ class NotmidShellViewModelTest {
             RouteEventSink { events.add(it) },
             testRouter(),
             FakeAuthGateway(signedOutAuthState),
+            MutableNoticeEffectDelegate(),
         )
         vm.onAction(NotmidShellAction.DestinationClicked("map"))
         vm.onAction(NotmidShellAction.ThreadClicked("thread-1"))
@@ -60,7 +62,7 @@ class NotmidShellViewModelTest {
     @Test fun authGateAndActiveRouteFollowRouterAndGateway() = runTest(dispatcherRule.dispatcher) {
         val router = testRouter()
         val gateway = FakeAuthGateway(signedOutAuthState)
-        val vm = NotmidShellViewModel(RouteEventSink {}, router, gateway)
+        val vm = NotmidShellViewModel(RouteEventSink {}, router, gateway, MutableNoticeEffectDelegate())
         assertFalse(vm.state.value.shouldShowLogin)
 
         router.execute(RoutePlan.compose(RouteStack.of(InboxRoute, ChatThreadRoute("thread-1"))))
@@ -76,7 +78,7 @@ class NotmidShellViewModelTest {
 
     @Test fun deepLinkActionPlansRouteInsideViewModel() = runTest(dispatcherRule.dispatcher) {
         val router = testRouter(deepLinkPlan = RoutePlan.compose(RouteStack.of(FeedRoute, InboxRoute)))
-        val vm = NotmidShellViewModel(RouteEventSink {}, router, FakeAuthGateway(signedOutAuthState))
+        val vm = NotmidShellViewModel(RouteEventSink {}, router, FakeAuthGateway(signedOutAuthState), MutableNoticeEffectDelegate())
 
         vm.onAction(NotmidShellAction.DeepLinkRequested(""))
         assertEquals(FeedRoute, router.currentRoute)
@@ -87,7 +89,7 @@ class NotmidShellViewModelTest {
 
     @Test fun settingsRouteLabelIsDerivedBeforeRendering() = runTest(dispatcherRule.dispatcher) {
         val router = testRouter()
-        val vm = NotmidShellViewModel(RouteEventSink {}, router, FakeAuthGateway(signedOutAuthState))
+        val vm = NotmidShellViewModel(RouteEventSink {}, router, FakeAuthGateway(signedOutAuthState), MutableNoticeEffectDelegate())
         assertEquals("", vm.state.value.settingsRouteLabel)
 
         router.execute(RoutePlan.compose(RouteStack.of(ProfileRoute, ProfileSettingsRoute)))
@@ -98,7 +100,7 @@ class NotmidShellViewModelTest {
 
     @Test fun routePresentationPolicyIsDerivedBeforeRendering() = runTest(dispatcherRule.dispatcher) {
         val router = testRouter()
-        val vm = NotmidShellViewModel(RouteEventSink {}, router, FakeAuthGateway(signedOutAuthState))
+        val vm = NotmidShellViewModel(RouteEventSink {}, router, FakeAuthGateway(signedOutAuthState), MutableNoticeEffectDelegate())
 
         assertEquals(NotmidShellBackdropSource.Feed, vm.state.value.navigationBackdropSource)
         assertEquals(NotmidShellScrollOwner.Destination, vm.state.value.scrollOwner)
@@ -124,7 +126,7 @@ class NotmidShellViewModelTest {
 
     @Test fun activityLaunchAcknowledgmentConsumesOnlyItsRequest() = runTest(dispatcherRule.dispatcher) {
         val router = testRouter()
-        val vm = NotmidShellViewModel(RouteEventSink {}, router, FakeAuthGateway(signedOutAuthState))
+        val vm = NotmidShellViewModel(RouteEventSink {}, router, FakeAuthGateway(signedOutAuthState), MutableNoticeEffectDelegate())
         val firstRoute = WebViewRoute("https://example.com/first")
         val secondRoute = WebViewRoute("https://example.com/second")
         router.execute(RoutePlan(activityRoutes = listOf(firstRoute, secondRoute)))

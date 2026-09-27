@@ -135,7 +135,7 @@ packages/api-client
   clip/place attachments into internal models before feature UI sees them.
   App Hilt modules now select static or API-backed content through
   `NOTMID_CONTENT_SOURCE`, provide the selected repository to
-  `NotmidAppViewModel`, and the ViewModel loads content through an explicit
+  `NotmidBootstrapViewModel`, and the ViewModel loads content through an explicit
   loading/error/ready state before rendering the app shell. Debug defaults to
   the deterministic fixture API at the Android emulator host URL, static
   remains an opt-in fallback, and release gates reject static content.
@@ -146,14 +146,15 @@ packages/api-client
   repository methods return receipts on success and throw
   `NotmidProtectedWriteException` with typed failures for missing auth, invalid
   input, HTTP status, transport failure, and malformed API responses. Successful
-  chat-send receipts are merged by `NotmidAppViewModel` into the loaded inbox
-  `threadMessages` before toast/alert effects are emitted, so the chat screen
-  reflects the write without feature UI owning refresh or network logic. Feature
-  screens emit callbacks; they do not own bearer tokens or HTTP clients.
+  chat-send receipts are merged by `RepositoryNotmidProtectedWriteExecutor` into
+  the shared content repository. `ChatThreadViewModel` maps the result to state
+  and notice effects, so the chat screen reflects the write without owning
+  refresh or network logic. Feature screens emit actions; they do not own bearer
+  tokens or HTTP clients.
 - Android chat invite accept/reject follows the same protected-write path. The
-  API/static repository returns a thread receipt, `NotmidAppViewModel` merges it
-  into loaded inbox content, and the feature chat screen unlocks or keeps the
-  composer disabled from `thread.chatAccess.canSendMessage`. Feature UI never
+  API/static repository returns a thread receipt, the shared content repository
+  receives it through the write executor, and the feature chat screen unlocks
+  or keeps the composer disabled from `thread.chatAccess.canSendMessage`. Feature UI never
   decides whether two users are friends; it only renders `chatAccess` and emits
   accept/reject callbacks.
 - Android `:core:auth:impl` has an API-verified Firebase auth gateway. It asks a
@@ -204,12 +205,12 @@ API route/input/auth/rate-limit failure
   and rethrow unexpected failures.
 - Android content reads keep raw network failures in `:core:network`, map
   API-backed read failures to `ApiNotmidContentException`, and expose app-shell
-  loading/error/ready state through `NotmidAppViewModel`. Inbox chat detail
+  loading/error/ready state through `NotmidBootstrapViewModel`. Inbox chat detail
   messages are normal content-read data, not write effects; a failed detail
-  read raises the same typed content exception path and the ViewModel decides
-  the visible app-shell error state. Android protected writes throw
-  `NotmidProtectedWriteException`; `NotmidAppViewModel` catches it and keeps
-  feature screens from seeing raw API errors or envelopes.
+  read follows the typed content exception path and `ChatThreadViewModel`
+  renders the shared unavailable state with retry. Android protected writes throw
+  `NotmidProtectedWriteException`; feature ViewModels map typed failures to
+  state and notice effects without exposing raw API envelopes to screens.
 - Retries must be explicit. Rate-limited responses use `retry-after`; protected
   web write refresh retry is limited to one session refresh; mutating writes
   should not be retried automatically unless the API path is idempotent or the

@@ -162,7 +162,7 @@ Current Android DI boundary:
 - App Hilt modules provide BuildConfig-backed runtime config, the product API
   network client, the Firebase Identity Toolkit network client, repository
   selection, Firebase token providers, and the `NotmidAuthGateway`.
-- `NotmidAppViewModel` is a Hilt ViewModel and receives repository/auth
+- `NotmidBootstrapViewModel` is a Hilt ViewModel and receives content
   contracts from DI. `MainActivity` must not manually construct
   `OkHttpNotmidNetworkClient`, repositories, Firebase token providers, auth
   gateways, or a `ViewModelProvider.Factory`.

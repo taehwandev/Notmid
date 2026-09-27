@@ -26,9 +26,9 @@ class MainActivity : BaseActivity() {
 
     @Composable
     override fun Content() {
-        val notmidAppViewModel: NotmidAppViewModel = viewModel()
+        val bootstrapViewModel: NotmidBootstrapViewModel = viewModel()
         val shellViewModel: NotmidShellViewModel = viewModel()
-        val appState by notmidAppViewModel.state.collectAsStateWithLifecycle()
+        val appState by bootstrapViewModel.state.collectAsStateWithLifecycle()
         val shellState by shellViewModel.state.collectAsStateWithLifecycle()
         val deepLink = pendingDeepLink
 
@@ -44,7 +44,7 @@ class MainActivity : BaseActivity() {
             onActivityRouteLaunched = { id ->
                 shellViewModel.onAction(NotmidShellAction.ActivityRouteLaunched(id))
             },
-            noticeEffects = notmidAppViewModel.effects,
+            noticeEffects = shellViewModel.effects,
             modifier = Modifier.fillMaxSize(),
             onNoticeActionDeepLink = { uri ->
                 shellViewModel.onAction(NotmidShellAction.DeepLinkRequested(uri))
@@ -65,7 +65,7 @@ class MainActivity : BaseActivity() {
                         title = contentState.title,
                         message = contentState.message,
                         onRetry = {
-                            notmidAppViewModel.onAction(NotmidAppAction.ReloadContent)
+                            bootstrapViewModel.onAction(NotmidBootstrapAction.ReloadContent)
                         },
                     )
                 }

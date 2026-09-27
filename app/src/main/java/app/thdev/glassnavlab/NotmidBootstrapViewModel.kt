@@ -7,15 +7,11 @@ import app.thdev.glassnavlab.core.data.api.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentSnapshot
-import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffectDelegate
-import app.thdev.glassnavlab.core.notice.api.effect.NoticeEffect
-import app.thdev.glassnavlab.core.notice.ui.NoticeEffectViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -26,24 +22,22 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
-internal class NotmidAppViewModel @Inject constructor(
+internal class NotmidBootstrapViewModel @Inject constructor(
     private val contentSource: NotmidContentSource,
     private val getDestinations: GetNotmidDestinationsUseCase,
     private val contentUpdates: NotmidContentUpdates,
-    private val uiEffects: NoticeEffectDelegate,
     @param:IoDispatcher
     private val ioDispatcher: CoroutineDispatcher,
-) : ViewModel(), NoticeEffectViewModel {
-    override val effects: Flow<NoticeEffect> = uiEffects.effects
+) : ViewModel() {
 
     private val mutableState = MutableStateFlow(
-        NotmidAppUiState(
+        NotmidBootstrapUiState(
             contentSource = contentSource,
         ),
     )
     private var contentJob: Job? = null
 
-    val state: StateFlow<NotmidAppUiState> = mutableState.asStateFlow()
+    val state: StateFlow<NotmidBootstrapUiState> = mutableState.asStateFlow()
 
     init {
         contentUpdates.snapshot.onEach { snapshot ->
@@ -54,9 +48,9 @@ internal class NotmidAppViewModel @Inject constructor(
         reloadContent()
     }
 
-    fun onAction(action: NotmidAppAction) {
+    fun onAction(action: NotmidBootstrapAction) {
         when (action) {
-            NotmidAppAction.ReloadContent -> reloadContent()
+            NotmidBootstrapAction.ReloadContent -> reloadContent()
         }
     }
 

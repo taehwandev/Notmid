@@ -73,9 +73,9 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
   debug DI selects static/API repositories; release DI binds API repositories only
   injected ActivityRouteLauncher and AppRouterRuntime from NotmidAppRouterFactory
   app-owned router config, deep-link resolver, planner, and runtime policy
-  NotmidAppViewModel for app content loading and notice host effects
+  NotmidBootstrapViewModel for app startup content loading and retry
   NotmidShellViewModel for active route, auth gate, route-derived presentation,
-  shell actions, and entry/notice deep links
+  shell actions, entry/notice deep links, and the retained notice-effect stream
   MainActivity forwards incoming deep links and activity-launch completion as typed shell actions
   Android Credential Manager Google ID-token provider for Firebase REST
   exchange, provided through app DI
@@ -97,7 +97,7 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
 :core:notice:ui
   NoticeHost, lifecycle collector, and alert dialog rendering
   Android Toast/Snackbar/Alert dispatch using :core:notice:api and design-system visuals
-  NoticeEffectViewModel UI output contract
+  NoticeEffectViewModel UI output contract implemented by the app shell ViewModel
 
 :core:domain
   suspend repository contracts, typed domain exceptions, and use cases
@@ -197,7 +197,7 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
 :feature:*:ui
   Compose surface for that feature only
   feature:capture:ui owns Android CameraX preview and local still capture details
-  screen state owners live here; :app NotmidAppViewModel retains app content loading
+  screen state owners live here; :app NotmidBootstrapViewModel retains startup content loading
 ```
 
 ## External Service Repositories
