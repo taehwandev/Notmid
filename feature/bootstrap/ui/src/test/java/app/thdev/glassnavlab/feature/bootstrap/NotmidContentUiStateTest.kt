@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab
+package app.thdev.glassnavlab.feature.bootstrap
 
 import app.thdev.glassnavlab.core.data.api.notmid.ApiNotmidContentException
 import app.thdev.glassnavlab.core.data.api.notmid.NotmidContentSource

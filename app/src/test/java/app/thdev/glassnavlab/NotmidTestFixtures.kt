@@ -3,15 +3,11 @@ package app.thdev.glassnavlab
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthGateway
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthResult
 import app.thdev.glassnavlab.core.auth.notmid.NotmidAuthSignInRequest
-import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthSession
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthUser
-import app.thdev.glassnavlab.core.model.notmid.NotmidClip
-import app.thdev.glassnavlab.core.model.notmid.NotmidDestination
-import app.thdev.glassnavlab.core.model.notmid.NotmidNavigationIcon
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
@@ -31,12 +27,6 @@ class MainDispatcherRule(
     override fun finished(description: Description) {
         kotlinx.coroutines.Dispatchers.resetMain()
     }
-}
-
-internal class FakeContentRepository(
-    private val destinations: List<NotmidDestination>,
-) : NotmidContentRepository {
-    override suspend fun destinations(): List<NotmidDestination> = destinations
 }
 
 internal class FakeAuthGateway(
@@ -94,21 +84,4 @@ internal val signedOutAuthState = NotmidAuthState(
     mode = NotmidAuthMode.Fake,
     session = null,
     requiredActions = emptyList(),
-)
-
-internal val testClip = NotmidClip(
-    id = "clip-1",
-    title = "Clip",
-    description = "A local clip.",
-    badge = "Local",
-    palette = emptyList(),
-)
-
-internal val viewModelTestDestination = NotmidDestination(
-    id = "feed",
-    title = "Feed",
-    subtitle = "Short video receipts.",
-    icon = NotmidNavigationIcon.Feed,
-    clips = listOf(testClip),
-    places = emptyList(),
 )

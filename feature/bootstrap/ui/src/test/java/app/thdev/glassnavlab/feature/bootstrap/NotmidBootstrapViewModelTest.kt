@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab
+package app.thdev.glassnavlab.feature.bootstrap
 
 import app.thdev.glassnavlab.core.data.api.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.data.impl.notmid.ObservableNotmidContentRepository
@@ -16,12 +16,12 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class NotmidBootstrapViewModelTest {
     @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    val mainDispatcherRule = BootstrapMainDispatcherRule()
 
     @Test
     fun initLoadsContentIntoState() = runTest(mainDispatcherRule.dispatcher) {
         val viewModel = newViewModel(
-            contentRepository = FakeContentRepository(listOf(viewModelTestDestination)),
+            contentRepository = FakeBootstrapContentRepository(listOf(bootstrapTestDestination)),
         )
 
         advanceUntilIdle()
@@ -29,7 +29,7 @@ class NotmidBootstrapViewModelTest {
         assertEquals(
             NotmidContentUiState.Ready(
                 source = NotmidContentSource.Static,
-                destinations = listOf(viewModelTestDestination),
+                destinations = listOf(bootstrapTestDestination),
             ),
             viewModel.state.value.content,
         )
@@ -50,8 +50,36 @@ class NotmidBootstrapViewModelTest {
         assertEquals(NotmidContentUiState.Loading, viewModel.state.value.content)
     }
 
+    @Test
+    fun retryActionReloadsContentAfterFailure() = runTest(mainDispatcherRule.dispatcher) {
+        var calls = 0
+        val repository = object : NotmidContentRepository {
+            override suspend fun destinations(): List<NotmidDestination> {
+                calls += 1
+                if (calls == 1) error("temporarily unavailable")
+                return listOf(bootstrapTestDestination)
+            }
+        }
+        val viewModel = newViewModel(contentRepository = repository)
+
+        advanceUntilIdle()
+        check(viewModel.state.value.content is NotmidContentUiState.Error)
+
+        viewModel.onAction(NotmidBootstrapAction.ReloadContent)
+        advanceUntilIdle()
+
+        assertEquals(2, calls)
+        assertEquals(
+            NotmidContentUiState.Ready(
+                source = NotmidContentSource.Static,
+                destinations = listOf(bootstrapTestDestination),
+            ),
+            viewModel.state.value.content,
+        )
+    }
+
     private fun newViewModel(
-        contentRepository: NotmidContentRepository = FakeContentRepository(listOf(viewModelTestDestination)),
+        contentRepository: NotmidContentRepository = FakeBootstrapContentRepository(listOf(bootstrapTestDestination)),
     ): NotmidBootstrapViewModel {
         val sharedContent = ObservableNotmidContentRepository(contentRepository)
         return NotmidBootstrapViewModel(

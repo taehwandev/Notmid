@@ -134,11 +134,11 @@ packages/api-client
   behind `NotmidNetworkClient`. Inbox detail hydration maps thread messages and
   clip/place attachments into internal models before feature UI sees them.
   App Hilt modules now select static or API-backed content through
-  `NOTMID_CONTENT_SOURCE`, provide the selected repository to
-  `NotmidBootstrapViewModel`, and the ViewModel loads content through an explicit
-  loading/error/ready state before rendering the app shell. Debug defaults to
-  the deterministic fixture API at the Android emulator host URL, static
-  remains an opt-in fallback, and release gates reject static content.
+  `NOTMID_CONTENT_SOURCE` and provide the selected repository to
+  `:feature:bootstrap:ui`. Its `NotmidBootstrapViewModel` loads content through
+  explicit loading/error/ready state before rendering the app shell. Debug
+  defaults to the deterministic fixture API at the Android emulator host URL;
+  static remains an opt-in fallback, and release gates reject static content.
 - Android protected writes use `NotmidProtectedWriteRepository` in
   `:core:domain` and static/API implementations in `:core:data`. Capture
   publish, clip save, chat send, and profile settings update all use the current
@@ -204,10 +204,10 @@ API route/input/auth/rate-limit failure
   `NotmidApiRequestError.status` and `apiError?.code` for expected redirects,
   and rethrow unexpected failures.
 - Android content reads keep raw network failures in `:core:network`, map
-  API-backed read failures to `ApiNotmidContentException`, and expose app-shell
-  loading/error/ready state through `NotmidBootstrapViewModel`. Inbox chat detail
-  messages are normal content-read data, not write effects; a failed detail
-  read follows the typed content exception path and `ChatThreadViewModel`
+  API-backed read failures to `ApiNotmidContentException`, and expose startup
+  loading/error/ready state through `:feature:bootstrap:ui` and its ViewModel.
+  Inbox chat detail messages are normal content-read data, not write effects;
+  a failed detail read follows the typed content exception path and `ChatThreadViewModel`
   renders the shared unavailable state with retry. Android protected writes throw
   `NotmidProtectedWriteException`; feature ViewModels map typed failures to
   state and notice effects without exposing raw API envelopes to screens.

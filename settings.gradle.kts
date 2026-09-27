@@ -45,6 +45,7 @@ include(
     ":core:navigation:assertions",
     ":core:navigation:impl",
     ":feature:auth:ui",
+    ":feature:bootstrap:ui",
     ":feature:capture:api",
     ":feature:capture:ui",
     ":feature:feed:api",

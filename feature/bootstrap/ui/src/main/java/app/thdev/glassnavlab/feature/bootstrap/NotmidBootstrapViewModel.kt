@@ -1,15 +1,15 @@
-package app.thdev.glassnavlab
+package app.thdev.glassnavlab.feature.bootstrap
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.thdev.glassnavlab.di.IoDispatcher
 import app.thdev.glassnavlab.core.data.api.notmid.NotmidContentSource
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
-import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentSnapshot
+import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
+import app.thdev.glassnavlab.feature.bootstrap.di.BootstrapIoDispatcher
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +26,7 @@ internal class NotmidBootstrapViewModel @Inject constructor(
     private val contentSource: NotmidContentSource,
     private val getDestinations: GetNotmidDestinationsUseCase,
     private val contentUpdates: NotmidContentUpdates,
-    @param:IoDispatcher
+    @param:BootstrapIoDispatcher
     private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 

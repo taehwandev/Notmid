@@ -69,11 +69,11 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
   Android entry point, NotmidApplication, MainActivity, manifest/theme selection
   Hilt root with @HiltAndroidApp and @AndroidEntryPoint activity injection
   Hilt runtime modules for BuildConfig-backed config, network clients,
-  auth gateway selection, and dispatcher bindings
+  auth gateway selection
   debug DI selects static/API repositories; release DI binds API repositories only
   injected ActivityRouteLauncher and AppRouterRuntime from NotmidAppRouterFactory
   app-owned router config, deep-link resolver, planner, and runtime policy
-  NotmidBootstrapViewModel for app startup content loading and retry
+  startup composition through :feature:bootstrap:ui
   NotmidShellViewModel for active route, auth gate, route-derived presentation,
   shell actions, entry/notice deep links, and the retained notice-effect stream
   MainActivity forwards incoming deep links and activity-launch completion as typed shell actions
@@ -183,6 +183,10 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
 :feature:auth:ui
   login screen state/action owner and auth gateway caller
 
+:feature:bootstrap:ui
+  startup content loading, typed retry action, loading/error/ready UI, and Hilt ViewModel binding
+  depends on content/domain contracts; exposes NotmidBootstrapScreen to :app
+
 :app
   notmid app shell and route dispatch
   router/ Notmid route registrations, deep-link registrations, event handlers
@@ -197,7 +201,7 @@ manifest 같은 플랫폼 진입 전용이다. 현재 `impl` 자격을 가진 fe
 :feature:*:ui
   Compose surface for that feature only
   feature:capture:ui owns Android CameraX preview and local still capture details
-  screen state owners live here; :app NotmidBootstrapViewModel retains startup content loading
+  screen state owners live here, including the bootstrap content owner
 ```
 
 ## External Service Repositories

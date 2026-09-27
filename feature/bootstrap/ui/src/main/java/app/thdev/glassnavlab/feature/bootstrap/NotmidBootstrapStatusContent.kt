@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.shell
+package app.thdev.glassnavlab.feature.bootstrap
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,11 +23,11 @@ import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidBackgroundColor
 
 @Composable
-fun NotmidShellLoadingScreen(
+internal fun NotmidBootstrapLoadingContent(
     sourceLabel: String,
     modifier: Modifier = Modifier,
 ) {
-    NotmidShellStatusScreen(
+    NotmidBootstrapStatusContent(
         title = "Loading notmid",
         message = "$sourceLabel is syncing.",
         modifier = modifier,
@@ -41,13 +41,13 @@ fun NotmidShellLoadingScreen(
 }
 
 @Composable
-fun NotmidShellErrorScreen(
+internal fun NotmidBootstrapErrorContent(
     title: String,
     message: String,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    NotmidShellStatusScreen(
+    NotmidBootstrapStatusContent(
         title = title,
         message = message,
         modifier = modifier,
@@ -61,7 +61,7 @@ fun NotmidShellErrorScreen(
 }
 
 @Composable
-private fun NotmidShellStatusScreen(
+private fun NotmidBootstrapStatusContent(
     title: String,
     message: String,
     modifier: Modifier = Modifier,

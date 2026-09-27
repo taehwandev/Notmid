@@ -202,8 +202,10 @@ WebView도 Compose 호스트·브라우저 뒤로 가기 액션/효과·컨트�
 ViewModel이 라우트에서 도출하며, Compose는 실제 스크롤 상태를 보유한다.
 앱 ViewModel은 셸 경로·인증 요청을 중계하지 않는다.
 루트 notice 효과 스트림은 셸 ViewModel이 호스트에 제공하며, toast/alert를
-보낼지 결정하는 것은 각 feature ViewModel이다. 앱 시작 콘텐츠 조회·재시도는
-`NotmidBootstrapViewModel`에 남아 있다.
+보낼지 결정하는 것은 각 feature ViewModel이다. 앱 시작 콘텐츠 조회·재시도와
+loading/error/ready 표시는 `:feature:bootstrap:ui`의
+`NotmidBootstrapViewModel`/`NotmidBootstrapScreen`이 소유한다. `MainActivity`는
+준비된 목적지 목록을 제품 셸에 전달한다.
 `:feature:notmid:impl`은 빌드에서 제거했고, `core:runtime`은 Decision 5에 따라
 해체했다.
 
@@ -329,7 +331,7 @@ core:*:assertions -> 같은 owner의 api
 | ~~`:core:base`~~ | `:core:activity` | 완료 |
 | ~~`:core:runtime`~~ | `:app` / `:core:notice:ui` / `:core:activity` | 완료, 모듈 제거 |
 | ~~`:core:data`~~ | `:core:data:{api,impl,assertions}` | 완료, 정적 fixture는 debug 전용 |
-| `NotmidAppViewModel` | feature별 ViewModel + `NotmidBootstrapViewModel` 시작 콘텐츠 조회 | feature 분해 완료, bootstrap 잔류 |
+| `NotmidAppViewModel` | feature별 ViewModel + `:feature:bootstrap:ui` 시작 콘텐츠 조회 | feature 분해 완료, app은 시작 화면 조립만 담당 |
 
 ## Migration Order
 
@@ -341,7 +343,7 @@ core:*:assertions -> 같은 owner의 api
 | 1 | `feature:notmid:api` → `core:navigation:api`, router 개명 | 전 모듈 컴파일, feature→feature api 엣지 0 | 낮음 | done 2026-09-12 |
 | 2 | `impl` → `ui` 개명 | 컴파일, `settings.gradle.kts`와 namespace 일치 | 낮음(기계적) | done 2026-09-12 |
 | 3 | 모델 이중화 제거, `feature:notmid:common` 정리 | 컴파일, core:model과 이름이 겹치는 타입이 3종 이하 | 중간 | done 2026-09-12 |
-| 4 | ViewModel 분해 — feature 하나씩 1 PR | feature별 ViewModel 테스트, 화면 파라미터에서 `destination`/`listState` 제거 | 높음 | in progress — feature 상태·액션 분리 완료, 앱 시작 콘텐츠 조회 경계 잔류 |
+| 4 | ViewModel 분해 — feature 하나씩 1 PR | feature별 ViewModel 테스트, 화면 파라미터에서 `destination`/`listState` 제거 | 높음 | done locally 2026-09-27 — 시작 콘텐츠 조회와 상태 표시도 feature로 이동 |
 | 5 | 셸을 `:app`으로 이동, `feature:notmid` 삭제 | 컴파일, 딥링크 수동 스모크, `:app`만 라우트 그래프 소유 | 높음 | done locally 2026-09-24 |
 | 6 | `core:base`/`core:runtime` 해체, `core:data` 분할 | 컴파일, `Static*`가 프로덕션 의존성에 없음 | 중간 | done locally 2026-09-24 |
 

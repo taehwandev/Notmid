@@ -1,4 +1,4 @@
-package app.thdev.glassnavlab.di
+package app.thdev.glassnavlab.feature.bootstrap.di
 
 import app.thdev.glassnavlab.core.domain.notmid.GetNotmidDestinationsUseCase
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 
 @Module
 @InstallIn(ViewModelComponent::class)
-object NotmidViewModelModule {
+internal object NotmidBootstrapModule {
     @Provides
     fun provideGetNotmidDestinationsUseCase(
         repository: NotmidContentRepository,
@@ -20,7 +20,7 @@ object NotmidViewModelModule {
     }
 
     @Provides
-    @IoDispatcher
+    @BootstrapIoDispatcher
     fun provideIoDispatcher(): CoroutineDispatcher {
         return Dispatchers.IO
     }

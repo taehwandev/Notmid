@@ -259,6 +259,7 @@ dependencies {
     implementation(project(":core:navigation:api"))
     implementation(project(":core:navigation:impl"))
     implementation(project(":feature:auth:ui"))
+    implementation(project(":feature:bootstrap:ui"))
     implementation(project(":feature:capture:api"))
     implementation(project(":feature:capture:ui"))
     implementation(project(":feature:feed:api"))
