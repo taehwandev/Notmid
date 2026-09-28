@@ -2,4 +2,12 @@
     <string name="map_loading">Loading places…</string>
     <string name="map_unavailable">Places are unavailable right now.</string>
     <string name="map_retry">Retry</string>
+    <string name="map_heading">proof map</string>
+    <string name="map_heading_supporting">Find fresh receipts around the city.</string>
+    <string name="map_places_in_view">Places in view</string>
+    <string name="map_no_places_in_view">No places in view</string>
+    <string name="map_empty_filter">No places match this filter. Try another category.</string>
+    <string name="map_preview_description_fallback">Open this place for receipts and details.</string>
+    <string name="map_open_place">Open place</string>
+    <string name="map_select_place">Select place</string>
 </resources>

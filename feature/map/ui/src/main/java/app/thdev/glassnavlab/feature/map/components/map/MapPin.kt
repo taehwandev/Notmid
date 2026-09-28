@@ -2,8 +2,8 @@ package app.thdev.glassnavlab.feature.map.components.map
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -13,6 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.thdev.glassnavlab.core.designsystem.component.NotmidGlassSurface
 import app.thdev.glassnavlab.core.designsystem.component.NotmidText
@@ -21,12 +26,12 @@ import app.thdev.glassnavlab.core.designsystem.theme.NotmidColorTokens
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
 
 import app.thdev.glassnavlab.feature.map.MapPinUi
+import app.thdev.glassnavlab.feature.map.R
 
 @Composable
 internal fun MapPin(
     pin: MapPinUi,
     selected: Boolean,
-    index: Int,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
@@ -42,7 +47,20 @@ internal fun MapPin(
                 brush = Brush.linearGradient(palette),
                 shape = NotmidTheme.shapes.pill,
             )
-            .clickable(onClick = onClick)
+            .border(
+                width = if (selected) 3.dp else 2.dp,
+                color = if (selected) NotmidColorTokens.SignalGreen else Color.White,
+                shape = NotmidTheme.shapes.pill,
+            )
+            .clickable(
+                role = Role.Button,
+                onClickLabel = stringResource(R.string.map_select_place),
+                onClick = onClick,
+            )
+            .semantics {
+                contentDescription = "${pin.place.title}, ${pin.category}"
+                this.selected = selected
+            }
             .padding(5.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -54,24 +72,17 @@ internal fun MapPin(
                 Color.Black.copy(alpha = 0.22f)
             },
             borderColor = Color.White.copy(alpha = 0.34f),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 7.dp),
+            contentPadding = PaddingValues(
+                horizontal = if (selected) 14.dp else 10.dp,
+                vertical = if (selected) 10.dp else 8.dp,
+            ),
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                NotmidText(
-                    text = "${index + 1}",
-                    color = Color.White,
-                    variant = NotmidTextVariant.Label,
-                    maxLines = 1,
-                )
-                if (selected) {
-                    NotmidText(
-                        text = pin.category,
-                        color = Color.White.copy(alpha = 0.86f),
-                        variant = NotmidTextVariant.Caption,
-                        maxLines = 1,
-                    )
-                }
-            }
+            NotmidText(
+                text = pin.category.take(1).uppercase(),
+                color = if (selected) NotmidColorTokens.Ink else Color.White,
+                variant = if (selected) NotmidTextVariant.Headline else NotmidTextVariant.Label,
+                maxLines = 1,
+            )
         }
     }
 }
