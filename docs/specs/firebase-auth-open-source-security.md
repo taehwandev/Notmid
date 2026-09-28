@@ -311,6 +311,13 @@ NOTMID_GOOGLE_MAPS_API_KEY=
 NOTMID_MAPBOX_ACCESS_TOKEN=
 ```
 
+The default Debug API URL uses the emulator host alias `10.0.2.2`. The Android
+Debug manifest permits cleartext HTTP only for that host through
+`notmid_debug_network_security_config.xml`; other hosts remain blocked. The
+Release manifest does not include this Debug exception and continues to use
+the configured HTTPS API URL. A local API process must still be listening on
+port `8787` for the default Debug content source to load.
+
 Client-side Firebase API keys, Google OAuth web client ids, and map keys are
 packaged into debug/release APKs when set, so they must be treated as public
 identifiers, not authorization secrets. Restrict them in Google Cloud or the map
