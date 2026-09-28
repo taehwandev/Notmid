@@ -39,11 +39,13 @@ internal fun CaptureMediaSurface(
     cameraState: CaptureCameraUiState,
     cameraController: CaptureCameraController,
     capturedMediaName: String?,
+    selectedMediaUri: String?,
     onCameraModeChange: (CaptureCameraMode) -> Unit,
     onCameraLensChange: (CaptureCameraLens) -> Unit,
     onRequestCameraPermission: () -> Unit,
     onCameraStatusChange: (CaptureCameraStatus) -> Unit,
     onCapturePhoto: () -> Unit,
+    onPickMedia: () -> Unit,
 ) {
     val palette = destination.clips.firstOrNull()?.palette.orEmpty()
     val startColor = palette.getOrNull(0) ?: NotmidColorTokens.Ink
@@ -57,7 +59,7 @@ internal fun CaptureMediaSurface(
         } else {
             cameraState.status.label
         }
-        CaptureCameraMode.Upload -> "upload standby"
+        CaptureCameraMode.Upload -> if (capturedMediaName == null) "upload standby" else "media selected"
     }
 
     NotmidGlassSurface(
@@ -69,7 +71,9 @@ internal fun CaptureMediaSurface(
         borderColor = Color.White.copy(alpha = 0.28f),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            if (isCameraPreviewVisible) {
+            if (selectedMediaUri != null) {
+                CaptureSelectedMediaPreview(selectedMediaUri, modifier = Modifier.fillMaxSize())
+            } else if (isCameraPreviewVisible) {
                 CaptureCameraPreview(
                     lens = cameraState.lens,
                     controller = cameraController,
@@ -165,6 +169,13 @@ internal fun CaptureMediaSurface(
                             variant = NotmidButtonVariant.Secondary,
                         )
                     }
+                    if (!isCameraMode) {
+                        NotmidButton(
+                            text = if (capturedMediaName == null) "Choose image" else "Change image",
+                            onClick = onPickMedia,
+                            variant = NotmidButtonVariant.Secondary,
+                        )
+                    }
                 }
             }
         }
@@ -206,7 +217,7 @@ private fun CaptureCameraUiState.supportingText(
 ): String {
     return when {
         capturedMediaName != null -> "Photo captured locally."
-        mode == CaptureCameraMode.Upload -> "Upload picker is queued for the next capture slice."
+        mode == CaptureCameraMode.Upload -> "Choose a local image to attach to this receipt."
         !permissionGranted -> "Camera permission is required before preview."
         status == CaptureCameraStatus.Failed -> "Preview could not start on this device."
         status == CaptureCameraStatus.Previewing -> "Preview stays local until publish."

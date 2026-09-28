@@ -87,6 +87,45 @@ class CaptureViewModelTest {
     }
 
     @Test
+    fun placeSelectionChangesPublishTargetAndRejectsUnknownPlaces() = runTest(dispatcher) {
+        val source = Source()
+        source.snapshot.value = NotmidContentSnapshot.Ready(listOf(destination.copy(
+            places = listOf(place, place.copy(id = "another", title = "Another place")),
+        )))
+        val writes = Executor()
+        val vm = CaptureViewModel(SavedStateHandle(), source, writes, CapturePlatformRequests(), Auth(), MutableNoticeEffectDelegate())
+        runCurrent()
+        vm.onAction(CaptureAction.PlaceQueryChanged("Another"))
+        vm.onAction(CaptureAction.PlaceSelected("missing"))
+        assertEquals("place", vm.state.value.attachedPlace?.id)
+        vm.onAction(CaptureAction.PlaceSelected("another"))
+        assertEquals("another", vm.state.value.attachedPlace?.id)
+        assertEquals("", vm.state.value.placeQuery)
+        vm.onAction(CaptureAction.MediaSelected("content://image/1", "image.jpg"))
+        vm.onAction(CaptureAction.Publish)
+        runCurrent()
+        assertEquals("another", (writes.requests.single() as NotmidProtectedWriteRequest.PublishCapture).request.placeId)
+    }
+
+    @Test
+    fun imagePickerCommandAndSelectedImageMakeDraftReady() = runTest(dispatcher) {
+        val platform = CapturePlatformRequests()
+        val commands = mutableListOf<CapturePlatformRequests.Request>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { platform.requests.collect { commands.add(it) } }
+        val vm = CaptureViewModel(SavedStateHandle(), Source(), Executor(), platform, Auth(), MutableNoticeEffectDelegate())
+        runCurrent()
+        vm.onAction(CaptureAction.PickMedia)
+        runCurrent()
+        assertEquals(listOf(CapturePlatformRequests.Request.PickMedia), commands)
+        vm.onAction(CaptureAction.MediaSelected("content://image/1", "image.jpg"))
+        assertTrue(vm.state.value.readyToPublish)
+        assertEquals("content://image/1", vm.state.value.selectedMediaUri)
+        vm.onAction(CaptureAction.CaptionChanged("a".repeat(150)))
+        assertEquals(140, vm.state.value.caption.length)
+        platform.close()
+    }
+
+    @Test
     fun platformCommandsFollowViewModelPermissionAndResults() = runTest(dispatcher) {
         val platform = CapturePlatformRequests()
         val commands = mutableListOf<CapturePlatformRequests.Request>()

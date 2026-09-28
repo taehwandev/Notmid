@@ -120,7 +120,7 @@ internal fun CapturePlaceAttachment(place: NotmidPlace?) {
             )
             if (place == null) {
                 NotmidText(
-                    text = "No local fake place is available for this draft.",
+                    text = "Choose a place to attach to this post.",
                     color = NotmidTheme.colors.contentMuted,
                 )
             } else {

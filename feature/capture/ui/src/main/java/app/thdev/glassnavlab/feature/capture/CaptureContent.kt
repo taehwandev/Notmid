@@ -63,11 +63,13 @@ internal fun CaptureContent(
                 cameraState = cameraState,
                 cameraController = cameraController,
                 capturedMediaName = capturedMediaName,
+                selectedMediaUri = state.selectedMediaUri,
                 onCameraModeChange = { onAction(CaptureAction.ModeChanged(it)) },
                 onCameraLensChange = { onAction(CaptureAction.LensChanged(it)) },
                 onRequestCameraPermission = { onAction(CaptureAction.RequestPermission) },
                 onCameraStatusChange = { onAction(CaptureAction.CameraStatusChanged(it)) },
                 onCapturePhoto = { onAction(CaptureAction.TakePhoto) },
+                onPickMedia = { onAction(CaptureAction.PickMedia) },
             )
         }
 
@@ -82,7 +84,13 @@ internal fun CaptureContent(
         }
 
         item(key = "capture-place-${destination.id}") {
-            CapturePlaceAttachment(place = attachedPlace)
+            CapturePlacePicker(
+                place = attachedPlace,
+                places = destination.places,
+                query = state.placeQuery,
+                onQueryChange = { onAction(CaptureAction.PlaceQueryChanged(it)) },
+                onPlaceSelected = { onAction(CaptureAction.PlaceSelected(it)) },
+            )
         }
 
         item(key = "capture-publish-${destination.id}") {

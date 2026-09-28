@@ -62,6 +62,9 @@ internal class CaptureViewModel @Inject constructor(
                 publicReceipt = if (restore) saved["public"] ?: (draft?.visibility != NotmidCaptureVisibility.Private) else draft?.visibility != NotmidCaptureVisibility.Private,
                 draftStatus = if (restore) saved["status"] ?: draft?.statusLabel ?: "Draft saved locally" else draft?.statusLabel ?: "Draft saved locally",
                 capturedMediaName = if (restore) saved["media"] else null,
+                selectedMediaUri = if (restore) saved["mediaUri"] else null,
+                selectedPlaceId = if (restore) saved["placeId"] ?: draft?.placeId else draft?.placeId,
+                placeQuery = if (restore) saved["placeQuery"] ?: "" else "",
                 publishStatusMessage = null,
             )
         }
@@ -71,8 +74,12 @@ internal class CaptureViewModel @Inject constructor(
     fun onAction(action: CaptureAction) {
         val current = state.value
         when (action) {
-            is CaptureAction.CaptionChanged -> update(current.copy(caption = action.value))
+            is CaptureAction.CaptionChanged -> update(current.copy(caption = action.value.take(140)))
             is CaptureAction.TagSelected -> update(current.copy(selectedTags = if (action.value in current.selectedTags) current.selectedTags - action.value else current.selectedTags + action.value))
+            is CaptureAction.PlaceQueryChanged -> update(current.copy(placeQuery = action.value))
+            is CaptureAction.PlaceSelected -> if (current.destination?.places?.any { it.id == action.placeId } == true) {
+                update(current.copy(selectedPlaceId = action.placeId, placeQuery = ""))
+            }
             is CaptureAction.VisibilityChanged -> update(current.copy(publicReceipt = action.public))
             is CaptureAction.ModeChanged -> update(current.copy(camera = current.camera.copy(
                 mode = action.mode,
@@ -84,10 +91,23 @@ internal class CaptureViewModel @Inject constructor(
                 status = if (!action.granted) CaptureCameraStatus.PermissionRequired else if (!current.camera.permissionGranted) CaptureCameraStatus.Starting else current.camera.status,
             )))
             is CaptureAction.CameraStatusChanged -> update(current.copy(camera = current.camera.copy(status = action.status)))
-            is CaptureAction.PhotoCaptured -> update(current.copy(capturedMediaName = action.fileName, draftStatus = "Photo captured locally", camera = current.camera.copy(status = CaptureCameraStatus.Previewing)))
+            is CaptureAction.PhotoCaptured -> update(current.copy(
+                capturedMediaName = action.fileName,
+                selectedMediaUri = action.uri,
+                draftStatus = "Photo captured locally",
+                camera = current.camera.copy(status = CaptureCameraStatus.Previewing),
+            ))
+            is CaptureAction.MediaSelected -> if (action.uri.isNotBlank()) {
+                update(current.copy(
+                    capturedMediaName = action.fileName,
+                    selectedMediaUri = action.uri,
+                    draftStatus = "Media selected locally",
+                ))
+            }
             CaptureAction.PhotoFailed -> update(current.copy(draftStatus = "Camera capture failed", camera = current.camera.copy(status = CaptureCameraStatus.Failed)))
             CaptureAction.RequestPermission -> request(CapturePlatformRequests.Request.Permission)
             CaptureAction.TakePhoto -> if (current.camera.permissionGranted) request(CapturePlatformRequests.Request.Photo)
+            CaptureAction.PickMedia -> request(CapturePlatformRequests.Request.PickMedia)
             CaptureAction.SaveDraft -> update(current.copy(draftStatus = "Draft updated just now"))
             CaptureAction.Publish -> publish()
         }
@@ -95,8 +115,7 @@ internal class CaptureViewModel @Inject constructor(
 
     private fun update(value: CaptureUiState) {
         val draft = value.destination?.captureDraft
-        val place = value.destination?.places?.firstOrNull { it.id == draft?.placeId }
-            ?: value.destination?.places?.firstOrNull()
+        val place = value.destination?.places?.firstOrNull { it.id == value.selectedPlaceId }
         val media = value.capturedMediaName != null || draft?.mediaState?.let { it != NotmidCaptureMediaState.Empty } == true
         mutableState.value = value.copy(attachedPlace = place, readyToPublish = draft != null && media && value.caption.isNotBlank() && value.selectedTags.isNotEmpty() && place != null)
         saved["mode"] = value.camera.mode.name
@@ -108,6 +127,9 @@ internal class CaptureViewModel @Inject constructor(
         saved["public"] = value.publicReceipt
         saved["status"] = value.draftStatus
         saved["media"] = value.capturedMediaName
+        saved["mediaUri"] = value.selectedMediaUri
+        saved["placeId"] = value.selectedPlaceId
+        saved["placeQuery"] = value.placeQuery
     }
 
     private fun publish() {
