@@ -48,11 +48,38 @@ class ProfileViewModelsTest {
         auth.applyProfileUpdate(session, user.copy(displayName = "Updated"))
         runCurrent()
         assertEquals("Updated", vm.state.value.auth.session?.user?.displayName)
+        ProfileTab.entries.forEach { tab ->
+            vm.onAction(ProfileAction.SelectTab(tab))
+            runCurrent()
+            assertEquals(tab, vm.state.value.selectedTab)
+        }
         vm.onAction(ProfileAction.OpenSettings)
         assertEquals(listOf(NotmidRouteEvent.SettingsRequested), routes)
         auth.signOut()
         runCurrent()
         assertNull(vm.state.value.auth.session)
+    }
+
+    @Test
+    fun profileShowsOnlyClipsOwnedBySignedInHandle() = runTest(dispatcher) {
+        val auth = Auth()
+        val source = object : NotmidContentUpdates {
+            override val snapshot = MutableStateFlow<NotmidContentSnapshot>(
+                NotmidContentSnapshot.Ready(listOf(destination.copy(clips = listOf(
+                    NotmidClip("My clip", "", "", emptyList(), creatorHandle = "HANDLE"),
+                    NotmidClip("Someone else's clip", "", "", emptyList(), creatorHandle = "other"),
+                    NotmidClip("Unattributed fixture", "", "", emptyList()),
+                )))),
+            )
+        }
+        val vm = ProfileViewModel(auth, source, RouteEventSink { })
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        runCurrent()
+        assertEquals(listOf("My clip"), vm.state.value.ownClips.map { it.title })
+
+        auth.signOut()
+        runCurrent()
+        assertTrue(vm.state.value.ownClips.isEmpty())
     }
 
     @Test

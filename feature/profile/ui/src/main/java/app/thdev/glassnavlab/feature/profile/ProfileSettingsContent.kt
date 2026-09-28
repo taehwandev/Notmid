@@ -12,10 +12,7 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import androidx.compose.ui.Modifier
 import app.thdev.glassnavlab.core.designsystem.component.NotmidSectionHeader
-import app.thdev.glassnavlab.core.designsystem.component.NotmidSelectionRow
-import app.thdev.glassnavlab.core.designsystem.component.NotmidSwitch
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
-import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
 
 @Composable
 internal fun ProfileSettingsContent(
@@ -26,7 +23,6 @@ internal fun ProfileSettingsContent(
     statusMessage: String?,
     onAction: (ProfileSettingsAction) -> Unit,
 ) {
-    val authState = state.auth
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = listState,
@@ -36,67 +32,13 @@ internal fun ProfileSettingsContent(
         item(key = "settings-header-profile") {
             NotmidSectionHeader(
                 title = "Settings",
-                subtitle = routeLabel,
-                eyebrow = authState.mode.label,
+                subtitle = "Manage your account",
+                eyebrow = "account",
             )
         }
 
         item(key = "settings-account-profile") {
             ProfileSettingsAccount(state, isSaving, statusMessage, onAction)
-        }
-
-        item(key = "settings-privacy-profile") {
-            SettingsSection(
-                title = "Privacy",
-                subtitle = "Visible controls now, server policy later.",
-            ) {
-                NotmidSelectionRow(
-                    title = "Saved places",
-                    subtitle = "Keep saves private until sharing is explicit.",
-                ) {
-                    NotmidSwitch(checked = false, onCheckedChange = null)
-                }
-                NotmidSelectionRow(
-                    title = "Chat invites",
-                    subtitle = "Allow friends from shared clips and places.",
-                ) {
-                    NotmidSwitch(checked = true, onCheckedChange = null)
-                }
-                NotmidSelectionRow(
-                    title = "Receipt visibility",
-                    subtitle = "Public by default for local fake mode.",
-                ) {
-                    NotmidSwitch(checked = true, onCheckedChange = null)
-                }
-            }
-        }
-
-        item(key = "settings-auth-profile") {
-            SettingsSection(
-                title = "Auth mode",
-                subtitle = "Features consume auth state, not Firebase SDK details.",
-            ) {
-                SettingValueRow(label = "Mode", value = authState.mode.label)
-                SettingValueRow(
-                    label = "Provider",
-                    value = authState.session?.provider?.label ?: NotmidAuthProvider.Fake.label,
-                )
-                SettingValueRow(
-                    label = "Protected actions",
-                    value = authState.requiredActions.joinToString { it.name },
-                )
-            }
-        }
-
-        item(key = "settings-open-source-profile") {
-            SettingsSection(
-                title = "Open-source safety",
-                subtitle = "Production config belongs in ignored local files or secret stores.",
-            ) {
-                SettingValueRow(label = "Firebase config", value = "bring your own project")
-                SettingValueRow(label = "API base URL", value = "local.properties / env")
-                SettingValueRow(label = "Secrets", value = "not committed")
-            }
         }
     }
 }

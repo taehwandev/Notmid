@@ -11,7 +11,5 @@ fun ProfileScreen() {
     val viewModel: ProfileViewModel = viewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
-    state.destination?.let { destination ->
-        ProfileContent(destination, state.auth, listState, viewModel::onAction)
-    }
+    ProfileContent(state, listState, viewModel::onAction)
 }

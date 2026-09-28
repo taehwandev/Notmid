@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -19,33 +18,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.thdev.glassnavlab.core.designsystem.component.NotmidButton
 import app.thdev.glassnavlab.core.designsystem.component.NotmidButtonVariant
-import app.thdev.glassnavlab.core.designsystem.component.NotmidCard
 import app.thdev.glassnavlab.core.designsystem.component.NotmidGlassSurface
-import app.thdev.glassnavlab.core.designsystem.component.NotmidHorizontalDivider
-import app.thdev.glassnavlab.core.designsystem.component.NotmidOutlinedButton
 import app.thdev.glassnavlab.core.designsystem.component.NotmidPillButton
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidColorTokens
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
 import app.thdev.glassnavlab.core.designsystem.component.NotmidText
 import app.thdev.glassnavlab.core.designsystem.component.NotmidTextVariant
-import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthUser
-import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
 
 @Composable
 internal fun ProfileHeader(
     user: NotmidAuthUser?,
-    destination: NotmidDestination,
-    authState: NotmidAuthState,
     onSettingsRequested: () -> Unit,
 ) {
-    val displayName = user?.displayName ?: "Local browser"
-    val handle = user?.handle ?: "signed.out"
-    val roles = user?.roles ?: listOf("browse")
+    val displayName = user?.displayName ?: "Your profile"
+    val handle = user?.handle
+    val roles = user?.roles.orEmpty()
 
     NotmidGlassSurface(
         modifier = Modifier.fillMaxWidth(),
@@ -58,18 +52,20 @@ internal fun ProfileHeader(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(NotmidTheme.spacing.md),
             ) {
-                ProfileAvatar(handle = handle)
+                ProfileAvatar(initial = handle?.take(1)?.uppercase() ?: "?")
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(NotmidTheme.spacing.xs),
                 ) {
-                    NotmidText(
-                        text = "@$handle",
-                        color = NotmidTheme.colors.signal,
-                        variant = NotmidTextVariant.Label,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    if (handle != null) {
+                        NotmidText(
+                            text = "@$handle",
+                            color = NotmidTheme.colors.signal,
+                            variant = NotmidTextVariant.Label,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                     NotmidText(
                         text = displayName,
                         variant = NotmidTextVariant.Title,
@@ -77,7 +73,8 @@ internal fun ProfileHeader(
                         overflow = TextOverflow.Ellipsis,
                     )
                     NotmidText(
-                        text = user?.homeNeighborhood ?: destination.subtitle,
+                        text = user?.homeNeighborhood?.takeIf(String::isNotBlank)
+                            ?: if (user == null) "Sign in to view your activity." else "Neighborhood not set",
                         color = NotmidTheme.colors.contentMuted,
                         variant = NotmidTextVariant.BodySmall,
                         maxLines = 2,
@@ -86,47 +83,24 @@ internal fun ProfileHeader(
                 }
             }
 
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(NotmidTheme.spacing.sm),
-            ) {
-                roles.forEach { role ->
-                    NotmidPillButton(
-                        label = role,
-                        selected = role == "creator",
-                        onClick = {},
-                    )
-                }
-                NotmidPillButton(
-                    label = authState.mode.label,
-                    selected = false,
-                    onClick = {},
+            if (roles.isNotEmpty()) {
+                NotmidText(
+                    text = roles.joinToString(" · "),
+                    color = NotmidTheme.colors.contentMuted,
+                    variant = NotmidTextVariant.Label,
                 )
             }
-
-            ProfileMetricRow(
-                receiptCount = destination.clips.size,
-                savedCount = destination.places.size,
-                routeCount = 2,
+            NotmidButton(
+                text = "Settings",
+                onClick = onSettingsRequested,
+                variant = NotmidButtonVariant.Primary,
             )
-
-            Row(horizontalArrangement = Arrangement.spacedBy(NotmidTheme.spacing.sm)) {
-                NotmidButton(
-                    text = "Settings",
-                    onClick = onSettingsRequested,
-                    variant = NotmidButtonVariant.Primary,
-                )
-                NotmidOutlinedButton(
-                    text = "Share profile",
-                    onClick = {},
-                )
-            }
         }
     }
 }
 
 @Composable
-private fun ProfileAvatar(handle: String) {
+private fun ProfileAvatar(initial: String) {
     Box(
         modifier = Modifier
             .size(68.dp)
@@ -149,7 +123,7 @@ private fun ProfileAvatar(handle: String) {
                 .background(Color.Black.copy(alpha = 0.24f)),
         )
         NotmidText(
-            text = handle.take(1).uppercase(),
+            text = initial,
             modifier = Modifier
                 .padding(top = 20.dp)
                 .fillMaxWidth(),
@@ -161,94 +135,22 @@ private fun ProfileAvatar(handle: String) {
 }
 
 @Composable
-private fun ProfileMetricRow(
-    receiptCount: Int,
-    savedCount: Int,
-    routeCount: Int,
+internal fun ProfileTabs(
+    selectedTab: ProfileTab,
+    onTabSelected: (ProfileTab) -> Unit,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(NotmidTheme.spacing.sm),
-    ) {
-        ProfileMetric(label = "Receipts", value = receiptCount.toString(), modifier = Modifier.weight(1f))
-        ProfileMetric(label = "Saved", value = savedCount.toString(), modifier = Modifier.weight(1f))
-        ProfileMetric(label = "Routes", value = routeCount.toString(), modifier = Modifier.weight(1f))
-    }
-}
-
-@Composable
-private fun ProfileMetric(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .heightIn(min = 64.dp)
-            .clip(NotmidTheme.shapes.card)
-            .background(NotmidTheme.colors.surfaceRaised.copy(alpha = 0.58f))
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(NotmidTheme.spacing.xxs),
-    ) {
-        NotmidText(
-            text = label,
-            color = NotmidTheme.colors.contentSubtle,
-            variant = NotmidTextVariant.Caption,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        NotmidText(
-            text = value,
-            variant = NotmidTextVariant.Headline,
-            maxLines = 1,
-        )
-    }
-}
-
-@Composable
-internal fun ProfileTabs() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(NotmidTheme.spacing.sm),
     ) {
-        listOf("Clips", "Saved", "Places", "Routes").forEachIndexed { index, label ->
+        ProfileTab.entries.forEach { tab ->
             NotmidPillButton(
-                label = label,
-                selected = index == 0,
-                onClick = {},
-            )
-        }
-    }
-}
-
-@Composable
-internal fun ProfileSettingsEntry(
-    authState: NotmidAuthState,
-    onSettingsRequested: () -> Unit,
-) {
-    NotmidCard {
-        Column(verticalArrangement = Arrangement.spacedBy(NotmidTheme.spacing.md)) {
-            NotmidText(
-                text = "Account controls",
-                variant = NotmidTextVariant.Headline,
-            )
-            NotmidText(
-                text = "Privacy, auth provider state, and open-source config checks live under Profile Settings.",
-                color = NotmidTheme.colors.contentMuted,
-                variant = NotmidTextVariant.BodySmall,
-            )
-            NotmidHorizontalDivider()
-            SettingValueRow(label = "Mode", value = authState.mode.label)
-            SettingValueRow(
-                label = "Session",
-                value = if (authState.isAuthenticated) "local fake signed in" else "signed out",
-            )
-            NotmidButton(
-                text = "Open settings",
-                onClick = onSettingsRequested,
-                variant = NotmidButtonVariant.Secondary,
+                label = tab.label,
+                modifier = Modifier.semantics { selected = tab == selectedTab },
+                selected = tab == selectedTab,
+                onClick = { onTabSelected(tab) },
             )
         }
     }

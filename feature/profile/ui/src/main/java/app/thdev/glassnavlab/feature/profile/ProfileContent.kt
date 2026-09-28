@@ -7,59 +7,71 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.runtime.Composable
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.ui.tooling.preview.Preview
-import app.thdev.glassnavlab.core.designsystem.theme.notmidTheme
-import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
-import app.thdev.glassnavlab.core.model.notmid.NotmidNavigationIcon
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Preview
 import app.thdev.glassnavlab.core.designsystem.component.NotmidSectionHeader
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
+import app.thdev.glassnavlab.core.designsystem.theme.notmidTheme
+import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
 import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
 import app.thdev.glassnavlab.feature.notmid.common.components.NotmidClipCard
-import app.thdev.glassnavlab.feature.notmid.common.components.NotmidPlaceCard
 import app.thdev.glassnavlab.feature.notmid.common.model.NotmidClip
-import app.thdev.glassnavlab.feature.notmid.common.model.NotmidDestination
-import app.thdev.glassnavlab.feature.notmid.common.model.NotmidPlace
+import app.thdev.glassnavlab.feature.profile.components.feedback.ProfileEmptyState
 
 @Composable
 internal fun ProfileContent(
-    destination: NotmidDestination,
-    authState: NotmidAuthState,
+    state: ProfileUiState,
     listState: LazyListState,
     onAction: (ProfileAction) -> Unit,
 ) {
-    val user = authState.session?.user
-
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = listState,
         contentPadding = ProfileContentPadding,
         verticalArrangement = Arrangement.spacedBy(NotmidTheme.spacing.lg),
     ) {
-        item(key = "profile-header-${destination.id}") {
+        item(key = "profile-header") {
             ProfileHeader(
-                user = user,
-                destination = destination,
-                authState = authState,
+                user = state.auth.session?.user,
                 onSettingsRequested = { onAction(ProfileAction.OpenSettings) },
             )
         }
 
-        item(key = "profile-tabs-${destination.id}") {
-            ProfileTabs()
+        item(key = "profile-tabs") {
+            ProfileTabs(
+                selectedTab = state.selectedTab,
+                onTabSelected = { onAction(ProfileAction.SelectTab(it)) },
+            )
         }
 
-        profileClips(destination.clips)
-        profilePlaces(destination.places)
-
-        item(key = "profile-settings-entry-${destination.id}") {
-            ProfileSettingsEntry(
-                authState = authState,
-                onSettingsRequested = { onAction(ProfileAction.OpenSettings) },
-            )
+        if (!state.auth.isAuthenticated) {
+            item(key = "profile-signed-out") {
+                ProfileEmptyState(
+                    title = "Sign in to see your profile",
+                    description = "Your clips, saves, places, and routes will appear here after you sign in.",
+                )
+            }
+        } else {
+            when (state.selectedTab) {
+                ProfileTab.Clips -> profileClips(state.ownClips)
+                ProfileTab.Saved -> profileTabEmpty(
+                    tab = ProfileTab.Saved,
+                    title = "Saved clips aren't available yet",
+                    description = "Clips you save will appear here when saving is available.",
+                )
+                ProfileTab.Places -> profileTabEmpty(
+                    tab = ProfileTab.Places,
+                    title = "Saved places aren't available yet",
+                    description = "Places you save will appear here when saving is available.",
+                )
+                ProfileTab.Routes -> profileTabEmpty(
+                    tab = ProfileTab.Routes,
+                    title = "Routes aren't available yet",
+                    description = "Routes you plan will appear here when they can be saved.",
+                )
+            }
         }
     }
 }
@@ -72,51 +84,48 @@ internal val ProfileContentPadding: PaddingValues
         bottom = NotmidTheme.spacing.bottomNavigationPadding,
     )
 
-@Preview
-@Composable
-private fun SignedOutProfilePreview() {
-    notmidTheme {
-        ProfileContent(
-            NotmidDestination("profile", "Profile", "Local", NotmidNavigationIcon.Inbox, emptyList(), emptyList(), emptyList(), null),
-            NotmidAuthState(NotmidAuthMode.Disabled, null, emptyList()),
-            rememberLazyListState(),
-        ) {}
-    }
-}
-
 private fun LazyListScope.profileClips(clips: List<NotmidClip>) {
+    if (clips.isEmpty()) {
+        profileTabEmpty(
+            tab = ProfileTab.Clips,
+            title = "No clips to show",
+            description = "Clips posted with this account will appear here when profile clips are available.",
+        )
+        return
+    }
+
     item(key = "profile-clips-header") {
         NotmidSectionHeader(
-            title = "Receipts",
-            subtitle = "Recent clips that prove the profile has real place context.",
+            title = "My clips",
+            subtitle = "Clips posted with this account.",
             eyebrow = "clips",
         )
     }
-
     items(
-        items = clips.take(2),
+        items = clips,
         key = { clip -> "profile-clip-${clip.id}" },
     ) { clip ->
         NotmidClipCard(clip = clip)
     }
 }
 
-private fun LazyListScope.profilePlaces(places: List<NotmidPlace>) {
-    item(key = "profile-places-header") {
-        NotmidSectionHeader(
-            title = "Saved places",
-            subtitle = "Places ready for map routes or chat planning.",
-            eyebrow = "saves",
-        )
+private fun LazyListScope.profileTabEmpty(
+    tab: ProfileTab,
+    title: String,
+    description: String,
+) {
+    item(key = "profile-empty-${tab.name}") {
+        ProfileEmptyState(title = title, description = description)
     }
+}
 
-    items(
-        items = places.take(2),
-        key = { place -> "profile-place-${place.id}" },
-    ) { place ->
-        NotmidPlaceCard(
-            place = place,
-            index = places.indexOf(place),
-        )
+@Preview
+@Composable
+private fun SignedOutProfilePreview() {
+    notmidTheme {
+        ProfileContent(
+            state = ProfileUiState(NotmidAuthState(NotmidAuthMode.Disabled, null, emptyList())),
+            listState = rememberLazyListState(),
+        ) {}
     }
 }

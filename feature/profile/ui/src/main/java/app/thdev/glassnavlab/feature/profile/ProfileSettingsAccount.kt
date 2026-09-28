@@ -23,7 +23,7 @@ internal fun ProfileSettingsAccount(
     val canSaveProfile = state.canSave && !isSaving
     SettingsSection(
         title = "Account",
-        subtitle = "Current fake user contract that future Firebase Auth will replace.",
+        subtitle = "How your name and neighborhood appear to others.",
     ) {
         SettingValueRow(
             label = "Handle",
