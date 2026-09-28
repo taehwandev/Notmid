@@ -93,6 +93,22 @@ class ChatThreadViewModelTest {
     }
 
     @Test
+    fun unknownThreadDoesNotInventMessagesOrAcceptWrites() = runTest(dispatcher) {
+        val source = Source()
+        val writes = Executor()
+        val vm = ChatThreadViewModel(
+            SavedStateHandle(mapOf("threadId" to "missing", "draft" to "Hello")),
+            source, source, writes, RouteEventSink {}, dispatcher, Auth(), MutableNoticeEffectDelegate(),
+        )
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        runCurrent()
+        assertEquals(ChatThreadUiState.Unavailable, vm.state.value)
+        vm.onAction(ChatThreadAction.Send)
+        runCurrent()
+        assertTrue(writes.requests.isEmpty())
+    }
+
+    @Test
     fun sendReceiptDoesNotClearNewDraftAndEmitsSuccess() = runTest(dispatcher) {
         val pending = CompletableDeferred<NotmidProtectedWriteResult>()
         val writes = Executor { pending.await() }

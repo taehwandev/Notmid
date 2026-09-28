@@ -2,4 +2,13 @@
     <string name="inbox_loading">Loading chats…</string>
     <string name="inbox_unavailable">Chats are unavailable.</string>
     <string name="inbox_retry">Retry</string>
+    <string name="inbox_search_label">Search chats</string>
+    <string name="inbox_search_placeholder">People, clips, or places</string>
+    <string name="inbox_search_clear">Clear search</string>
+    <string name="inbox_empty_title">No conversations yet</string>
+    <string name="inbox_empty_description">Share a place or clip with someone to start planning.</string>
+    <string name="inbox_search_empty_title">No chats found</string>
+    <string name="inbox_search_empty_description">Try another person, clip, or place.</string>
+    <string name="inbox_filter_empty_title">No chats in this filter</string>
+    <string name="inbox_filter_empty_description">Try another filter to see your conversations.</string>
 </resources>

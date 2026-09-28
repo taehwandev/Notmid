@@ -17,6 +17,8 @@ import app.thdev.glassnavlab.core.designsystem.component.NotmidPillButton
 import app.thdev.glassnavlab.core.designsystem.component.NotmidSectionHeader
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidColorTokens
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
+import app.thdev.glassnavlab.feature.inbox.components.feedback.InboxEmptyState
+import app.thdev.glassnavlab.feature.inbox.components.inputs.InboxSearchField
 
 @Composable
 internal fun InboxContent(
@@ -49,6 +51,13 @@ internal fun InboxContent(
             InboxSummary(threads = state.threads)
         }
 
+        item(key = "inbox-search-${state.destinationId}") {
+            InboxSearchField(
+                query = state.searchQuery,
+                onQueryChange = { onAction(InboxAction.QueryChanged(it)) },
+            )
+        }
+
         item(key = "inbox-filters-${state.destinationId}") {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(NotmidTheme.spacing.sm)) {
                 items(InboxFilters, key = { it }) { filter ->
@@ -61,16 +70,25 @@ internal fun InboxContent(
             }
         }
 
-        items(
-            items = state.visibleThreads,
-            key = { thread -> "${state.destinationId}-${thread.id}" },
-        ) { thread ->
-            InboxThreadRow(
-                thread = thread,
-                onClick = {
-                    onAction(InboxAction.ThreadClicked(thread.id))
-                },
-            )
+        if (state.visibleThreads.isEmpty()) {
+            item(key = "inbox-empty-${state.destinationId}") {
+                InboxEmptyState(
+                    inboxIsEmpty = state.threads.isEmpty(),
+                    searching = state.searchQuery.isNotBlank(),
+                )
+            }
+        } else {
+            items(
+                items = state.visibleThreads,
+                key = { thread -> "${state.destinationId}-${thread.id}" },
+            ) { thread ->
+                InboxThreadRow(
+                    thread = thread,
+                    onClick = {
+                        onAction(InboxAction.ThreadClicked(thread.id))
+                    },
+                )
+            }
         }
     }
 }

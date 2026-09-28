@@ -15,6 +15,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import app.thdev.glassnavlab.core.designsystem.theme.notmidTheme
 import app.thdev.glassnavlab.core.model.notmid.NotmidChatAccess
 import app.thdev.glassnavlab.core.designsystem.component.NotmidSectionHeader
+import app.thdev.glassnavlab.core.designsystem.component.NotmidText
+import app.thdev.glassnavlab.core.designsystem.component.NotmidTextVariant
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidColorTokens
 import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
 
@@ -47,7 +49,7 @@ internal fun ChatThreadContent(
             NotmidSectionHeader(
                 title = thread.title,
                 subtitle = thread.subtitle,
-                eyebrow = "chats/${state.routeThreadId}",
+                eyebrow = "conversation",
             )
         }
 
@@ -69,6 +71,16 @@ internal fun ChatThreadContent(
             key = { message -> "${thread.id}-${message.id}" },
         ) { message ->
             ChatMessageBubble(message = message)
+        }
+
+        if (state.messages.isEmpty()) {
+            item(key = "chat-empty-${thread.id}") {
+                NotmidText(
+                    text = "No messages yet. Start by asking about the place.",
+                    color = NotmidTheme.colors.contentMuted,
+                    variant = NotmidTextVariant.BodySmall,
+                )
+            }
         }
 
         item(key = "chat-composer-${thread.id}") {

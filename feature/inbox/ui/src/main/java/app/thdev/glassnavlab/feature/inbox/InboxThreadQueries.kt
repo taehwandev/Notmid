@@ -12,12 +12,27 @@ internal fun List<InboxThreadUi>.filterFor(filter: String): List<InboxThreadUi> 
     }
 }
 
-internal fun List<InboxThreadUi>.findMatchingThread(threadId: String): InboxThreadUi? {
-    return firstOrNull { thread ->
-        thread.id == threadId ||
-            thread.clip?.id == threadId ||
-            thread.place?.id == threadId
+internal fun List<InboxThreadUi>.searchFor(query: String): List<InboxThreadUi> {
+    val terms = query.trim().split(Regex("\\s+")).filter(String::isNotBlank)
+    if (terms.isEmpty()) return this
+    return filter { thread ->
+        val searchable = listOfNotNull(
+            thread.title,
+            thread.participants,
+            thread.preview,
+            thread.subtitle,
+            thread.clip?.title,
+            thread.clip?.creatorHandle,
+            thread.place?.title,
+            thread.place?.address,
+            thread.routePlan,
+        )
+        terms.all { term -> searchable.any { text -> text.contains(term, ignoreCase = true) } }
     }
+}
+
+internal fun List<InboxThreadUi>.findMatchingThread(threadId: String): InboxThreadUi? {
+    return firstOrNull { thread -> thread.id == threadId }
 }
 
 internal fun InboxThreadUi.palette(): List<Color> {

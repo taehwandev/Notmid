@@ -5,7 +5,9 @@ import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentSnapshot
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
 import app.thdev.glassnavlab.core.model.notmid.NotmidDestination
+import app.thdev.glassnavlab.core.model.notmid.NotmidClip
 import app.thdev.glassnavlab.core.model.notmid.NotmidNavigationIcon
+import app.thdev.glassnavlab.core.model.notmid.NotmidPlace
 import app.thdev.glassnavlab.core.model.notmid.NotmidThread
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEventSink
@@ -61,6 +63,51 @@ class InboxViewModelTest {
     }
 
     @Test
+    fun searchMatchesPeopleClipsAndPlacesAndCombinesWithFilter() = runTest(dispatcher) {
+        val searchable = destination.copy(
+            clips = listOf(NotmidClip("Golden hour receipt", "", "", emptyList(), id = "clip-1", creatorHandle = "Sol")),
+            places = listOf(NotmidPlace("Harbor Cafe", "", "", emptyList(), heightDp = 180, id = "place-1", address = "East Pier")),
+            threads = listOf(
+                NotmidThread(
+                    "harbor", "Meet here", "See you soon", "now", listOf("Mina"),
+                    attachedPlaceId = "place-1", attachedClipId = "clip-1", unreadCount = 2,
+                ),
+                NotmidThread("dinner", "Dinner", "Later", "1h", listOf("Jae")),
+            ),
+        )
+        val source = Source(NotmidContentSnapshot.Ready(listOf(searchable)))
+        val handle = SavedStateHandle(mapOf("query" to "golden"))
+        val vm = InboxViewModel(handle, source, source, RouteEventSink {}, dispatcher)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        runCurrent()
+
+        assertEquals(listOf("harbor"), (vm.state.value as InboxUiState.Ready).visibleThreads.map { it.id })
+        vm.onAction(InboxAction.QueryChanged("hArBoR"))
+        runCurrent()
+        assertEquals(listOf("harbor"), (vm.state.value as InboxUiState.Ready).visibleThreads.map { it.id })
+        vm.onAction(InboxAction.QueryChanged("East Pier"))
+        runCurrent()
+        assertEquals(listOf("harbor"), (vm.state.value as InboxUiState.Ready).visibleThreads.map { it.id })
+        vm.onAction(InboxAction.QueryChanged("Sol"))
+        runCurrent()
+        assertEquals(listOf("harbor"), (vm.state.value as InboxUiState.Ready).visibleThreads.map { it.id })
+        vm.onAction(InboxAction.QueryChanged("Mina golden"))
+        runCurrent()
+        assertEquals(listOf("harbor"), (vm.state.value as InboxUiState.Ready).visibleThreads.map { it.id })
+        vm.onAction(InboxAction.QueryChanged("Jae"))
+        vm.onAction(InboxAction.FilterSelected("Unread"))
+        runCurrent()
+        val noResults = vm.state.value as InboxUiState.Ready
+        assertEquals("Jae", noResults.searchQuery)
+        assertEquals(emptyList<InboxThreadUi>(), noResults.visibleThreads)
+        vm.onAction(InboxAction.QueryChanged("Mina"))
+        runCurrent()
+        assertEquals(listOf("harbor"), (vm.state.value as InboxUiState.Ready).visibleThreads.map { it.id })
+        assertEquals("Mina", handle.get<String>("query"))
+        assertEquals(0, source.reads)
+    }
+
+    @Test
     fun retryIsSingleFlightAndPublishesRecovery() = runTest(dispatcher) {
         val source = Source(NotmidContentSnapshot.Unavailable)
         source.release = CompletableDeferred()
@@ -85,6 +132,20 @@ class InboxViewModelTest {
         runCurrent()
         val state = vm.state.value as InboxUiState.Ready
         assertEquals("All", state.selectedFilter)
+        assertEquals(emptyList<InboxThreadUi>(), state.visibleThreads)
+    }
+
+    @Test
+    fun emptyDestinationDoesNotInventAConversation() = runTest(dispatcher) {
+        val source = Source(NotmidContentSnapshot.Ready(listOf(destination.copy(
+            threads = emptyList(),
+            clips = listOf(NotmidClip("Unrelated post", "", "", emptyList())),
+        ))))
+        val vm = InboxViewModel(SavedStateHandle(), source, source, RouteEventSink {}, dispatcher)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        runCurrent()
+        val state = vm.state.value as InboxUiState.Ready
+        assertEquals(emptyList<InboxThreadUi>(), state.threads)
         assertEquals(emptyList<InboxThreadUi>(), state.visibleThreads)
     }
 

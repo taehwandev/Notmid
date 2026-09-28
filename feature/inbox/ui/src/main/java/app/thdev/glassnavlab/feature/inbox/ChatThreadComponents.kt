@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,7 +20,6 @@ import app.thdev.glassnavlab.core.designsystem.component.NotmidButton
 import app.thdev.glassnavlab.core.designsystem.component.NotmidButtonVariant
 import app.thdev.glassnavlab.core.designsystem.component.NotmidGlassSurface
 import app.thdev.glassnavlab.core.designsystem.component.NotmidOutlinedButton
-import app.thdev.glassnavlab.core.designsystem.component.NotmidPillButton
 import app.thdev.glassnavlab.core.designsystem.component.NotmidText
 import app.thdev.glassnavlab.core.designsystem.component.NotmidTextField
 import app.thdev.glassnavlab.core.designsystem.component.NotmidTextVariant
@@ -308,15 +305,6 @@ internal fun ChatComposer(
                 minLines = 2,
                 maxLines = 4,
             )
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(NotmidTheme.spacing.sm)) {
-                items(listOf("Clip", "Place", "Route"), key = { it }) { action ->
-                    NotmidPillButton(
-                        label = action,
-                        enabled = enabled && !isSending,
-                        onClick = {},
-                    )
-                }
-            }
             statusMessage?.let { message ->
                 NotmidText(
                     text = message,

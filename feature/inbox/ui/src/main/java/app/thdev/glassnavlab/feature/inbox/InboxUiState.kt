@@ -14,5 +14,6 @@ internal sealed interface InboxUiState {
         val threads: List<InboxThreadUi>,
         val selectedFilter: String,
         val visibleThreads: List<InboxThreadUi>,
+        val searchQuery: String = "",
     ) : InboxUiState
 }

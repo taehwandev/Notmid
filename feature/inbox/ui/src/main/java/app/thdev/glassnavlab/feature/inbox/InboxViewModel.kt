@@ -31,7 +31,11 @@ internal class InboxViewModel @Inject constructor(
     @param:InboxIoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
     private var retryJob: Job? = null
-    val state = combine(updates.snapshot, savedState.getStateFlow("filter", "All")) { snapshot, filter ->
+    val state = combine(
+        updates.snapshot,
+        savedState.getStateFlow("filter", "All"),
+        savedState.getStateFlow("query", ""),
+    ) { snapshot, filter, query ->
         when (snapshot) {
             NotmidContentSnapshot.Loading -> InboxUiState.Loading
             NotmidContentSnapshot.Unavailable -> InboxUiState.Unavailable
@@ -46,7 +50,8 @@ internal class InboxViewModel @Inject constructor(
                     destination?.title ?: "Inbox",
                     threads,
                     selectedFilter,
-                    threads.filterFor(selectedFilter),
+                    threads.filterFor(selectedFilter).searchFor(query),
+                    query,
                 )
             }
         }
@@ -55,6 +60,7 @@ internal class InboxViewModel @Inject constructor(
     fun onAction(action: InboxAction) {
         when (action) {
             is InboxAction.FilterSelected -> if (action.filter in InboxFilters) savedState["filter"] = action.filter
+            is InboxAction.QueryChanged -> savedState["query"] = action.query
             is InboxAction.ThreadClicked -> routeEvents.onRouteEvent(InboxRouteEvent.ChatThreadRequested(action.threadId))
             InboxAction.Retry -> retry()
         }

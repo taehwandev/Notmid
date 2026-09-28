@@ -93,7 +93,7 @@ internal class ChatThreadViewModel @Inject constructor(
     private fun selectedThread(snapshot: NotmidContentSnapshot.Ready): InboxThreadUi? {
         val destinations = snapshot.destinations.toNotmidDestinations()
         val destination = destinations.firstOrNull { it.id == route.selectedDestinationId } ?: destinations.firstOrNull()
-        return destination?.let { it.toInboxThreads().findMatchingThread(route.threadId) ?: it.fallbackThread(route.threadId) }
+        return destination?.toInboxThreads()?.findMatchingThread(route.threadId)
     }
 
     private fun dispatch(request: NotmidProtectedWriteRequest, sentDraft: String? = null) {
