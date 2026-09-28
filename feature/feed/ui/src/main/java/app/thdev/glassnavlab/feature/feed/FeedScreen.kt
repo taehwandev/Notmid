@@ -31,8 +31,6 @@ fun FeedScreen(
         state = state,
         listState = listState,
         onRetry = { viewModel.onAction(FeedAction.Retry) },
-        onClipSelected = { clipId ->
-            viewModel.onAction(FeedAction.ClipClicked(clipId))
-        },
+        onAction = viewModel::onAction,
     )
 }

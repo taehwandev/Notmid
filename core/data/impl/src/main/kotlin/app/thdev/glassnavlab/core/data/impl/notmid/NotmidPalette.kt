@@ -5,9 +5,8 @@ import app.thdev.glassnavlab.core.model.notmid.NotmidColor
 /**
  * Deterministic visual values derived from a stable id.
  *
- * The notmid API does not send palettes or playback progress, so both the
- * content and protected-write repositories derive them from the same id to keep
- * a clip or place looking identical wherever it is hydrated.
+ * The notmid API does not send palettes, so both the content and
+ * protected-write repositories derive them from the same id.
  */
 internal fun paletteForStableId(id: String): List<NotmidColor> {
     val hash = id.fold(0) { acc, char -> (acc * 31 + char.code).and(0x00FFFFFF) }
@@ -19,11 +18,6 @@ internal fun paletteForStableId(id: String): List<NotmidColor> {
         NotmidColor(secondary.ensureVisibleColor()),
         NotmidColor(tertiary.ensureVisibleColor()),
     )
-}
-
-internal fun stableProgressFor(id: String): Float {
-    val bucket = id.fold(17) { acc, char -> acc + char.code }.mod(70)
-    return (bucket + 20) / 100f
 }
 
 private fun Int.rotateColor(bits: Int): Int {

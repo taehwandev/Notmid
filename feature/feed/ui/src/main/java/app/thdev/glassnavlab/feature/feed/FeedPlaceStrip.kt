@@ -33,8 +33,7 @@ internal fun FeedPlaceStrip(
 ) {
     NotmidGlassSurface(
         modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .fillMaxWidth(),
         shape = NotmidTheme.shapes.cardLarge,
         backgroundColor = NotmidTheme.colors.glassDark,
         borderColor = Color.White.copy(alpha = 0.28f),
@@ -51,8 +50,9 @@ internal fun FeedPlaceStrip(
                 modifier = Modifier.weight(1f),
             )
             NotmidButton(
-                text = "Open",
+                text = "View place",
                 onClick = onClick,
+                enabled = place != null,
                 variant = NotmidButtonVariant.Secondary,
             )
         }

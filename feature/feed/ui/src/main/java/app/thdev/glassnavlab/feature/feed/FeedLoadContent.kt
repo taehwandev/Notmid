@@ -21,10 +21,10 @@ internal fun FeedLoadContent(
     state: FeedLoadState,
     listState: LazyListState,
     onRetry: () -> Unit,
-    onClipSelected: (String) -> Unit,
+    onAction: (FeedAction) -> Unit,
 ) {
     when (state) {
-        is FeedLoadState.Ready -> FeedContent(state.content, listState, onClipSelected)
+        is FeedLoadState.Ready -> FeedContent(state.content, listState, onAction)
         else -> FeedLoadStatus(state == FeedLoadState.Loading, onRetry)
     }
 }

@@ -31,13 +31,12 @@ internal fun JsonObject.toClip(): NotmidClip {
         description = requiredString("caption"),
         badge = optionalStringArray("moodTags").firstOrNull() ?: capturedAtLabel,
         palette = paletteForStableId(id),
-        isLive = capturedAtLabel.contains("m") || capturedAtLabel == "now",
+        isLive = false,
         placeId = requiredString("placeId"),
         creatorHandle = requiredString("creatorHandle"),
         moodTags = optionalStringArray("moodTags"),
         capturedAtLabel = capturedAtLabel,
         qualityLabel = metrics.optionalString("distanceLabel") ?: "HD",
-        playbackProgress = stableProgressFor(id),
     )
 }
 

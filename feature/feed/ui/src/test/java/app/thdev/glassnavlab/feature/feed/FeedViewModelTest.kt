@@ -4,6 +4,17 @@ import androidx.lifecycle.ViewModelStore
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEvent
 import app.thdev.glassnavlab.core.navigation.runtime.RouteEventSink
 import app.thdev.glassnavlab.feature.feed.api.event.FeedRouteEvent
+import app.thdev.glassnavlab.feature.map.api.event.MapRouteEvent
+import app.thdev.glassnavlab.core.auth.notmid.*
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteExecutor
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteRequest
+import app.thdev.glassnavlab.core.domain.notmid.NotmidProtectedWriteResult
+import app.thdev.glassnavlab.core.notice.api.effect.MutableNoticeEffectDelegate
+import app.thdev.glassnavlab.core.model.notmid.NotmidAuthMode
+import app.thdev.glassnavlab.core.model.notmid.NotmidAuthProvider
+import app.thdev.glassnavlab.core.model.notmid.NotmidAuthSession
+import app.thdev.glassnavlab.core.model.notmid.NotmidAuthState
+import app.thdev.glassnavlab.core.model.notmid.NotmidAuthUser
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentRepository
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentSnapshot
 import app.thdev.glassnavlab.core.domain.notmid.NotmidContentUpdates
@@ -37,6 +48,20 @@ class FeedViewModelTest {
     private var reads = 0
     private val routeEvents = mutableListOf<RouteEvent>()
     private val routeSink = RouteEventSink { routeEvents.add(it) }
+    private val submitted = mutableListOf<NotmidProtectedWriteRequest>()
+    private val writes = NotmidProtectedWriteExecutor { _, request ->
+        submitted.add(request)
+        NotmidProtectedWriteResult.Completed
+    }
+    private val auth = object : NotmidAuthGateway {
+        override val states = MutableStateFlow(NotmidAuthState(NotmidAuthMode.Fake,
+            NotmidAuthSession("token", NotmidAuthProvider.Fake, "", NotmidAuthUser("user", "handle", "Name", "Seoul", "", emptyList())), emptyList()))
+        override fun currentState() = states.value
+        override fun signOut() = states.value.copy(session = null).also { states.value = it }
+        override suspend fun signIn(request: NotmidAuthSignInRequest): NotmidAuthResult = error("No sign-in expected")
+        override fun applyProfileUpdate(expectedSession: NotmidAuthSession, user: NotmidAuthUser): NotmidAuthState = error("No profile update expected")
+    }
+    private val notices = MutableNoticeEffectDelegate()
     private val repository = object : NotmidContentRepository {
         override suspend fun destinations(): List<NotmidDestination> {
             reads++
@@ -63,12 +88,12 @@ class FeedViewModelTest {
     }
 
     @Test
-    fun preservesMissingFeedFallbackAndRepresentsEmptyData() = runTest(dispatcher) {
+    fun missingFeedDoesNotDisplayClipsFromAnotherDestination() = runTest(dispatcher) {
         val vm = model()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         updates.snapshot.value = NotmidContentSnapshot.Ready(listOf(feed.copy(id = "other", title = "Fallback")))
         advanceUntilIdle()
-        assertEquals("Fallback", (vm.state.value as FeedLoadState.Ready).content.title)
+        assertEquals(true, (vm.state.value as FeedLoadState.Ready).content.isEmpty)
         updates.snapshot.value = NotmidContentSnapshot.Ready(emptyList())
         advanceUntilIdle()
         assertEquals(true, (vm.state.value as FeedLoadState.Ready).content.isEmpty)
@@ -97,7 +122,7 @@ class FeedViewModelTest {
                 return emptyList()
             }
         }
-        val vm = FeedViewModel(updates, pendingRepository, dispatcher, routeSink).also { store.put("feed", it) }
+        val vm = FeedViewModel(updates, pendingRepository, dispatcher, routeSink, writes, auth, notices).also { store.put("feed", it) }
         vm.onAction(FeedAction.Retry)
         vm.onAction(FeedAction.Retry)
         advanceUntilIdle()
@@ -112,7 +137,17 @@ class FeedViewModelTest {
         assertEquals(0, reads)
     }
 
-    private fun model() = FeedViewModel(updates, repository, dispatcher, routeSink).also { store.put("feed", it) }
+    @Test
+    fun placeActionOpensPlaceAndSaveActionExecutesProtectedWrite() = runTest(dispatcher) {
+        val vm = model()
+        vm.onAction(FeedAction.PlaceClicked("place-2"))
+        vm.onAction(FeedAction.SaveClicked("clip-2"))
+        advanceUntilIdle()
+        assertEquals(listOf(MapRouteEvent.PlaceRequested("place-2")), routeEvents)
+        assertEquals(listOf(NotmidProtectedWriteRequest.SaveClip("clip-2")), submitted)
+    }
+
+    private fun model() = FeedViewModel(updates, repository, dispatcher, routeSink, writes, auth, notices).also { store.put("feed", it) }
 
     private val feed = NotmidDestination(
         id = "feed", title = "Feed", subtitle = "Receipts", icon = NotmidNavigationIcon.Feed,

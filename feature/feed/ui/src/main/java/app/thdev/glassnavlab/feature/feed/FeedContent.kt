@@ -26,7 +26,7 @@ import app.thdev.glassnavlab.core.designsystem.theme.NotmidTheme
 internal fun FeedContent(
     state: FeedUiState,
     listState: LazyListState,
-    onClipSelected: (String) -> Unit,
+    onAction: (FeedAction) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -43,8 +43,8 @@ internal fun FeedContent(
     ) {
         item(key = "feed-header") {
             NotmidSectionHeader(
-                title = "proof stream",
-                subtitle = state.subtitle,
+                title = "See a place before you go",
+                subtitle = "Place videos, map context, and a way to plan together.",
                 eyebrow = state.title,
             )
         }
@@ -57,7 +57,7 @@ internal fun FeedContent(
                 FeedHeroStage(
                     clip = clip,
                     place = state.placeFor(clip),
-                    onClipSelected = onClipSelected,
+                    onAction = onAction,
                 )
             }
         }
@@ -65,9 +65,9 @@ internal fun FeedContent(
         if (state.queue.isNotEmpty()) {
             item(key = "feed-queue-header") {
                 NotmidSectionHeader(
-                    title = "next receipts",
-                    subtitle = "More fresh clips tied to places nearby.",
-                    eyebrow = "queue",
+                    title = "More place posts",
+                    subtitle = "Recent posts linked to places.",
+                    eyebrow = "places",
                 )
             }
 
@@ -78,7 +78,7 @@ internal fun FeedContent(
                 FeedQueueCard(
                     clip = clip,
                     place = state.placeFor(clip),
-                    onClipSelected = onClipSelected,
+                    onAction = onAction,
                 )
             }
         }
@@ -101,12 +101,12 @@ private fun FeedEmptyStage() {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             NotmidText(
-                text = "No fresh receipts",
+                text = "No place posts yet",
                 variant = NotmidTextVariant.Title,
             )
             Spacer(modifier = Modifier.height(NotmidTheme.spacing.sm))
             NotmidText(
-                text = "The feed is ready, but local content has no clips yet.",
+                text = "When someone shares a place video, it will appear here.",
                 color = NotmidTheme.colors.contentMuted,
                 variant = NotmidTextVariant.BodySmall,
             )

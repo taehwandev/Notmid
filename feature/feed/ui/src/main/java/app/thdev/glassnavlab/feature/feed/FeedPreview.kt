@@ -20,7 +20,7 @@ private fun FeedContentPreview() {
         FeedContent(
             state = PreviewFeedState,
             listState = rememberLazyListState(),
-            onClipSelected = {},
+            onAction = {},
         )
     }
 }
@@ -33,10 +33,7 @@ private val PreviewFeedState = FeedUiState(
         title = "Cafe queue check",
         caption = "A 14 second proof clip showing wait time, table vibe, and drink texture.",
         creatorHandle = "min.zip",
-        badgeLabel = "live rn",
         capturedAtLabel = "8m",
-        qualityLabel = "1080P",
-        progress = 0.42f,
         palette = listOf(
             NotmidColorTokens.Ink,
             NotmidColorTokens.WarmClip,
@@ -44,9 +41,6 @@ private val PreviewFeedState = FeedUiState(
         ),
         moodTags = listOf("line proof", "worth it", "quiet seats"),
         placeId = "millo-roasters",
-        likeCountLabel = "482",
-        saveCountLabel = "119",
-        chatCountLabel = "34",
     ),
     queue = listOf(
         FeedClipUi(
@@ -54,10 +48,7 @@ private val PreviewFeedState = FeedUiState(
             title = "Late night ramen",
             caption = "Creator-tagged receipt for taste, price, and the actual line outside.",
             creatorHandle = "receipt.han",
-            badgeLabel = "receipt",
             capturedAtLabel = "22m",
-            qualityLabel = "720P",
-            progress = 0.58f,
             palette = listOf(
                 Color(0xFF0F172A),
                 NotmidColorTokens.SignalGreen,
@@ -65,19 +56,13 @@ private val PreviewFeedState = FeedUiState(
             ),
             moodTags = listOf("price check", "line proof"),
             placeId = "basement-listening-bar",
-            likeCountLabel = "291",
-            saveCountLabel = "66",
-            chatCountLabel = "18",
         ),
         FeedClipUi(
             id = "gallery-opener",
             title = "Gallery opener",
             caption = "Muted clip stack with map-aware recommendations nearby.",
             creatorHandle = "nari.place",
-            badgeLabel = "near you",
             capturedAtLabel = "41m",
-            qualityLabel = "1080P",
-            progress = 0.21f,
             palette = listOf(
                 Color(0xFF312E81),
                 NotmidColorTokens.NightViolet,
@@ -85,9 +70,6 @@ private val PreviewFeedState = FeedUiState(
             ),
             moodTags = listOf("exhibit", "date safe"),
             placeId = "han-river-steps",
-            likeCountLabel = "389",
-            saveCountLabel = "104",
-            chatCountLabel = "27",
         ),
     ),
     places = listOf(

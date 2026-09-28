@@ -17,6 +17,24 @@ Primary screen priority:
 Feed -> Place/Map -> Chat planning -> Capture receipt -> Profile credibility
 ```
 
+## Current Android Completion Gaps
+
+The ViewModel action boundary and service separation do not mean the product screens are finished. Use this list when selecting the next screen slice:
+
+| Screen | Current local UI | Still needed for the screen contract |
+| --- | --- | --- |
+| Feed | Place-linked posts, save/place/detail actions and an explicit unavailable-video state | Playable video and cover delivery, full-height browsing, signed-out save login flow, and direct chat/share. The API currently exposes an object key as `videoUrl`, not a playable URL. |
+| Clip Detail | Shared route detail layout and chat action | Receipt-specific proof facts, related clips, save/map actions. |
+| Map | Spatial fake canvas, category pins, selected preview | Location fallback and low-zoom pin clustering. |
+| Place Detail | Shared route detail layout | Place-specific freshness, clips, route/save/share actions. |
+| Capture | Camera, local image picker, place search, caption/tags and fake publish | Editable proof facts, durable draft/media storage and real media publish contract. |
+| Inbox | Service threads, filters, search and empty results; no conversations inferred from unrelated clips | Real thread creation/ownership data when the service contract supports it. |
+| Chat Thread | Context, service messages and text send; unknown threads and no-message states are explicit | Clip/place/route attachment actions and a persistent bottom composer. |
+| Profile | Account header and working tabs | Owned saved clips, places and routes data; tabs currently show honest empty states. |
+| Settings | Account edit; unfinished privacy and infrastructure controls are hidden | Persisted privacy controls. |
+
+Do not represent fixture content or an inert control as a completed user flow. Keep route, notice and protected write decisions in the owning ViewModel as each screen advances.
+
 ## Shared Detail Rules
 
 - Use `Notmid*` design-system wrappers in Android feature/app code.
@@ -52,9 +70,9 @@ Feed is the proof stream. It should feel like short video first, with place cont
 ### Primary Layout
 
 - Full-height vertical clip stage.
-- Media-derived background or simulated video surface.
+- Playable place video when the service provides a URL; otherwise show a clear unavailable-media state.
 - Floating place strip near lower third.
-- Right-side action rail: like, save, chat/share, map/route.
+- Right-side actions should be backed by distinct behavior. Save and place navigation work now; like and share require their own contracts before controls appear.
 - Bottom Liquid Glass navigation.
 - Secondary list/stack may show more clips, but the first viewport should be video-dominant.
 
@@ -73,15 +91,15 @@ Feed is the proof stream. It should feel like short video first, with place cont
 - captured time/freshness label
 - distance label
 - mood tags
-- metrics: likes, saves, comments
-- video/cover asset or deterministic simulated media palette
+- real metrics when the server provides them; never derive reaction counts from IDs
+- playable video and cover URLs, or an explicit unavailable-media state
 - auth requirements for save/chat
 
 ### Android Work
 
 - Keep `FeedScreen` as holder that receives `NotmidDestination`.
 - Add a feed-specific UI path instead of only `NotmidDestinationContent`.
-- Keep click output as `FeedRouteEvent.ClipRequested(clipId)`.
+- Send every user action to `FeedViewModel`; it owns route events, protected writes and notices.
 - Reuse `NotmidActionRail` and `NotmidClipCard` only where the feed surface is not the full-screen stage.
 
 ### Web Work
@@ -92,7 +110,7 @@ Feed is the proof stream. It should feel like short video first, with place cont
 
 ### Acceptance
 
-- First viewport communicates clip + place + action loop.
+- First viewport communicates the place, capture time, creator and available actions without implying that a gradient is playable media.
 - Opening a clip detail preserves `[Feed, ClipDetail]` on Android.
 - Save/chat interactions do not silently no-op when signed out.
 
@@ -172,8 +190,8 @@ Map is the spatial view of fresh receipts. It should show where proof is happeni
 
 ### Android Work
 
-- Replace generic `MapScreen` list with a map-specific UI.
-- Add local selected pin state.
+- Keep the map canvas as the primary viewport and the selected pin preview above navigation.
+- Add the no-location and clustered-pin behavior to the current fake map.
 - Emit `MapRouteEvent.PlaceRequested(place.id)` from preview sheet/detail action.
 - Keep `PlaceDetailRoute(placeId)` fallback for unmatched fake content.
 
@@ -262,7 +280,7 @@ Capture lets a signed-in user record or upload a receipt tied to a place.
 
 ### Android Work
 
-- Build a capture-specific screen in `feature/capture/impl`.
+- Continue the capture-specific screen in `feature/capture/ui`.
 - Use shared design-system wrappers for inputs/buttons.
 - Keep auth gate in shell or add a reusable `AuthGate` component only if multiple screens need it.
 - Keep Android camera work inside `feature/capture/impl`: CameraX preview, runtime
@@ -313,7 +331,7 @@ Inbox is for place planning, not generic messaging.
 
 ### Android Work
 
-- Replace `InboxScreen` generic destination content.
+- Keep thread search/filter and empty states consistent with service-backed threads.
 - Emit `InboxRouteEvent.ChatThreadRequested(threadId)`.
 - Do not use clip/place id as thread id unless fake data explicitly maps it.
 
@@ -403,7 +421,7 @@ Profile shows creator credibility, saved receipts, places, routes, and account e
 
 ### Android Work
 
-- Replace generic `ProfileScreen` destination content.
+- Connect saved-content tabs when profile ownership data is available.
 - Use fake auth user from `NotmidAuthState`.
 - Keep profile edit behind settings/auth.
 
