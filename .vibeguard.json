@@ -1,5 +1,5 @@
 {
-  "rulesPath": "${TAO_HOME:-$HOME/git/tao-agent-os}",
+  "rulesPath": "${TAO_HOME:-$HOME/git/moru-core}",
   "maxFileLines": 500,
   "autoFix": {
     "envGitignore": true,

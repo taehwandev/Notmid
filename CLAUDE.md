@@ -22,7 +22,7 @@ Read in order:
 ```text
 AGENTS.md
 VIBEGUARD.md
-${TAO_HOME:-$HOME/git/tao-agent-os}/AGENTS.md
+${TAO_HOME:-$HOME/git/moru-core}/AGENTS.md
 ```
 
 Do not duplicate routing, VibeGuard, security, architecture, or verification

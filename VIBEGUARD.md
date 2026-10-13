@@ -19,7 +19,7 @@ https://vibeguard.thdev.app/
 Use the local Tao Agent OS rule source:
 
 ```bash
-TAO_ROOT="${TAO_HOME:-$HOME/git/tao-agent-os}"
+TAO_ROOT="${TAO_HOME:-$HOME/git/moru-core}"
 npm exec --cache /private/tmp/notmid-npm-cache --no-update-notifier --yes --package @taehwandev/vibeguard -- vibeguard audit . --rules "$TAO_ROOT"
 ```
 
@@ -29,7 +29,7 @@ When the user explicitly approves refreshing an existing managed VibeGuard
 block, use the same rule source:
 
 ```bash
-TAO_ROOT="${TAO_HOME:-$HOME/git/tao-agent-os}"
+TAO_ROOT="${TAO_HOME:-$HOME/git/moru-core}"
 npm exec --cache /private/tmp/notmid-npm-cache --no-update-notifier --yes --package @taehwandev/vibeguard -- vibeguard update . --rules "$TAO_ROOT"
 npm exec --cache /private/tmp/notmid-npm-cache --no-update-notifier --yes --package @taehwandev/vibeguard -- vibeguard audit . --fix --rules "$TAO_ROOT"
 npm exec --cache /private/tmp/notmid-npm-cache --no-update-notifier --yes --package @taehwandev/vibeguard -- vibeguard audit . --rules "$TAO_ROOT"
@@ -62,5 +62,5 @@ behavior.
 ## Local Shared Rules
 
 ```text
-${TAO_HOME:-$HOME/git/tao-agent-os}
+${TAO_HOME:-$HOME/git/moru-core}
 ```
