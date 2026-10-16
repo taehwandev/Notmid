@@ -16,7 +16,7 @@ https://vibeguard.thdev.app/
 
 ## Command
 
-Use the local Tao Agent OS rule source:
+Use the local Moru Core rule source:
 
 ```bash
 TAO_ROOT="${TAO_HOME:-$HOME/git/moru-core}"
